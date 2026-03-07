@@ -12,6 +12,10 @@ public class AuthService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
+    /**
+     * Constructor with BCryptPasswordEncoder injected from SecurityConfig
+     * Password encoder is configured with SDD specified salt rounds = 12
+     */
     public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
