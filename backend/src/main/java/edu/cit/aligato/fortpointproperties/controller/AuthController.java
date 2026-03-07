@@ -1,6 +1,9 @@
 package edu.cit.aligato.fortpointproperties.controller;
 
+import edu.cit.aligato.fortpointproperties.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.dto.RegisterRequest;
+import edu.cit.aligato.fortpointproperties.entity.User;
+import edu.cit.aligato.fortpointproperties.security.JwtUtil;
 import edu.cit.aligato.fortpointproperties.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,9 +18,11 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil) {
         this.authService = authService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
@@ -25,7 +30,6 @@ public class AuthController {
         try {
             authService.registerUser(request);
 
-            // Constructing a basic success response aligning with SDD format structure
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "User registered successfully");
@@ -33,11 +37,37 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.CREATED);
 
         } catch (IllegalArgumentException e) {
-            // Returns 409 Conflict if email already exists
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("error", e.getMessage());
             return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        try {
+            User user = authService.authenticateUser(request);
+
+            // Generate JWT token upon successful authentication
+            String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Login successful");
+            response.put("token", token);
+            response.put("email", user.getEmail());
+            response.put("firstname", user.getFirstname());
+            response.put("lastname", user.getLastname());
+            response.put("role", user.getRole());
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (IllegalArgumentException e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
     }
 }
