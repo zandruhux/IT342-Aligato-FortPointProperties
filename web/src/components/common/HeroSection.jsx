@@ -6,26 +6,25 @@ export default function HeroSection({ showSearch = false }) {
 
   return (
     <div
-      className="relative bg-cover bg-center overflow-hidden"
+      className="relative bg-cover bg-center overflow-hidden h-full"
       style={{
         backgroundImage: `url(${propertyImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        minHeight: showSearch ? '500px' : '400px',
       }}
     >
       {/* Overlay for better text readability */}
       <div className="absolute inset-0 bg-black/30"></div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col justify-center items-start h-full p-8 md:p-16">
+      <div className="relative z-10 flex flex-col items-start h-full p-8 md:p-16 pt-12">
         <div className="max-w-xl">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-5xl font-bold mb-4" style={{ color: '#FFFFFF' }}>
             Find Your
             <br />
-            <span className="text-cyan-600">Perfect</span> Home
+            <span style={{ color: '#007EB7' }}>Perfect</span> Home
           </h1>
-          <p className="text-gray-700 text-lg leading-relaxed mb-8">
+          <p className="text-lg leading-relaxed mb-8" style={{ color: '#FFFFFF' }}>
             Discover exceptional properties across the Philippines. Whether
             you're buying, selling, or investing, our expert team is here to guide
             you every step of the way.
@@ -38,9 +37,13 @@ export default function HeroSection({ showSearch = false }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Location, City, or Address"
-                className="flex-1 px-4 py-3 text-gray-700 focus:outline-none"
+                className="flex-1 px-4 py-3 focus:outline-none"
+                style={{ color: '#747474' }}
               />
-              <button className="bg-cyan-600 text-white px-6 py-3 font-semibold hover:bg-cyan-700 transition whitespace-nowrap">
+              <button
+                className="text-white px-6 py-3 font-semibold hover:opacity-90 transition whitespace-nowrap"
+                style={{ backgroundColor: '#007EB7' }}
+              >
                 Search Properties
               </button>
             </div>
