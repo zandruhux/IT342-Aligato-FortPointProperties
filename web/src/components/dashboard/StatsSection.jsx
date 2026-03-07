@@ -14,8 +14,8 @@ export default function StatsSection() {
         <div className="flex justify-around items-center">
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{stat.value}</p>
-              <p className="text-gray-600 text-sm mt-1">{stat.label}</p>
+              <p className="text-3xl font-bold" style={{ color: '#007EB7' }}>{stat.value}</p>
+              <p className="text-sm mt-1" style={{ color: '#747474' }}>{stat.label}</p>
             </div>
           ))}
         </div>

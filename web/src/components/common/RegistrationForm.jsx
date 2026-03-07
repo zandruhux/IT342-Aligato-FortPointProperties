@@ -7,11 +7,53 @@ export default function RegistrationForm({ onSwitchToLogin }) {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: [],
+  });
+
+  const validatePasswordStrength = (password) => {
+    const feedback = [];
+    let score = 0;
+
+    if (password.length >= 8) {
+      score++;
+    } else {
+      feedback.push('At least 8 characters');
+    }
+
+    if (/[A-Z]/.test(password)) {
+      score++;
+    } else {
+      feedback.push('One uppercase letter');
+    }
+
+    if (/[a-z]/.test(password)) {
+      score++;
+    } else {
+      feedback.push('One lowercase letter');
+    }
+
+    if (/\d/.test(password)) {
+      score++;
+    } else {
+      feedback.push('One digit');
+    }
+
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
+      score++;
+    } else {
+      feedback.push('One special character');
+    }
+
+    return { score, feedback };
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,6 +62,11 @@ export default function RegistrationForm({ onSwitchToLogin }) {
       [name]: value,
     }));
     setError('');
+
+    // Update password strength when password changes
+    if (name === 'password') {
+      setPasswordStrength(validatePasswordStrength(value));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -28,27 +75,56 @@ export default function RegistrationForm({ onSwitchToLogin }) {
     setError('');
     setSuccess('');
 
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    // Validate password strength
+    if (passwordStrength.score < 5) {
+      setError('Password does not meet strength requirements: ' + passwordStrength.feedback.join(', '));
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await registerUser(formData);
       setSuccess('Registration successful! You can now sign in.');
-      setFormData({ firstName: '', lastName: '', email: '', password: '' });
+      setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
+      setPasswordStrength({ score: 0, feedback: [] });
       
       // Optionally redirect after success
       setTimeout(() => {
-        // window.location.href = '/login';
+        onSwitchToLogin();
       }, 2000);
     } catch (err) {
-      setError(err.error || 'Registration failed. Please try again.');
+      setError(err.error?.message || err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const getStrengthColor = () => {
+    if (passwordStrength.score === 0) return 'bg-gray-200';
+    if (passwordStrength.score <= 2) return 'bg-red-500';
+    if (passwordStrength.score <= 4) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  const getStrengthText = () => {
+    if (passwordStrength.score === 0) return '';
+    if (passwordStrength.score <= 2) return 'Weak';
+    if (passwordStrength.score <= 4) return 'Medium';
+    return 'Strong';
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2>
-      <p className="text-gray-600 text-sm mb-6">
-        Sign in to access your account and manage your properties
+    <div className="w-full max-w-md rounded-lg p-8 pb-8" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.10)', backgroundColor: '#FFFFFF' }}>
+      <h2 className="text-2xl font-bold mb-2" style={{ color: '#000000' }}>Welcome!</h2>
+      <p className="text-sm mb-6" style={{ color: '#747474' }}>
+        Sign up to access your account and manage your properties
       </p>
 
       {error && (
@@ -65,7 +141,7 @@ export default function RegistrationForm({ onSwitchToLogin }) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="firstName" className="block text-gray-700 font-medium mb-2">
+          <label htmlFor="firstName" className="block font-medium mb-2" style={{ color: '#000000' }}>
             First Name
           </label>
           <input
@@ -75,13 +151,14 @@ export default function RegistrationForm({ onSwitchToLogin }) {
             value={formData.firstName}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+            style={{ borderColor: '#747474', color: '#000000' }}
             placeholder="Enter your first name"
           />
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-gray-700 font-medium mb-2">
+          <label htmlFor="lastName" className="block font-medium mb-2" style={{ color: '#000000' }}>
             Last Name
           </label>
           <input
@@ -91,13 +168,14 @@ export default function RegistrationForm({ onSwitchToLogin }) {
             value={formData.lastName}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+            style={{ borderColor: '#747474', color: '#000000' }}
             placeholder="Enter your last name"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
+          <label htmlFor="email" className="block font-medium mb-2" style={{ color: '#000000' }}>
             Email
           </label>
           <input
@@ -107,13 +185,14 @@ export default function RegistrationForm({ onSwitchToLogin }) {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+            style={{ borderColor: '#747474', color: '#000000' }}
             placeholder="Enter your email"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-gray-700 font-medium mb-2">
+          <label htmlFor="password" className="block font-medium mb-2" style={{ color: '#000000' }}>
             Password
           </label>
           <input
@@ -123,25 +202,66 @@ export default function RegistrationForm({ onSwitchToLogin }) {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+            style={{ borderColor: '#747474', color: '#000000' }}
             placeholder="Enter your password"
           />
+          {formData.password && (
+            <div className="mt-2">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${getStrengthColor()}`}
+                    style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                  ></div>
+                </div>
+                <span className="text-sm font-medium">{getStrengthText()}</span>
+              </div>
+              {passwordStrength.feedback.length > 0 && (
+                <p className="text-xs" style={{ color: '#747474' }}>
+                  Required: {passwordStrength.feedback.join(', ')}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="block font-medium mb-2" style={{ color: '#000000' }}>
+            Confirm Password
+          </label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
+            style={{ borderColor: '#747474', color: '#000000' }}
+            placeholder="Confirm your password"
+          />
+          {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+            <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+          )}
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full text-white font-semibold py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ backgroundColor: '#007EB7' }}
         >
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
 
-      <p className="text-center text-gray-600 text-sm mt-6">
+      <p className="text-center text-sm mt-6" style={{ color: '#747474' }}>
         Already have an account?{' '}
         <button
           onClick={onSwitchToLogin}
-          className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+          className="font-semibold hover:underline"
+          style={{ color: '#007EB7' }}
         >
           Sign In
         </button>

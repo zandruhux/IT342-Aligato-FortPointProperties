@@ -17,9 +17,22 @@ export const registerUser = async (userData) => {
       email: userData.email,
       password: userData.password,
     });
-    return response.data;
+
+    console.log('Register Response:', JSON.stringify(response.data, null, 2));
+    
+    // Return the nested data structure
+    if (response.data.success && response.data.data) {
+      return response.data.data; // Returns { user, accessToken, refreshToken }
+    }
+    
+    throw new Error('Unexpected response format');
   } catch (error) {
-    throw error.response?.data || error.message;
+    console.error('Register Error:', JSON.stringify(error.response?.data, null, 2));
+    // Handle error response with new structure
+    if (error.response?.data?.error) {
+      throw error.response.data;
+    }
+    throw { error: { message: error.message } };
   }
 };
 
@@ -29,9 +42,22 @@ export const loginUser = async (credentials) => {
       email: credentials.email,
       password: credentials.password,
     });
-    return response.data;
+
+    console.log('Login Response:', JSON.stringify(response.data, null, 2));
+    
+    // Return the nested data structure
+    if (response.data.success && response.data.data) {
+      return response.data.data; // Returns { user, accessToken, refreshToken }
+    }
+    
+    throw new Error('Unexpected response format');
   } catch (error) {
-    throw error.response?.data || error.message;
+    console.error('Login Error:', JSON.stringify(error.response?.data, null, 2));
+    // Handle error response with new structure
+    if (error.response?.data?.error) {
+      throw error.response.data;
+    }
+    throw { error: { message: error.message } };
   }
 };
 

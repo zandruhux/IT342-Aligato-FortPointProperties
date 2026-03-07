@@ -1,11 +1,13 @@
 package edu.cit.aligato.fortpointproperties.service;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import edu.cit.aligato.fortpointproperties.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.dto.RegisterRequest;
 import edu.cit.aligato.fortpointproperties.entity.User;
 import edu.cit.aligato.fortpointproperties.repository.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
+import edu.cit.aligato.fortpointproperties.util.PasswordValidator;
 
 @Service
 public class AuthService {
@@ -26,6 +28,12 @@ public class AuthService {
         // Prevent duplicate email registration
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
+        }
+
+        // Validate password strength
+        PasswordValidator.ValidationResult validationResult = PasswordValidator.validate(request.getPassword());
+        if (!validationResult.isValid()) {
+            throw new IllegalArgumentException(validationResult.getErrorMessage());
         }
 
         User newUser = new User();
