@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { loginUser } from '../../api/auth';
 
-export default function LoginForm({ onSwitchToRegister }) {
+export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -36,8 +36,8 @@ export default function LoginForm({ onSwitchToRegister }) {
         role: response.role,
       }));
 
-      // Redirect or update app state after login
-      window.location.reload();
+      // Navigate to home page
+      if (onLoginSuccess) onLoginSuccess();
     } catch (err) {
       setError(err.error || 'Login failed. Please check your credentials.');
     } finally {
