@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { registerUser } from '../../api/auth';
 
-export default function RegistrationForm() {
+export default function RegistrationForm({ onSwitchToLogin }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -136,6 +136,16 @@ export default function RegistrationForm() {
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
+
+      <p className="text-center text-gray-600 text-sm mt-6">
+        Already have an account?{' '}
+        <button
+          onClick={onSwitchToLogin}
+          className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
+        >
+          Sign In
+        </button>
+      </p>
     </div>
   );
 }
