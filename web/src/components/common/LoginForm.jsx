@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
-import { registerUser } from '../../api/auth';
+import { loginUser } from '../../api/auth';
 
-export default function RegistrationForm({ onSwitchToLogin }) {
+export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
     password: '',
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,19 +23,23 @@ export default function RegistrationForm({ onSwitchToLogin }) {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSuccess('');
 
     try {
-      const response = await registerUser(formData);
-      setSuccess('Registration successful! You can now sign in.');
-      setFormData({ firstName: '', lastName: '', email: '', password: '' });
-      
-      // Optionally redirect after success
-      setTimeout(() => {
-        // window.location.href = '/login';
-      }, 2000);
+      const response = await loginUser(formData);
+
+      // Store token and user info
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify({
+        email: response.email,
+        firstname: response.firstname,
+        lastname: response.lastname,
+        role: response.role,
+      }));
+
+      // Navigate to home page
+      if (onLoginSuccess) onLoginSuccess();
     } catch (err) {
-      setError(err.error || 'Registration failed. Please try again.');
+      setError(err.error || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export default function RegistrationForm({ onSwitchToLogin }) {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome!</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back!</h2>
       <p className="text-gray-600 text-sm mb-6">
         Sign in to access your account and manage your properties
       </p>
@@ -57,45 +58,7 @@ export default function RegistrationForm({ onSwitchToLogin }) {
         </div>
       )}
 
-      {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-          {success}
-        </div>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="firstName" className="block text-gray-700 font-medium mb-2">
-            First Name
-          </label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            placeholder="Enter your first name"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="lastName" className="block text-gray-700 font-medium mb-2">
-            Last Name
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
-            placeholder="Enter your last name"
-          />
-        </div>
-
         <div>
           <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
             Email
@@ -133,17 +96,17 @@ export default function RegistrationForm({ onSwitchToLogin }) {
           disabled={loading}
           className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Registering...' : 'Register'}
+          {loading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
 
       <p className="text-center text-gray-600 text-sm mt-6">
-        Already have an account?{' '}
+        Don't have an account?{' '}
         <button
-          onClick={onSwitchToLogin}
+          onClick={onSwitchToRegister}
           className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
         >
-          Sign In
+          Sign Up
         </button>
       </p>
     </div>

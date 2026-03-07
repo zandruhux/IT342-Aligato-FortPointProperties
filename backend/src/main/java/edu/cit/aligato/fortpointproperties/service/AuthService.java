@@ -1,5 +1,6 @@
 package edu.cit.aligato.fortpointproperties.service;
 
+import edu.cit.aligato.fortpointproperties.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.dto.RegisterRequest;
 import edu.cit.aligato.fortpointproperties.entity.User;
 import edu.cit.aligato.fortpointproperties.repository.UserRepository;
@@ -39,5 +40,19 @@ public class AuthService {
         newUser.setRole("registered_user");
 
         return userRepository.save(newUser);
+    }
+
+    public User authenticateUser(LoginRequest request) {
+        // 1. Find the user by email
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+
+        // 2. Verify the password matches the hashed password in the database
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        // 3. If everything is good, return the user
+        return user;
     }
 }

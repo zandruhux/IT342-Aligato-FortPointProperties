@@ -23,4 +23,16 @@ export const registerUser = async (userData) => {
   }
 };
 
+export const loginUser = async (credentials) => {
+  try {
+    const response = await authApi.post('/auth/login', {
+      email: credentials.email,
+      password: credentials.password,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
 export default authApi;

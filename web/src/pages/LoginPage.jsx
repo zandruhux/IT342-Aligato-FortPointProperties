@@ -1,13 +1,13 @@
 import React from 'react';
-import RegistrationForm from '../components/common/RegistrationForm';
+import LoginForm from '../components/common/LoginForm';
 import HeroSection from '../components/common/HeroSection';
 
-export default function RegisterPage({ onSwitchToLogin }) {
+export default function LoginPage({ onSwitchToRegister, onLoginSuccess }) {
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Left side - Registration Form */}
+      {/* Left side - Login Form */}
       <div className="w-1/3 flex items-center justify-center p-8">
-        <RegistrationForm onSwitchToLogin={onSwitchToLogin} />
+        <LoginForm onSwitchToRegister={onSwitchToRegister} onLoginSuccess={onLoginSuccess} />
       </div>
 
       {/* Right side - Hero Section */}
