@@ -63,4 +63,24 @@ public class AuthService {
         // 3. If everything is good, return the user
         return user;
     }
+
+    /**
+     * Authenticate or register a user via Google OAuth
+     * If user doesn't exist, creates a new account with google_oauth role
+     */
+    public User authenticateOrCreateGoogleUser(String email, String firstname, String lastname) {
+        // Check if user already exists
+        return userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    // Create new Google OAuth user
+                    User newUser = new User();
+                    newUser.setEmail(email);
+                    newUser.setFirstname(firstname != null ? firstname : "");
+                    newUser.setLastname(lastname != null ? lastname : "");
+                    newUser.setRole("google_oauth");
+                    // Password is not required for OAuth users
+                    newUser.setPasswordHash(null);
+                    return userRepository.save(newUser);
+                });
+    }
 }
