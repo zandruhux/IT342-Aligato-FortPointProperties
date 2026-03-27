@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { loginUser } from '../../api/auth';
+import { loginUser, loginWithGoogle } from '../../api/auth';
+import { useGoogleLogin } from '@react-oauth/google'; 
 
 export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
   const [formData, setFormData] = useState({
@@ -52,6 +53,46 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
       setLoading(false);
     }
   };
+
+  const handleGoogleSuccess = async (tokenResponse) => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await loginWithGoogle(tokenResponse);
+
+      // Store tokens and user info with new nested structure
+      localStorage.setItem('accessToken', response.accessToken);
+      localStorage.setItem('refreshToken', response.refreshToken);
+      localStorage.setItem('user', JSON.stringify({
+        id: response.user.id,
+        email: response.user.email,
+        firstname: response.user.firstname,
+        lastname: response.user.lastname,
+        role: response.user.role,
+      }));
+
+      setSuccess('Google Login successful! Redirecting...');
+
+      // Navigate to home page after brief delay
+      setTimeout(() => {
+        if (onLoginSuccess) onLoginSuccess();
+      }, 1500);
+    } catch (err) {
+      console.error('Google Login Handler Error:', err);
+      setError(err.error?.message || err.message || 'Google login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const triggerGoogleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setError('Google login failed. Please try again.'),
+    flow: 'implicit',
+  });
+
 
   return (
     <div className="w-full max-w-md rounded-lg p-8" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.10)', backgroundColor: '#FFFFFF' }}>
@@ -116,6 +157,18 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
           {loading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
+
+      <div className="mt-4">
+        <button
+          type="button" 
+          onClick={() => triggerGoogleLogin()}
+          disabled={loading}
+          className="w-full text-white font-semibold py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+          style={{ backgroundColor: '#DB4437' }} 
+        >
+           Sign In with Google
+        </button>
+      </div>
 
       <p className="text-center text-sm mt-6" style={{ color: '#747474' }}>
         Don't have an account?{' '}
