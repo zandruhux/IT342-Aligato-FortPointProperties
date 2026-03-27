@@ -1,0 +1,87 @@
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import edu.cit.aligato.fortpointproperties.entity.User;
+
+@Service
+public class GoogleAuthService {
+
+    @Autowired
+    private AuthService authService;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    private final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
+
+    /**
+     * Authenticate user via Google OAuth access token
+     * Fetches user info from Google's UserInfo endpoint
+     * Creates new user if they don't exist in the database
+     */
+    public User authenticateWithGoogle(String accessToken) throws Exception {
+        try {
+            // Call Google's UserInfo API to get user information
+            String url = GOOGLE_USERINFO_URL + "?access_token=" + accessToken;
+            GoogleUserInfo userInfo = restTemplate.getForObject(url, GoogleUserInfo.class);
+
+            if (userInfo == null || userInfo.getEmail() == null) {
+                throw new IllegalArgumentException("Could not retrieve user information from Google");
+            }
+
+            // Authenticate or create the user
+            return authService.authenticateOrCreateGoogleUser(
+                userInfo.getEmail(),
+                userInfo.getGiven_name(),
+                userInfo.getFamily_name()
+            );
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid Google access token: " + e.getMessage());
+        }
+    }
+
+    /**
+     * POJO for Google UserInfo response
+     */
+    public static class GoogleUserInfo {
+        private String email;
+        private String given_name;
+        private String family_name;
+        private String picture;
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public String getGiven_name() {
+            return given_name;
+        }
+
+        public void setGiven_name(String given_name) {
+            this.given_name = given_name;
+        }
+
+        public String getFamily_name() {
+            return family_name;
+        }
+
+        public void setFamily_name(String family_name) {
+            this.family_name = family_name;
+        }
+
+        public String getPicture() {
+            return picture;
+        }
+
+        public void setPicture(String picture) {
+            this.picture = picture;
+        }
+    }
+}
