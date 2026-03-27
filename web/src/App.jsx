@@ -5,6 +5,8 @@ import RegisterPage from './pages/RegisterPage'
 import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 import './App.css'
+import { GoogleOAuthProvider } from '@react-oauth/google'
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
