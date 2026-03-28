@@ -63,4 +63,9 @@ public class AuthService {
         // 3. If everything is good, return the user
         return user;
     }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
 }
