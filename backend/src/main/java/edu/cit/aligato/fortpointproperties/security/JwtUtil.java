@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 
 @Component
 public class JwtUtil {
@@ -23,27 +25,65 @@ public class JwtUtil {
     private long refreshTokenExpiration;
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+        //512 bits
+        byte[] keyBytes = secretKey.getBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateAccessToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
-                .claim("type", "access")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
 
     public String generateRefreshToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
-                .claim("type", "refresh")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String extractEmail(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getSubject();
+        } catch (JwtException e) {
+            return null;
+        }
+    }
+
+    public String extractRole(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.get("role", String.class);
+        } catch (JwtException e) {
+            return null;
+        }
     }
 }

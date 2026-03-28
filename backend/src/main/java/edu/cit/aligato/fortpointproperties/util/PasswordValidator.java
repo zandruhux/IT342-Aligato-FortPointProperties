@@ -19,22 +19,6 @@ public class PasswordValidator {
             errors.add("Password must be at least " + MIN_LENGTH + " characters long");
         }
 
-        if (!password.matches(".*[A-Z].*")) {
-            errors.add("Password must contain at least one uppercase letter");
-        }
-
-        if (!password.matches(".*[a-z].*")) {
-            errors.add("Password must contain at least one lowercase letter");
-        }
-
-        if (!password.matches(".*\\d.*")) {
-            errors.add("Password must contain at least one digit");
-        }
-
-        if (!password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/?].*")) {
-            errors.add("Password must contain at least one special character");
-        }
-
         return new ValidationResult(errors.isEmpty(), errors);
     }
 
