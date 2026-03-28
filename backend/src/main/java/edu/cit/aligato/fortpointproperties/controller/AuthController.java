@@ -2,6 +2,9 @@ package edu.cit.aligato.fortpointproperties.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +17,7 @@ import edu.cit.aligato.fortpointproperties.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.dto.RegisterRequest;
 import edu.cit.aligato.fortpointproperties.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.entity.User;
+import edu.cit.aligato.fortpointproperties.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.security.JwtUtil;
 import edu.cit.aligato.fortpointproperties.service.AuthService;
 import jakarta.validation.Valid;
@@ -24,10 +28,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil, UserRepository userRepository) {
         this.authService = authService;
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/register")
@@ -41,12 +47,11 @@ public class AuthController {
 
             // Create user DTO
             UserDTO userDTO = new UserDTO(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstname(),
-                user.getLastname(),
-                user.getRole()
-            );
+                    user.getId(),
+                    user.getEmail(),
+                    user.getFirstname(),
+                    user.getLastname(),
+                    user.getRole());
 
             // Create auth response
             AuthResponse authResponse = new AuthResponse(userDTO, accessToken, refreshToken);
@@ -76,12 +81,11 @@ public class AuthController {
 
             // Create user DTO
             UserDTO userDTO = new UserDTO(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstname(),
-                user.getLastname(),
-                user.getRole()
-            );
+                    user.getId(),
+                    user.getEmail(),
+                    user.getFirstname(),
+                    user.getLastname(),
+                    user.getRole());
 
             // Create auth response
             AuthResponse authResponse = new AuthResponse(userDTO, accessToken, refreshToken);
@@ -95,6 +99,36 @@ public class AuthController {
             ErrorDetail error = new ErrorDetail("AUTH-001", e.getMessage(), null);
             ApiResponse<AuthResponse> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<UserDTO>> getProfile() {
+        try {
+            // Get email from JWT token (from security context)
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+            // Find user by email
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Create user DTO
+            UserDTO userDTO = new UserDTO(
+                    user.getId(),
+                    user.getEmail(),
+                    user.getFirstname(),
+                    user.getLastname(),
+                    user.getRole());
+
+            // Wrap in standardized API response
+            ApiResponse<UserDTO> response = ApiResponse.success(userDTO);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("AUTH-004", e.getMessage(), null);
+            ApiResponse<UserDTO> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         }
     }
 }
