@@ -57,8 +57,26 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
+                    // AUTH ENDPOINTS - Public
                         .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                    
+                    // PUBLIC ENDPOINTS - Unauthenticated users
+                        .requestMatchers("/properties/**").permitAll()
+                    
+                    // REGISTERED USER ENDPOINTS - Authenticated users only
+                        .requestMatchers("/user/properties/**").authenticated()
+                    
+                    // AGENT ENDPOINTS - Agents and Admins
+                        .requestMatchers("/agent/properties/**").hasAnyRole("AGENT", "ADMIN")
+                    
+                    // AUTH PROFILE - Authenticated users
                         .requestMatchers("/api/v1/auth/profile").authenticated()
+                        .requestMatchers("/api/v1/auth/users").hasRole("ADMIN")
+                    
+                    // ADMIN ENDPOINTS - Admins only
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                    
+                    // Everything else requires authentication
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
