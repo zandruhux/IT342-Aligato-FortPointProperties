@@ -1,8 +1,9 @@
-package edu.cit.aligato.fortpointproperties.controller;
+package edu.cit.aligato.fortpointproperties.auth.controller;
+
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,20 +11,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import edu.cit.aligato.fortpointproperties.auth.dto.AuthResponse;
+import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
+import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
+import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
+import edu.cit.aligato.fortpointproperties.auth.service.AuthService;
 import edu.cit.aligato.fortpointproperties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.dto.AuthResponse;
 import edu.cit.aligato.fortpointproperties.dto.ErrorDetail;
-import edu.cit.aligato.fortpointproperties.dto.LoginRequest;
-import edu.cit.aligato.fortpointproperties.dto.RegisterRequest;
-import edu.cit.aligato.fortpointproperties.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.entity.User;
 import edu.cit.aligato.fortpointproperties.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.security.JwtUtil;
-import edu.cit.aligato.fortpointproperties.service.AuthService;
 import jakarta.validation.Valid;
 
+
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1/auth") //TO CHANGE THIS PART
 public class AuthController {
 
     private final AuthService authService;
@@ -130,5 +132,22 @@ public class AuthController {
             ApiResponse<UserDTO> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         }
+    }
+
+    //THIS IS ONLY A TEST. KINDLY DELETE AFTER
+    @GetMapping("/users")
+    public ResponseEntity<ApiResponse<List<UserDTO>>> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        List<UserDTO> userDTOs = users.stream()
+                .map(user -> new UserDTO(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getFirstname(),
+                        user.getLastname(),
+                        user.getRole()))
+                .toList();
+
+        ApiResponse<List<UserDTO>> response = ApiResponse.success(userDTOs);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

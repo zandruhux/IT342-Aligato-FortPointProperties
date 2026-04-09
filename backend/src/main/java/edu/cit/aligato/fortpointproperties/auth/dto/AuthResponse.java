@@ -1,9 +1,13 @@
-package edu.cit.aligato.fortpointproperties.dto;
+package edu.cit.aligato.fortpointproperties.auth.dto;
 
 public class AuthResponse {
     private UserDTO user;
     private String accessToken;
     private String refreshToken;
+
+    // --- Constructors ---
+    public AuthResponse() {
+    }
 
     public AuthResponse(UserDTO user, String accessToken, String refreshToken) {
         this.user = user;
@@ -11,7 +15,7 @@ public class AuthResponse {
         this.refreshToken = refreshToken;
     }
 
-    // Getters and Setters
+    // --- Getters and Setters ---
     public UserDTO getUser() {
         return user;
     }
