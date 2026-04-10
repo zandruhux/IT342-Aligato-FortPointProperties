@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Header from './components/common/Header'
-import RegisterPage from './pages/RegisterPage'
-import LoginPage from './pages/LoginPage'
-import HomePage from './pages/HomePage'
+import RegisterPage from './pages/auth/RegisterPage'
+import LoginPage from './pages/auth/LoginPage'
+import HomePage from './pages/public/HomePage'
+import PropertyListPage from './pages/public/PropertyListPage'
 import './App.css'
 
 function App() {
@@ -39,18 +40,23 @@ function App() {
       />
       <main className="flex-1">
         <Routes>
+
+          // Public Routes
+          <Route path="/" element={<HomePage />}/>
+          <Route path="/properties" element={<PropertyListPage />}/>
+
+          // Auth Routes. Change this one to updated homepage when we have it
           <Route
             path="/login"
             element={isLoggedIn ? <Navigate to="/" /> : <LoginPage onLoginSuccess={handleLoginSuccess} />}
           />
+
+
           <Route
             path="/register"
             element={isLoggedIn ? <Navigate to="/" /> : <RegisterPage />}
           />
-          <Route
-            path="/"
-            element={isLoggedIn ? <HomePage /> : <Navigate to="/login" />}
-          />
+          
         </Routes>
       </main>
     </div>
