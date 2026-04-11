@@ -1,4 +1,4 @@
-package edu.cit.aligato.fortpointproperties.dto;
+package edu.cit.aligato.fortpointproperties.auth.dto;
 
 public class UserDTO {
     private String id;
@@ -6,6 +6,10 @@ public class UserDTO {
     private String firstname;
     private String lastname;
     private String role;
+
+    // --- Constructors ---
+    public UserDTO() {
+    }
 
     public UserDTO(String id, String email, String firstname, String lastname, String role) {
         this.id = id;
@@ -15,7 +19,7 @@ public class UserDTO {
         this.role = role;
     }
 
-    // Getters and Setters
+    // --- Getters and Setters ---
     public String getId() {
         return id;
     }

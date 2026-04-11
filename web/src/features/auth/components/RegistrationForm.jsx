@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { registerUser } from '../../api/auth';
+import { registerUser } from '../../../api/auth';
 
 export default function RegistrationForm({ onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -25,31 +25,31 @@ export default function RegistrationForm({ onSwitchToLogin }) {
     if (password.length >= 8) {
       score++;
     } else {
-      feedback.push('At least 8 characters');
+      feedback.push('at least 8 characters');
     }
 
     if (/[A-Z]/.test(password)) {
       score++;
     } else {
-      feedback.push('One uppercase letter');
+      feedback.push('an uppercase letter');
     }
 
     if (/[a-z]/.test(password)) {
       score++;
     } else {
-      feedback.push('One lowercase letter');
+      feedback.push('a lowercase letter');
     }
 
     if (/\d/.test(password)) {
       score++;
     } else {
-      feedback.push('One digit');
+      feedback.push('a number');
     }
 
     if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
       score++;
     } else {
-      feedback.push('One special character');
+      feedback.push('a special character');
     }
 
     return { score, feedback };
@@ -75,30 +75,31 @@ export default function RegistrationForm({ onSwitchToLogin }) {
     setError('');
     setSuccess('');
 
-    // Validate password match
+    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
-    // Validate password strength
-    if (passwordStrength.score < 5) {
-      setError('Password does not meet strength requirements: ' + passwordStrength.feedback.join(', '));
+    if (passwordStrength.score < 4) {
+      setError('Password is not strong enough');
       setLoading(false);
       return;
     }
 
     try {
-      const response = await registerUser(formData);
-      setSuccess('Registration successful! You can now sign in.');
-      setFormData({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
-      setPasswordStrength({ score: 0, feedback: [] });
-      
-      // Optionally redirect after success
+      await registerUser({
+        email: formData.email,
+        password: formData.password,
+        firstname: formData.firstName,
+        lastname: formData.lastName,
+      });
+
+      setSuccess('Registration successful! Redirecting to login...');
       setTimeout(() => {
         onSwitchToLogin();
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError(err.error?.message || err.message || 'Registration failed. Please try again.');
     } finally {
@@ -107,16 +108,17 @@ export default function RegistrationForm({ onSwitchToLogin }) {
   };
 
   const getStrengthColor = () => {
-    if (passwordStrength.score === 0) return 'bg-gray-200';
+    if (passwordStrength.score === 0) return 'bg-gray-300';
     if (passwordStrength.score <= 2) return 'bg-red-500';
-    if (passwordStrength.score <= 4) return 'bg-yellow-500';
+    if (passwordStrength.score === 3) return 'bg-yellow-500';
     return 'bg-green-500';
   };
 
   const getStrengthText = () => {
-    if (passwordStrength.score === 0) return '';
+    if (passwordStrength.score === 0) return 'None';
     if (passwordStrength.score <= 2) return 'Weak';
-    if (passwordStrength.score <= 4) return 'Medium';
+    if (passwordStrength.score === 3) return 'Fair';
+    if (passwordStrength.score === 4) return 'Good';
     return 'Strong';
   };
 

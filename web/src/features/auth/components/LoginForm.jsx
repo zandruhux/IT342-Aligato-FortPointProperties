@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { loginUser } from '../../api/auth';
+import { loginUser } from '../../../api/auth';
 
 export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
   const [formData, setFormData] = useState({

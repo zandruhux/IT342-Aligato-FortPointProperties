@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import RegistrationForm from '../components/common/RegistrationForm';
-import HeroSection from '../components/common/HeroSection';
+import RegistrationForm from '../../features/auth/components/RegistrationForm';
+import HeroSection from '../../components/common/HeroSection';
 
 export default function RegisterPage() {
   const navigate = useNavigate();

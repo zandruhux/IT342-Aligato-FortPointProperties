@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoginForm from '../components/common/LoginForm';
-import HeroSection from '../components/common/HeroSection';
+import LoginForm from '../../features/auth/components/LoginForm';
+import HeroSection from '../../components/common/HeroSection';
 
 export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate();

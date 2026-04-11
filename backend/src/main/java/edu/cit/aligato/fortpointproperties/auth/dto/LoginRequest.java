@@ -1,16 +1,24 @@
-package edu.cit.aligato.fortpointproperties.dto;
+package edu.cit.aligato.fortpointproperties.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
-
+    @Email(message = "Email should be valid")
     @NotBlank(message = "Email is required")
-    @Email(message = "Invalid email format")
     private String email;
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    // --- Constructors ---
+    public LoginRequest() {
+    }
+
+    public LoginRequest(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 
     // --- Getters and Setters ---
     public String getEmail() {
