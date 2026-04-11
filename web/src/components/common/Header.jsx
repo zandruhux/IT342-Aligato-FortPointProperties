@@ -20,6 +20,9 @@ export default function Header({ isLoggedIn, onLogout }) {
     <div className="flex items-center gap-8">
       <Link to="/" className="hover:opacity-80 transition no-underline" style={{ color: '#747474' }}>Home</Link>
       <Link to="/properties" className="hover:opacity-80 transition" style={{ color: '#747474' }}>Properties</Link>
+      {isLoggedIn && (
+        <Link to="/favorites" className="hover:opacity-80 transition" style={{ color: '#747474' }}>Favorites</Link>
+      )}
       <Link to="/articles" className="hover:opacity-80 transition" style={{ color: '#747474' }}>Articles</Link>
     </div>
 
