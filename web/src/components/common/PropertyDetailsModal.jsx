@@ -7,6 +7,8 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !propertyId) return;
@@ -26,6 +28,10 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
         const decoded = jwtDecode(token);
         const role = decoded.role || decoded.authorities; 
         setUserRole(role);
+
+        // Check favorite status
+        const isFav = await property.checkIfFavorited(propertyId);
+        setIsFavorited(isFav);
 
         let data;
         // Check if role is AGENT (Adjust the string to match your exact backend role name, e.g., 'ROLE_AGENT')
@@ -47,6 +53,26 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
     fetchDetails();
   }, [isOpen, propertyId]);
 
+  const handleFavoriteClick = async (e) => {
+    e.stopPropagation();
+    setIsLoadingFavorite(true);
+
+    try {
+      if (isFavorited) {
+        await property.removeFromFavorites(propertyId);
+        setIsFavorited(false);
+      } else {
+        await property.addToFavorites(propertyId);
+        setIsFavorited(true);
+      }
+    } catch (error) {
+      console.error('Error updating favorite:', error);
+      alert('Failed to update favorite');
+    } finally {
+      setIsLoadingFavorite(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   // Format currency
@@ -56,10 +82,27 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-y-auto relative">
         
-        {/* Close Button */}
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full p-2">
-          ✕
-        </button>
+        {/* Close and Favorite Buttons */}
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+          <button 
+            onClick={handleFavoriteClick}
+            disabled={isLoadingFavorite}
+            className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition disabled:opacity-50"
+          >
+            {isFavorited ? (
+              <svg className="w-6 h-6" fill="#FF0000" viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="#FF0000" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            )}
+          </button>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 transition-colors rounded-full p-2">
+            ✕
+          </button>
+        </div>
 
         <div className="p-8">
           {loading && <p className="text-center text-gray-500 py-10">Loading advanced details...</p>}
