@@ -1,0 +1,60 @@
+# IDE & Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.env.local
+
+# Java/Maven
+target/
+*.jar
+*.war
+*.ear
+*.class
+.classpath
+.project
+.settings/
+bin/
+
+# Gradle
+.gradle/
+build/
+gradle-wrapper.jar
+
+# Node/NPM/Vite
+node_modules/
+dist/
+.env
+.env.local
+.eslintcache
+
+# Kotlin
+out/
+
+# Android
+.gradle/
+build/
+*.apk
+*.aab
+local.properties
+
+# Logs & Crashes
+*.log
+hs_err_pid*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Misc
+.cache
+.temp
+temp/
