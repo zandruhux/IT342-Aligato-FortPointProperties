@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
-import { property } from '../../api/property';
+import { property as propertyAPI } from '../../api/property';
 
 const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
   const [details, setDetails] = useState(null);
@@ -30,16 +30,16 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
         setUserRole(role);
 
         // Check favorite status
-        const isFav = await property.checkIfFavorited(propertyId);
+        const isFav = await propertyAPI.checkIfFavorited(propertyId);
         setIsFavorited(isFav);
 
         let data;
         // Check if role is AGENT (Adjust the string to match your exact backend role name, e.g., 'ROLE_AGENT')
         if (role === 'AGENT' || role === 'ROLE_AGENT') {
-          data = await property.getAgentPropertyDetails(propertyId);
+          data = await propertyAPI.getAgentPropertyDetails(propertyId);
         } else {
           // Default to registered user view
-          data = await property.getUserPropertyDetails(propertyId);
+          data = await propertyAPI.getUserPropertyDetails(propertyId);
         }
         
         setDetails(data);
@@ -59,13 +59,18 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
 
     try {
       if (isFavorited) {
-        await property.removeFromFavorites(propertyId);
+        await propertyAPI.removeFromFavorites(propertyId);
         setIsFavorited(false);
       } else {
-        await property.addToFavorites(propertyId);
+        await propertyAPI.addToFavorites(propertyId);
         setIsFavorited(true);
       }
     } catch (error) {
+      // Handle 409 Conflict (already favorited) gracefully
+      if (error.response?.status === 409) {
+        setIsFavorited(true);
+        return;
+      }
       console.error('Error updating favorite:', error);
       alert('Failed to update favorite');
     } finally {
