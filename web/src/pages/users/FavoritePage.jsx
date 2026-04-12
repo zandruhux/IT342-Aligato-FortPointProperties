@@ -33,6 +33,15 @@ export default function FavoritePage() {
     setIsModalOpen(true);
   };
 
+  const handleFavoriteChange = (propertyId, isFavorited) => {
+    if (!isFavorited) {
+      // Remove property from favorites list
+      setFavorites((prevFavorites) => 
+        prevFavorites.filter((fav) => fav.propertyId !== propertyId)
+      );
+    }
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedPropertyId(null);
@@ -107,6 +116,8 @@ export default function FavoritePage() {
                   priceRangeMax: fav.priceRangeMax,
                 }}
                 onClick={handlePropertyClick}
+                isFavoritedInitially={true}
+                onFavoriteChange={handleFavoriteChange}
               />
             ))}
           </div>
