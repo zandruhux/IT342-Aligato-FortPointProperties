@@ -1,24 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { property } from '../../api/property';
+import { property as propertyFavorite } from '../../api/property';
 
-const PropertyCard = ({ property, onClick }) => {
+const PropertyCard = ({ property, onClick, isFavoritedInitially = false, onFavoriteChange }) => {
   const { propertyName, description, location, priceRangeMin, priceRangeMax, id } = property;
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(isFavoritedInitially);
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     setIsAuthenticated(!!token);
+  }, []);
 
-    if (token) {
+  // Check favorite status when component mounts or ID changes
+  useEffect(() => {
+    if (isAuthenticated && id) {
       checkFavoriteStatus();
     }
-  }, [id]);
+  }, [id, isAuthenticated]);
 
   const checkFavoriteStatus = async () => {
     try {
-      const isFav = await property.checkIfFavorited(id);
+      const isFav = await propertyFavorite.checkIfFavorited(id);
       setIsFavorited(isFav);
     } catch (error) {
       console.error('Error checking favorite status:', error);
@@ -36,13 +39,26 @@ const PropertyCard = ({ property, onClick }) => {
     setIsLoadingFavorite(true);
     try {
       if (isFavorited) {
-        await property.removeFromFavorites(id);
+        await propertyFavorite.removeFromFavorites(id);
         setIsFavorited(false);
+        // Notify parent if callback exists
+        if (onFavoriteChange) {
+          onFavoriteChange(id, false);
+        }
       } else {
-        await property.addToFavorites(id);
+        await propertyFavorite.addToFavorites(id);
         setIsFavorited(true);
+        // Notify parent if callback exists
+        if (onFavoriteChange) {
+          onFavoriteChange(id, true);
+        }
       }
     } catch (error) {
+      // Handle 409 Conflict (already favorited) gracefully
+      if (error.response?.status === 409) {
+        setIsFavorited(true);
+        return;
+      }
       console.error('Error updating favorite:', error);
       alert('Failed to update favorite');
     } finally {
@@ -75,21 +91,23 @@ const PropertyCard = ({ property, onClick }) => {
             </span>
             
             {/* Heart Favorite Button */}
-            <button
-              onClick={handleFavoriteClick}
-              disabled={isLoadingFavorite}
-              className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition disabled:opacity-50"
-            >
-              {isFavorited ? (
-                <svg className="w-6 h-6" fill="#FF0000" viewBox="0 0 24 24">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="none" stroke="#FF0000" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-              )}
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={handleFavoriteClick}
+                disabled={isLoadingFavorite}
+                className="absolute top-3 right-3 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition disabled:opacity-50"
+              >
+                {isFavorited ? (
+                  <svg className="w-6 h-6" fill="#FF0000" viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="#FF0000" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  </svg>
+                )}
+              </button>
+            )}
             
             <div className="flex items-center justify-center w-full h-full text-gray-500 font-medium">
             [Image Placeholder]
