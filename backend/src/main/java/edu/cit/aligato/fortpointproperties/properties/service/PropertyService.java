@@ -196,8 +196,10 @@ public class PropertyService {
         dto.setUpdatedAt(property.getUpdatedAt());
         
         // Map createdBy user firstname only if not null
-        if (property.getCreatedBy() != null) {
+        if (property.getCreatedBy() != null && property.getCreatedBy().getFirstname() != null) {
             dto.setCreatedBy(property.getCreatedBy().getFirstname());
+        } else {
+            dto.setCreatedBy("System");
         }
         
         return dto;
