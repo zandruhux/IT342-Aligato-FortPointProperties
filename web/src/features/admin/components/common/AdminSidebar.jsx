@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiHome, FiSettings, FiFileText, FiUser, FiLogOut } from 'react-icons/fi';
+import logo from '../../../../assets/FortPointProperties_Logo.jpg';
 
 export default function AdminSidebar({ onLogout }) {
   const navigate = useNavigate();
@@ -19,14 +20,13 @@ export default function AdminSidebar({ onLogout }) {
   return (
     <aside className="w-64 bg-gradient-to-b from-slate-950 to-slate-900 text-white h-screen fixed left-0 top-0 flex flex-col shadow-2xl">
       {/* Logo Section */}
-      <div className="p-6 border-b border-slate-700">
+      <div className="p-6 border-b border-slate-700 bg-gradient-to-br from-slate-900 to-slate-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">
-            FP
+          <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-lg">
+            <img src={logo} alt="Fort Point Properties Logo" className="w-10 h-10 object-contain" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">Fort Point</h2>
-            <p className="text-xs text-red-400 font-semibold">Admin Portal</p>
+            <h2 className="text-base font-bold text-white leading-tight">Fort Point Properties</h2>
           </div>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function AdminSidebar({ onLogout }) {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-bold ${
                 active
-                  ? 'bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg'
+                  ? 'bg-blue-600 text-white shadow-lg'
                   : 'text-slate-200 hover:bg-slate-700 hover:text-white'
               }`}
             >
@@ -57,7 +57,7 @@ export default function AdminSidebar({ onLogout }) {
       <div className="p-4 border-t border-slate-700">
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg"
+          className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 font-semibold shadow-lg"
         >
           <FiLogOut size={20} />
           <span>Logout</span>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import logo from '../../../../assets/FortPointProperties_Logo.jpg';
 
 const AgentSidebar = ({ isLoggedIn, onLogout, userRole }) => {
   const navigate = useNavigate();
@@ -34,16 +35,14 @@ const AgentSidebar = ({ isLoggedIn, onLogout, userRole }) => {
     <div className="fixed left-0 top-0 h-screen w-56 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-900 text-white flex flex-col shadow-2xl">
       {/* Logo Section */}
       <div className="border-b border-slate-700 p-6 bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center font-bold text-lg shadow-md">
-            FP
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-white rounded-lg flex items-center justify-center shadow-lg">
+            <img src={logo} alt="Fort Point Properties Logo" className="w-9 h-9 object-contain" />
           </div>
           <div>
-            <h1 className="text-lg font-bold tracking-tight">Fort Point</h1>
-            <p className="text-xs text-slate-400 font-medium">Properties</p>
+            <h1 className="text-base font-bold tracking-tight text-white">Fort Point Properties</h1>
           </div>
         </div>
-        <p className="text-xs text-slate-400 mt-3 font-medium">Agent Dashboard</p>
       </div>
 
       {/* Navigation Items */}
