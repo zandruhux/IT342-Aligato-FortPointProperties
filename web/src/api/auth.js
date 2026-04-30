@@ -12,10 +12,11 @@ const authApi = axios.create({
 export const registerUser = async (userData) => {
   try {
     const response = await authApi.post('/auth/register', {
-      firstname: userData.firstName,
-      lastname: userData.lastName,
+      firstname: userData.firstname,
+      lastname: userData.lastname,
       email: userData.email,
       password: userData.password,
+      confirmPassword: userData.password,
     });
 
     console.log('Register Response:', JSON.stringify(response.data, null, 2));

@@ -115,12 +115,12 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
           
           {!loading && !error && details && (
             <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-2">{details.propertyName}</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-2">{details.name}</h2>
               <p className="text-gray-500 mb-6 flex items-center">
                  Location: {details.location}
               </p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 bg-gray-50 p-6 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 bg-gray-50 p-6 rounded-lg">
                 <div>
                   <p className="text-sm text-gray-500">Price Range</p>
                   <p className="font-semibold text-lg">
@@ -130,12 +130,14 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Type</p>
-                  <p className="font-semibold">{details.propertyType} - {details.unitType}</p>
-                </div>
-                <div>
                   <p className="text-sm text-gray-500">Listing Type</p>
-                  <p className="font-semibold">{details.listingType}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {details.listingType && details.listingType.split(',').map((type, idx) => (
+                      <span key={idx} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+                        {type.trim()}
+                      </span>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Turnover Date</p>
@@ -143,17 +145,24 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
                 </div>
               </div>
 
+              {/* Photo Placeholder */}
+              <div className="mb-6 p-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-gray-300 text-center">
+                <p className="text-gray-600 font-semibold">Photo Gallery Coming Soon</p>
+              </div>
+
               <div className="mb-6">
                 <h3 className="text-2xl font-bold mb-3">Description</h3>
-                <p className="text-gray-700 whitespace-pre-line leading-relaxed">{details.description}</p>
+                <p className="text-gray-700 whitespace-pre-line leading-relaxed">{details.basicDescription}</p>
               </div>
 
               <div className="mb-6">
                 <h3 className="text-2xl font-bold mb-3">Features & Amenities</h3>
                 <p className="text-gray-700 mb-4">{details.amenities}</p>
                 <div className="flex gap-4 mt-2">
-                  {details.petFriendly && <span className="bg-green-50 border border-green-200 text-green-800 px-4 py-1.5 rounded-full text-sm font-medium">Pet Friendly</span>}
-                  {details.parkingAvailable && <span className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-1.5 rounded-full text-sm font-medium">Parking Available</span>}
+                  {details.petFriendly && <span className="bg-green-50 border border-green-200 text-green-800 px-4 py-1.5 rounded-full text-sm font-medium">✅ Pet Friendly</span>}
+                  {!details.petFriendly && <span className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-sm font-medium">❌ Not Pet Friendly</span>}
+                  {details.parkingAvailable && <span className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-1.5 rounded-full text-sm font-medium">✅ Parking Available</span>}
+                  {!details.parkingAvailable && <span className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-1.5 rounded-full text-sm font-medium">❌ No Parking</span>}
                 </div>
               </div>
 
@@ -165,33 +174,87 @@ const PropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
                     <h3 className="text-2xl font-bold text-blue-900">Agent Toolkit</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
                     <div>
-                      <div className="mb-5">
-                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Developer</p>
-                        <p className="text-gray-900 text-lg">{details.developerName}</p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Developer Links</p>
-                        <p className="text-blue-600 break-all">{details.developerLinks}</p>
-                      </div>
+                      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Developer</p>
+                      <p className="text-gray-900 text-lg font-semibold">{details.developer}</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Price Computations</p>
-                      <div className="bg-white p-4 rounded-lg border border-blue-100">
-                        <p className="text-gray-900 whitespace-pre-line text-sm font-mono">{details.priceComputations}</p>
-                      </div>
-                    </div>
-
-                    <div className="col-span-1 md:col-span-2">
-                      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Pitch Ready Phrases</p>
-                      <div className="bg-white p-5 rounded-lg border border-blue-100 border-l-4 border-l-blue-500">
-                        <p className="text-gray-900 italic text-lg">"{details.pitchReadyPhrases}"</p>
-                      </div>
+                      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">Turnover Date</p>
+                      <p className="text-gray-900 text-lg font-semibold">{details.turnoverDate}</p>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {details.brochurePdfUrl && (
+                      <div className="bg-white p-4 rounded-lg border border-blue-100 hover:border-blue-300 transition">
+                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Brochure PDF</p>
+                        <a 
+                          href={details.brochurePdfUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-600 hover:text-blue-800 font-semibold break-all underline flex items-center gap-2"
+                        >
+                          📄 Download Brochure
+                        </a>
+                      </div>
+                    )}
+                    {details.inventoryLink && (
+                      <div className="bg-white p-4 rounded-lg border border-blue-100 hover:border-blue-300 transition">
+                        <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Inventory/Floor Plan</p>
+                        <a 
+                          href={details.inventoryLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-600 hover:text-blue-800 font-semibold break-all underline flex items-center gap-2"
+                        >
+                          🏗️ View Inventory
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {details.keySellingPoints && (
+                    <div className="bg-white p-5 rounded-lg border border-blue-100 border-l-4 border-l-blue-500">
+                      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Key Selling Points</p>
+                      <p className="text-gray-900 italic text-lg">"{details.keySellingPoints}"</p>
+                    </div>
+                  )}
+
+                  {details.units && details.units.length > 0 && (
+                    <div className="bg-white p-5 rounded-lg border border-blue-100">
+                      <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Property Units ({details.units.length})</p>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-blue-50">
+                            <tr>
+                              <th className="px-4 py-2 text-left font-semibold text-gray-900">Type</th>
+                              <th className="px-4 py-2 text-left font-semibold text-gray-900">Floor/Lot (sqm)</th>
+                              <th className="px-4 py-2 text-left font-semibold text-gray-900">Price</th>
+                              <th className="px-4 py-2 text-left font-semibold text-gray-900">Financing</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {details.units.map((unit, idx) => (
+                              <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
+                                <td className="px-4 py-2 font-medium text-gray-900">{unit.unitType}</td>
+                                <td className="px-4 py-2 text-gray-700">{unit.floorArea} / {unit.lotArea}</td>
+                                <td className="px-4 py-2 text-gray-900 font-semibold">{formatPrice(unit.totalSellingPrice)}</td>
+                                <td className="px-4 py-2">
+                                  <div className="flex flex-wrap gap-1">
+                                    {unit.financingTypes && unit.financingTypes.map((type, i) => (
+                                      <span key={i} className="bg-blue-100 text-blue-800 px-2 py-1 text-xs rounded">{type}</span>
+                                    ))}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

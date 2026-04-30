@@ -7,30 +7,30 @@ const AgentPropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const fetchPropertyDetails = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await property.getAgentPropertyDetails(propertyId);
+        setPropertyDetails(data);
+      } catch (err) {
+        console.error('Error fetching property details:', err);
+        setError('Failed to load property details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (isOpen && propertyId) {
       fetchPropertyDetails();
     }
   }, [isOpen, propertyId]);
 
-  const fetchPropertyDetails = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await property.getAgentPropertyDetails(propertyId);
-      setPropertyDetails(data);
-    } catch (err) {
-      console.error('Error fetching property details:', err);
-      setError('Failed to load property details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-transparent backdrop-brightness-30 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-6xl w-full max-h-[92vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-10 py-7 flex justify-between items-center shadow-md">
           <h2 className="text-2xl font-bold">Property Details</h2>
@@ -68,7 +68,7 @@ const AgentPropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div>
                     <p className="text-sm text-gray-600 font-bold uppercase tracking-wide mb-2">Property Name</p>
-                    <p className="text-lg text-gray-900 font-semibold">{propertyDetails.propertyName}</p>
+                    <p className="text-lg text-gray-900 font-semibold">{propertyDetails.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 font-bold uppercase tracking-wide mb-2">Location</p>
@@ -76,16 +76,12 @@ const AgentPropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 font-bold uppercase tracking-wide mb-2">Developer Name</p>
-                    <p className="text-lg text-gray-900 font-semibold">{propertyDetails.developerName || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-bold uppercase tracking-wide mb-2">Property Type</p>
-                    <p className="text-lg text-gray-900 font-semibold">{propertyDetails.propertyType || 'N/A'}</p>
+                    <p className="text-lg text-gray-900 font-semibold">{propertyDetails.developer || 'N/A'}</p>
                   </div>
                 </div>
                 <div className="mt-8">
                   <p className="text-sm text-gray-600 font-bold uppercase tracking-wide mb-3">Description</p>
-                  <p className="text-gray-700 leading-relaxed text-base">{propertyDetails.description}</p>
+                  <p className="text-gray-700 leading-relaxed text-base">{propertyDetails.basicDescription}</p>
                 </div>
               </section>
 
@@ -115,11 +111,7 @@ const AgentPropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
                 <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-blue-600">
                   Property Details
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <p className="text-sm text-gray-600 font-bold uppercase tracking-wide mb-2">Unit Type</p>
-                    <p className="text-gray-900 font-semibold">{propertyDetails.unitType || 'N/A'}</p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gray-50 p-6 rounded-lg">
                     <p className="text-sm text-gray-600 font-bold uppercase tracking-wide mb-2">Listing Type</p>
                     <p className="text-gray-900 font-semibold">{propertyDetails.listingType || 'N/A'}</p>
@@ -143,6 +135,14 @@ const AgentPropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
                 </div>
               </section>
 
+              {/* Photo Placeholder */}
+              <section>
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b-2 border-blue-600">Property Photos</h3>
+                <div className="p-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-gray-300 text-center">
+                  <p className="text-gray-600 font-semibold">Photo Gallery Coming Soon</p>
+                </div>
+              </section>
+
               {/* Amenities */}
               {propertyDetails.amenities && (
                 <section>
@@ -155,34 +155,39 @@ const AgentPropertyDetailsModal = ({ isOpen, onClose, propertyId }) => {
 
               {/* Agent-Specific Information */}
               <section className="bg-gradient-to-br from-blue-50 to-blue-100 p-10 rounded-lg border-2 border-blue-200">
-                <h3 className="text-2xl font-bold text-gray-900 mb-8">Agent Information</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-8">Agent Tools & Resources</h3>
                 <div className="space-y-6">
-                  {propertyDetails.priceComputations && (
+                  {propertyDetails.keySellingPoints && (
                     <div>
-                      <p className="text-sm text-gray-700 font-bold uppercase tracking-wide mb-3">Price Computations</p>
+                      <p className="text-sm text-gray-700 font-bold uppercase tracking-wide mb-3">Key Selling Points</p>
                       <p className="text-gray-700 bg-white p-5 rounded border border-blue-300 leading-relaxed">
-                        {propertyDetails.priceComputations}
+                        {propertyDetails.keySellingPoints}
                       </p>
                     </div>
                   )}
-                  {propertyDetails.pitchReadyPhrases && (
+                  {propertyDetails.brochurePdfUrl && (
                     <div>
-                      <p className="text-sm text-gray-700 font-bold uppercase tracking-wide mb-3">Pitch Ready Phrases</p>
-                      <p className="text-gray-700 bg-white p-5 rounded border border-blue-300 leading-relaxed">
-                        {propertyDetails.pitchReadyPhrases}
-                      </p>
-                    </div>
-                  )}
-                  {propertyDetails.developerLinks && (
-                    <div>
-                      <p className="text-sm text-gray-700 font-bold uppercase tracking-wide mb-3">Developer Links</p>
+                      <p className="text-sm text-gray-700 font-bold uppercase tracking-wide mb-3">📄 Brochure</p>
                       <a 
-                        href={propertyDetails.developerLinks} 
+                        href={propertyDetails.brochurePdfUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-blue-600 font-semibold hover:text-blue-800 underline text-sm break-all bg-white p-5 rounded border border-blue-300 block"
                       >
-                        {propertyDetails.developerLinks}
+                        {propertyDetails.brochurePdfUrl}
+                      </a>
+                    </div>
+                  )}
+                  {propertyDetails.inventoryLink && (
+                    <div>
+                      <p className="text-sm text-gray-700 font-bold uppercase tracking-wide mb-3">🏗️ Inventory & Floor Plans</p>
+                      <a 
+                        href={propertyDetails.inventoryLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 font-semibold hover:text-blue-800 underline text-sm break-all bg-white p-5 rounded border border-blue-300 block"
+                      >
+                        {propertyDetails.inventoryLink}
                       </a>
                     </div>
                   )}

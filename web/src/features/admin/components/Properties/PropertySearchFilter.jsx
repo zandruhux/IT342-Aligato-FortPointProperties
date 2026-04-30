@@ -87,14 +87,14 @@ export default function PropertySearchFilter({
           Pre-Selling
         </button>
         <button
-          onClick={() => handleFilter('Ready-For-Occupancy')}
+          onClick={() => handleFilter('RFO')}
           className={`px-4 py-2 rounded-lg font-bold transition-all duration-200 ${
-            filterType === 'Ready-For-Occupancy'
+            filterType === 'RFO'
               ? 'bg-white text-blue-700 shadow-lg'
               : 'bg-blue-400 text-white hover:bg-blue-500'
           }`}
         >
-          Ready-For-Occupancy
+          RFO (Ready-For-Occupancy)
         </button>
         <button
           onClick={handleClear}

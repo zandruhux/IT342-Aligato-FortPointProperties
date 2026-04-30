@@ -4,9 +4,9 @@ const PropertySearchFilter = ({ onSearch, onFilter, onClearFilters, isLoading })
   const [searchType, setSearchType] = useState('name'); // 'name', 'listing-type', 'developer'
   const [searchValue, setSearchValue] = useState('');
   const [listingTypeOptions] = useState([
-    'Sale',
-    'Rent',
-    'Pre-selling'
+    'Pre-Selling',
+    'RFO',
+    'Rent-To-Own'
   ]);
   const [developerOptions] = useState([
     'Ayala Land',
