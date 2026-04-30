@@ -1,38 +1,38 @@
 package edu.cit.aligato.fortpointproperties.properties.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PropertyDTO {
     private String id;
-    private String propertyName;
-    private String description;
-    private String developerName;
+    private String name;
+    private String basicDescription;
+    private String developer;
     private Double priceRangeMin;
     private Double priceRangeMax;
     private String location;
-    private String propertyType;
-    private String unitType;
     private String listingType;
     private Boolean petFriendly;
     private Boolean parkingAvailable;
     private String turnoverDate;
     private String amenities;
-    private String priceComputations;
-    private String developerLinks;
-    private String pitchReadyPhrases;
+    private String keySellingPoints;
+    private String brochurePdfUrl;
+    private String inventoryLink;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String createdBy;
+    private List<PropertyUnitDTO> units;
 
     // --- Constructors ---
     public PropertyDTO() {
     }
 
-    public PropertyDTO(String id, String propertyName, String developerName, Double priceRangeMin, 
+    public PropertyDTO(String id, String name, String developer, Double priceRangeMin, 
                       Double priceRangeMax, String location, String listingType) {
         this.id = id;
-        this.propertyName = propertyName;
-        this.developerName = developerName;
+        this.name = name;
+        this.developer = developer;
         this.priceRangeMin = priceRangeMin;
         this.priceRangeMax = priceRangeMax;
         this.location = location;
@@ -48,28 +48,28 @@ public class PropertyDTO {
         this.id = id;
     }
 
-    public String getPropertyName() {
-        return propertyName;
+    public String getName() {
+        return name;
     }
 
-    public void setPropertyName(String propertyName) {
-        this.propertyName = propertyName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getBasicDescription() {
+        return basicDescription;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setBasicDescription(String basicDescription) {
+        this.basicDescription = basicDescription;
     }
 
-    public String getDeveloperName() {
-        return developerName;
+    public String getDeveloper() {
+        return developer;
     }
 
-    public void setDeveloperName(String developerName) {
-        this.developerName = developerName;
+    public void setDeveloper(String developer) {
+        this.developer = developer;
     }
 
     public Double getPriceRangeMin() {
@@ -94,22 +94,6 @@ public class PropertyDTO {
 
     public void setLocation(String location) {
         this.location = location;
-    }
-
-    public String getPropertyType() {
-        return propertyType;
-    }
-
-    public void setPropertyType(String propertyType) {
-        this.propertyType = propertyType;
-    }
-
-    public String getUnitType() {
-        return unitType;
-    }
-
-    public void setUnitType(String unitType) {
-        this.unitType = unitType;
     }
 
     public String getListingType() {
@@ -152,28 +136,28 @@ public class PropertyDTO {
         this.amenities = amenities;
     }
 
-    public String getPriceComputations() {
-        return priceComputations;
+    public String getKeySellingPoints() {
+        return keySellingPoints;
     }
 
-    public void setPriceComputations(String priceComputations) {
-        this.priceComputations = priceComputations;
+    public void setKeySellingPoints(String keySellingPoints) {
+        this.keySellingPoints = keySellingPoints;
     }
 
-    public String getDeveloperLinks() {
-        return developerLinks;
+    public String getBrochurePdfUrl() {
+        return brochurePdfUrl;
     }
 
-    public void setDeveloperLinks(String developerLinks) {
-        this.developerLinks = developerLinks;
+    public void setBrochurePdfUrl(String brochurePdfUrl) {
+        this.brochurePdfUrl = brochurePdfUrl;
     }
 
-    public String getPitchReadyPhrases() {
-        return pitchReadyPhrases;
+    public String getInventoryLink() {
+        return inventoryLink;
     }
 
-    public void setPitchReadyPhrases(String pitchReadyPhrases) {
-        this.pitchReadyPhrases = pitchReadyPhrases;
+    public void setInventoryLink(String inventoryLink) {
+        this.inventoryLink = inventoryLink;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -199,4 +183,14 @@ public class PropertyDTO {
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
     }
+
+    public List<PropertyUnitDTO> getUnits() {
+        return units;
+    }
+
+    public void setUnits(List<PropertyUnitDTO> units) {
+        this.units = units;
+    }
+
+
 }

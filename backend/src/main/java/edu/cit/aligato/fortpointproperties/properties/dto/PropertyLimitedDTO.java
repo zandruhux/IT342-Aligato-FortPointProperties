@@ -1,20 +1,20 @@
 package edu.cit.aligato.fortpointproperties.properties.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * PropertyLimitedDTO - For REGISTERED USERS (authenticated but not admin/agent)
- * Excludes: developerName, pitchReadyPhrases, priceComputations, developerLinks
+ * Excludes: developer, keySellingPoints, brochurePdfUrl, inventoryLink
+ * Includes: units (read-only list of property units)
  */
 public class PropertyLimitedDTO {
     private String id;
-    private String propertyName;
-    private String description;
+    private String name;
+    private String basicDescription;
     private Double priceRangeMin;
     private Double priceRangeMax;
     private String location;
-    private String propertyType;
-    private String unitType;
     private String listingType;
     private Boolean petFriendly;
     private Boolean parkingAvailable;
@@ -22,16 +22,17 @@ public class PropertyLimitedDTO {
     private String amenities;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private List<PropertyUnitDTO> units;
 
     // --- Constructors ---
     public PropertyLimitedDTO() {
     }
 
-    public PropertyLimitedDTO(String id, String propertyName, String description, Double priceRangeMin,
+    public PropertyLimitedDTO(String id, String name, String basicDescription, Double priceRangeMin,
                              Double priceRangeMax, String location, String listingType) {
         this.id = id;
-        this.propertyName = propertyName;
-        this.description = description;
+        this.name = name;
+        this.basicDescription = basicDescription;
         this.priceRangeMin = priceRangeMin;
         this.priceRangeMax = priceRangeMax;
         this.location = location;
@@ -47,20 +48,20 @@ public class PropertyLimitedDTO {
         this.id = id;
     }
 
-    public String getPropertyName() {
-        return propertyName;
+    public String getName() {
+        return name;
     }
 
-    public void setPropertyName(String propertyName) {
-        this.propertyName = propertyName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getBasicDescription() {
+        return basicDescription;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setBasicDescription(String basicDescription) {
+        this.basicDescription = basicDescription;
     }
 
     public Double getPriceRangeMin() {
@@ -85,22 +86,6 @@ public class PropertyLimitedDTO {
 
     public void setLocation(String location) {
         this.location = location;
-    }
-
-    public String getPropertyType() {
-        return propertyType;
-    }
-
-    public void setPropertyType(String propertyType) {
-        this.propertyType = propertyType;
-    }
-
-    public String getUnitType() {
-        return unitType;
-    }
-
-    public void setUnitType(String unitType) {
-        this.unitType = unitType;
     }
 
     public String getListingType() {
@@ -157,5 +142,13 @@ public class PropertyLimitedDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<PropertyUnitDTO> getUnits() {
+        return units;
+    }
+
+    public void setUnits(List<PropertyUnitDTO> units) {
+        this.units = units;
     }
 }

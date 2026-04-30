@@ -20,7 +20,7 @@ import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
 
 /**
  * PropertyRegisteredController - Registered (authenticated) users can view limited property details
- * Excludes: developerName, pitchReadyPhrases, priceComputations, developerLinks
+ * Excludes: developer, keySellingPoints, brochurePdfUrl, inventoryLink
  * Includes: all other property details, search, and filter capabilities
  */
 @RestController
@@ -41,8 +41,8 @@ public class PropertyRegisteredController {
             List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
-                            dto.getPropertyName(),
-                            dto.getDescription(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
                             dto.getLocation(),
                             dto.getPriceRangeMin(),
                             dto.getPriceRangeMax()))
@@ -143,17 +143,16 @@ public class PropertyRegisteredController {
     }
 
     // Convert PropertyDTO to PropertyLimitedDTO
-    // Excludes: developerName, pitchReadyPhrases, priceComputations, developerLinks
+    // Excludes: developer, keySellingPoints, brochurePdfUrl, inventoryLink
+    // Includes: units (read-only for registered users)
     private PropertyLimitedDTO convertToLimitedDTO(PropertyDTO dto) {
         PropertyLimitedDTO limited = new PropertyLimitedDTO();
         limited.setId(dto.getId());
-        limited.setPropertyName(dto.getPropertyName());
-        limited.setDescription(dto.getDescription());
+        limited.setName(dto.getName());
+        limited.setBasicDescription(dto.getBasicDescription());
         limited.setPriceRangeMin(dto.getPriceRangeMin());
         limited.setPriceRangeMax(dto.getPriceRangeMax());
         limited.setLocation(dto.getLocation());
-        limited.setPropertyType(dto.getPropertyType());
-        limited.setUnitType(dto.getUnitType());
         limited.setListingType(dto.getListingType());
         limited.setPetFriendly(dto.getPetFriendly());
         limited.setParkingAvailable(dto.getParkingAvailable());
@@ -161,6 +160,7 @@ public class PropertyRegisteredController {
         limited.setAmenities(dto.getAmenities());
         limited.setCreatedAt(dto.getCreatedAt());
         limited.setUpdatedAt(dto.getUpdatedAt());
+        limited.setUnits(dto.getUnits());
         return limited;
     }
 }

@@ -1,55 +1,100 @@
 package edu.cit.aligato.fortpointproperties.properties.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.cit.aligato.fortpointproperties.entity.User;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyBasicDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCreateRequest;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyDTO;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitCreateRequest;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitDTO;
 import edu.cit.aligato.fortpointproperties.properties.entity.Property;
+import edu.cit.aligato.fortpointproperties.properties.entity.PropertyUnit;
 import edu.cit.aligato.fortpointproperties.properties.repository.PropertyRepository;
+import edu.cit.aligato.fortpointproperties.properties.repository.PropertyUnitRepository;
 
 @Service
 public class PropertyService {
 
     private final PropertyRepository propertyRepository;
+    private final PropertyUnitRepository propertyUnitRepository;
 
-    public PropertyService(PropertyRepository propertyRepository) {
+    public PropertyService(PropertyRepository propertyRepository, PropertyUnitRepository propertyUnitRepository) {
         this.propertyRepository = propertyRepository;
+        this.propertyUnitRepository = propertyUnitRepository;
     }
 
     // --- CRUD Operations ---
 
-    //CREATE NEW PROPERTY
+    //CREATE NEW PROPERTY (with optional units)
+    @Transactional
     public Property createProperty(PropertyCreateRequest request, User currentUser) {
-        if (propertyRepository.existsByPropertyName(request.getPropertyName())) {
-            throw new IllegalArgumentException("Property with this name already exists");
-        }
-
-        Property property = new Property();
-        property.setPropertyName(request.getPropertyName());
-        property.setDescription(request.getDescription());
-        property.setDeveloperName(request.getDeveloperName());
-        property.setPriceRangeMin(request.getPriceRangeMin());
-        property.setPriceRangeMax(request.getPriceRangeMax());
-        property.setLocation(request.getLocation());
-        property.setPropertyType(request.getPropertyType());
-        property.setUnitType(request.getUnitType());
-        property.setListingType(request.getListingType());
-        property.setPetFriendly(request.getPetFriendly() != null ? request.getPetFriendly() : false);
-        property.setParkingAvailable(request.getParkingAvailable() != null ? request.getParkingAvailable() : false);
-        property.setTurnoverDate(request.getTurnoverDate());
-        property.setAmenities(request.getAmenities());
-        property.setPriceComputations(request.getPriceComputations());
-        property.setDeveloperLinks(request.getDeveloperLinks());
-        property.setPitchReadyPhrases(request.getPitchReadyPhrases());
-        property.setCreatedBy(currentUser);
-
-        return propertyRepository.save(property);
+    if (propertyRepository.existsByName(request.getName())) {
+        throw new IllegalArgumentException("Property with this name already exists");
     }
+
+    Property property = new Property();
+    property.setName(request.getName());
+    property.setBasicDescription(request.getBasicDescription());
+    property.setDeveloper(request.getDeveloper());
+    property.setPriceRangeMin(request.getPriceRangeMin());
+    property.setPriceRangeMax(request.getPriceRangeMax());
+    property.setLocation(request.getLocation());
+    
+    // Convert listingType array to comma-separated string
+    if (request.getListingType() != null && !request.getListingType().isEmpty()) {
+        String listingTypeStr = String.join(",", request.getListingType());
+        property.setListingType(listingTypeStr);
+    }
+    
+    property.setPetFriendly(Objects.requireNonNullElse(request.getPetFriendly(), false));
+    property.setParkingAvailable(Objects.requireNonNullElse(request.getParkingAvailable(), false));
+    property.setTurnoverDate(request.getTurnoverDate());
+    property.setAmenities(request.getAmenities());
+    property.setKeySellingPoints(request.getKeySellingPoints());
+    property.setBrochurePdfUrl(request.getBrochurePdfUrl());
+    property.setInventoryLink(request.getInventoryLink());
+    property.setCreatedBy(currentUser);
+
+    // Initialize units list (empty by default, can be populated below)
+    property.setUnits(new ArrayList<>());
+
+    // Save property first to generate ID
+    Property savedProperty = propertyRepository.save(property);
+
+    // Handle units if provided - save them explicitly via repository
+    if (request.getUnits() != null && !request.getUnits().isEmpty()) {
+        List<PropertyUnit> savedUnits = new ArrayList<>();
+        for (PropertyUnitCreateRequest unitRequest : request.getUnits()) {
+            PropertyUnit unit = new PropertyUnit();
+            unit.setProperty(savedProperty);
+            unit.setUnitType(unitRequest.getUnitType());
+            unit.setFloorArea(unitRequest.getFloorArea());
+            unit.setLotArea(unitRequest.getLotArea());
+            unit.setReservationFee(unitRequest.getReservationFee());
+            unit.setEquityPeriodMonths(unitRequest.getEquityPeriodMonths());
+            unit.setMonthlyEquity(unitRequest.getMonthlyEquity());
+            unit.setTotalSellingPrice(unitRequest.getTotalSellingPrice());
+            unit.setFinancingTypes(unitRequest.getFinancingTypes());
+            
+            // Explicitly save the unit via repository (handles @ElementCollection properly)
+            PropertyUnit savedUnit = propertyUnitRepository.save(unit);
+            savedUnits.add(savedUnit);
+        }
+        
+        // Update property with saved units and save again
+        savedProperty.setUnits(savedUnits);
+        savedProperty = propertyRepository.save(savedProperty);
+    }
+
+    return savedProperty;
+}
 
     /**
      * Get all properties (basic list view)
@@ -74,26 +119,52 @@ public class PropertyService {
     /**
      * Update a property (Admin only)
      */
+    @Transactional
     public Property updateProperty(String id, PropertyCreateRequest request) {
         Property property = propertyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
 
-        property.setPropertyName(request.getPropertyName());
-        property.setDescription(request.getDescription());
-        property.setDeveloperName(request.getDeveloperName());
+        property.setName(request.getName());
+        property.setBasicDescription(request.getBasicDescription());
+        property.setDeveloper(request.getDeveloper());
         property.setPriceRangeMin(request.getPriceRangeMin());
         property.setPriceRangeMax(request.getPriceRangeMax());
         property.setLocation(request.getLocation());
-        property.setPropertyType(request.getPropertyType());
-        property.setUnitType(request.getUnitType());
-        property.setListingType(request.getListingType());
+        
+        // Convert listingType array to comma-separated string
+        if (request.getListingType() != null && !request.getListingType().isEmpty()) {
+            String listingTypeStr = String.join(",", request.getListingType());
+            property.setListingType(listingTypeStr);
+        }
+        
         property.setPetFriendly(request.getPetFriendly());
         property.setParkingAvailable(request.getParkingAvailable());
         property.setTurnoverDate(request.getTurnoverDate());
         property.setAmenities(request.getAmenities());
-        property.setPriceComputations(request.getPriceComputations());
-        property.setDeveloperLinks(request.getDeveloperLinks());
-        property.setPitchReadyPhrases(request.getPitchReadyPhrases());
+        property.setKeySellingPoints(request.getKeySellingPoints());
+        property.setBrochurePdfUrl(request.getBrochurePdfUrl());
+        property.setInventoryLink(request.getInventoryLink());
+
+        // Handle units cascade (similar to createProperty)
+        if (request.getUnits() != null && !request.getUnits().isEmpty()) {
+            // Clear existing units and add new ones
+            property.getUnits().clear();
+            
+            for (PropertyUnitCreateRequest unitRequest : request.getUnits()) {
+                PropertyUnit unit = new PropertyUnit();
+                unit.setProperty(property);
+                unit.setUnitType(unitRequest.getUnitType());
+                unit.setFloorArea(unitRequest.getFloorArea());
+                unit.setLotArea(unitRequest.getLotArea());
+                unit.setReservationFee(unitRequest.getReservationFee());
+                unit.setEquityPeriodMonths(unitRequest.getEquityPeriodMonths());
+                unit.setMonthlyEquity(unitRequest.getMonthlyEquity());
+                unit.setTotalSellingPrice(unitRequest.getTotalSellingPrice());
+                unit.setFinancingTypes(unitRequest.getFinancingTypes());
+                
+                property.getUnits().add(unit);
+            }
+        }
 
         return propertyRepository.save(property);
     }
@@ -114,7 +185,7 @@ public class PropertyService {
      * Search properties by name
      */
     public List<PropertyDTO> searchByName(String name) {
-        return propertyRepository.findByPropertyNameContainingIgnoreCase(name).stream()
+        return propertyRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -133,15 +204,6 @@ public class PropertyService {
      */
     public List<PropertyDTO> searchByListingType(String listingType) {
         return propertyRepository.findByListingType(listingType).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Search properties by property type
-     */
-    public List<PropertyDTO> searchByPropertyType(String propertyType) {
-        return propertyRepository.findByPropertyType(propertyType).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -175,23 +237,25 @@ public class PropertyService {
 
     /**
      * Convert Property entity to basic DTO
+     * Includes nested units as PropertyUnitDTO list
      */
     private PropertyDTO convertToDTO(Property property) {
         PropertyDTO dto = new PropertyDTO();
         dto.setId(property.getId());
-        dto.setPropertyName(property.getPropertyName());
-        dto.setDescription(property.getDescription());
-        dto.setDeveloperName(property.getDeveloperName());
+        dto.setName(property.getName());
+        dto.setBasicDescription(property.getBasicDescription());
+        dto.setDeveloper(property.getDeveloper());
         dto.setPriceRangeMin(property.getPriceRangeMin());
         dto.setPriceRangeMax(property.getPriceRangeMax());
         dto.setLocation(property.getLocation());
-        dto.setPropertyType(property.getPropertyType());
-        dto.setUnitType(property.getUnitType());
         dto.setListingType(property.getListingType());
         dto.setPetFriendly(property.getPetFriendly());
         dto.setParkingAvailable(property.getParkingAvailable());
         dto.setTurnoverDate(property.getTurnoverDate());
         dto.setAmenities(property.getAmenities());
+        dto.setKeySellingPoints(property.getKeySellingPoints());
+        dto.setBrochurePdfUrl(property.getBrochurePdfUrl());
+        dto.setInventoryLink(property.getInventoryLink());
         dto.setCreatedAt(property.getCreatedAt());
         dto.setUpdatedAt(property.getUpdatedAt());
         
@@ -201,6 +265,15 @@ public class PropertyService {
         } else {
             dto.setCreatedBy("System");
         }
+
+        // Convert and set units if available
+        if (property.getUnits() != null && !property.getUnits().isEmpty()) {
+            List<PropertyUnitDTO> unitDTOs = property.getUnits().stream()
+                    .map(this::convertUnitToDTO)
+                    .collect(Collectors.toList());
+            dto.setUnits(unitDTOs);
+        }
+
         
         return dto;
     }
@@ -211,11 +284,95 @@ public class PropertyService {
     public PropertyBasicDTO convertPropertyToBasicDTO(Property property) {
         return new PropertyBasicDTO(
                 property.getId(),
-                property.getPropertyName(),
-                property.getDescription(),
+                property.getName(),
+                property.getBasicDescription(),
                 property.getLocation(),
                 property.getPriceRangeMin(),
                 property.getPriceRangeMax()
         );
+    }
+
+    // --- Unit CRUD Operations ---
+
+    /**
+     * Create a new unit for a property
+     */
+    @Transactional
+    public PropertyUnit createPropertyUnit(String propertyId, PropertyUnitCreateRequest request) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+
+        PropertyUnit unit = new PropertyUnit();
+        unit.setProperty(property);
+        unit.setUnitType(request.getUnitType());
+        unit.setFloorArea(request.getFloorArea());
+        unit.setLotArea(request.getLotArea());
+        unit.setReservationFee(request.getReservationFee());
+        unit.setEquityPeriodMonths(request.getEquityPeriodMonths());
+        unit.setMonthlyEquity(request.getMonthlyEquity());
+        unit.setTotalSellingPrice(request.getTotalSellingPrice());
+        unit.setFinancingTypes(request.getFinancingTypes());
+
+        return propertyUnitRepository.save(unit);
+    }
+
+    /**
+     * Get all units for a property
+     */
+    public List<PropertyUnitDTO> getPropertyUnits(String propertyId) {
+        List<PropertyUnit> units = propertyUnitRepository.findByProperty_Id(propertyId);
+        return units.stream()
+                .map(this::convertUnitToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Update a unit
+     */
+    @Transactional
+    public PropertyUnit updatePropertyUnit(String unitId, PropertyUnitCreateRequest request) {
+        PropertyUnit unit = propertyUnitRepository.findById(unitId)
+                .orElseThrow(() -> new IllegalArgumentException("Unit not found"));
+
+        unit.setUnitType(request.getUnitType());
+        unit.setFloorArea(request.getFloorArea());
+        unit.setLotArea(request.getLotArea());
+        unit.setReservationFee(request.getReservationFee());
+        unit.setEquityPeriodMonths(request.getEquityPeriodMonths());
+        unit.setMonthlyEquity(request.getMonthlyEquity());
+        unit.setTotalSellingPrice(request.getTotalSellingPrice());
+        unit.setFinancingTypes(request.getFinancingTypes());
+
+        return propertyUnitRepository.save(unit);
+    }
+
+    /**
+     * Delete a unit
+     */
+    @Transactional
+    public void deletePropertyUnit(String unitId) {
+        if (!propertyUnitRepository.existsById(unitId)) {
+            throw new IllegalArgumentException("Unit not found");
+        }
+        propertyUnitRepository.deleteById(unitId);
+    }
+
+    /**
+     * Convert PropertyUnit entity to PropertyUnitDTO
+     */
+    private PropertyUnitDTO convertUnitToDTO(PropertyUnit unit) {
+        PropertyUnitDTO dto = new PropertyUnitDTO();
+        dto.setId(unit.getId());
+        dto.setUnitType(unit.getUnitType());
+        dto.setFloorArea(unit.getFloorArea());
+        dto.setLotArea(unit.getLotArea());
+        dto.setReservationFee(unit.getReservationFee());
+        dto.setEquityPeriodMonths(unit.getEquityPeriodMonths());
+        dto.setMonthlyEquity(unit.getMonthlyEquity());
+        dto.setTotalSellingPrice(unit.getTotalSellingPrice());
+        dto.setFinancingTypes(unit.getFinancingTypes());
+        dto.setCreatedAt(unit.getCreatedAt());
+        dto.setUpdatedAt(unit.getUpdatedAt());
+        return dto;
     }
 }

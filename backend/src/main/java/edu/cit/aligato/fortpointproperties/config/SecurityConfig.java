@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -49,6 +51,17 @@ public class SecurityConfig {
     }
 
     /**
+     * AuthenticationManager bean - disables default Spring Security in-memory auth
+     * JWT authentication is handled by JwtAuthenticationFilter instead
+     */
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return authentication -> {
+            throw new BadCredentialsException("Authentication not supported");
+        };
+    }
+
+    /**
      * Configure HTTP security with CORS and CSRF settings
      */
     @Bean
@@ -76,7 +89,7 @@ public class SecurityConfig {
 
                         // ADMIN ENDPOINTS - Admins only
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-
+                        
                         // Everything else requires authentication
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
