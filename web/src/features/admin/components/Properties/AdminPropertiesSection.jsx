@@ -146,7 +146,10 @@ export default function AdminPropertiesSection() {
   };
 
   const handleFilter = (listingType) => {
-    const filtered = properties.filter(p => p.listingType === listingType);
+    const filtered = properties.filter(p => {
+      // listingType is stored as comma-separated string (e.g., "Pre-Selling,RFO")
+      return p.listingType && p.listingType.includes(listingType);
+    });
     setProperties(filtered);
   };
 

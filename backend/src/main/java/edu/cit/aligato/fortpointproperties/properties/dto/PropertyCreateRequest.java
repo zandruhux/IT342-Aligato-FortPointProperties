@@ -1,5 +1,7 @@
 package edu.cit.aligato.fortpointproperties.properties.dto;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -7,12 +9,12 @@ import jakarta.validation.constraints.Positive;
 public class PropertyCreateRequest {
     
     @NotBlank(message = "Property name is required")
-    private String propertyName;
+    private String name;
 
-    private String description;
+    private String basicDescription;
 
     @NotBlank(message = "Developer name is required")
-    private String developerName;
+    private String developer;
 
     @NotNull(message = "Minimum price is required")
     @Positive(message = "Minimum price must be positive")
@@ -25,14 +27,8 @@ public class PropertyCreateRequest {
     @NotBlank(message = "Location is required")
     private String location;
 
-    @NotBlank(message = "Property type is required")
-    private String propertyType;
-
-    @NotBlank(message = "Unit type is required")
-    private String unitType;
-
-    @NotBlank(message = "Listing type is required")
-    private String listingType;
+    @NotNull(message = "Listing type is required")
+    private List<String> listingType; // Format: ["Pre-Selling", "RFO", "Rent-To-Own"]
 
     private Boolean petFriendly = false;
 
@@ -43,39 +39,47 @@ public class PropertyCreateRequest {
 
     private String amenities;
 
-    private String priceComputations;
+    private String keySellingPoints;
 
-    private String developerLinks;
+    private String brochurePdfUrl;
 
-    private String pitchReadyPhrases;
+    private String inventoryLink;
+
+    /**
+     * Optional list of units to create with this property
+     * If not provided or empty, property is created without units (can add later)
+     * Each unit must have unitType, reservationFee, equityPeriodMonths, monthlyEquity, 
+     * totalSellingPrice, and financingTypes
+     */
+    private List<PropertyUnitCreateRequest> units;
 
     // --- Constructors ---
     public PropertyCreateRequest() {
     }
 
     // --- Getters and Setters ---
-    public String getPropertyName() {
-        return propertyName;
+    public String getName() {
+        return name;
     }
 
-    public void setPropertyName(String propertyName) {
-        this.propertyName = propertyName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getBasicDescription() {
+        return basicDescription;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setBasicDescription(String basicDescription) {
+        this.basicDescription = basicDescription;
     }
 
-    public String getDeveloperName() {
-        return developerName;
+    public String getDeveloper() {
+        return developer;
     }
 
-    public void setDeveloperName(String developerName) {
-        this.developerName = developerName;
+    public void setDeveloper(String developer) {
+        this.developer = developer;
     }
 
     public Double getPriceRangeMin() {
@@ -102,27 +106,11 @@ public class PropertyCreateRequest {
         this.location = location;
     }
 
-    public String getPropertyType() {
-        return propertyType;
-    }
-
-    public void setPropertyType(String propertyType) {
-        this.propertyType = propertyType;
-    }
-
-    public String getUnitType() {
-        return unitType;
-    }
-
-    public void setUnitType(String unitType) {
-        this.unitType = unitType;
-    }
-
-    public String getListingType() {
+    public List<String> getListingType() {
         return listingType;
     }
 
-    public void setListingType(String listingType) {
+    public void setListingType(List<String> listingType) {
         this.listingType = listingType;
     }
 
@@ -158,27 +146,35 @@ public class PropertyCreateRequest {
         this.amenities = amenities;
     }
 
-    public String getPriceComputations() {
-        return priceComputations;
+    public String getKeySellingPoints() {
+        return keySellingPoints;
     }
 
-    public void setPriceComputations(String priceComputations) {
-        this.priceComputations = priceComputations;
+    public void setKeySellingPoints(String keySellingPoints) {
+        this.keySellingPoints = keySellingPoints;
     }
 
-    public String getDeveloperLinks() {
-        return developerLinks;
+    public String getBrochurePdfUrl() {
+        return brochurePdfUrl;
     }
 
-    public void setDeveloperLinks(String developerLinks) {
-        this.developerLinks = developerLinks;
+    public void setBrochurePdfUrl(String brochurePdfUrl) {
+        this.brochurePdfUrl = brochurePdfUrl;
     }
 
-    public String getPitchReadyPhrases() {
-        return pitchReadyPhrases;
+    public String getInventoryLink() {
+        return inventoryLink;
     }
 
-    public void setPitchReadyPhrases(String pitchReadyPhrases) {
-        this.pitchReadyPhrases = pitchReadyPhrases;
+    public void setInventoryLink(String inventoryLink) {
+        this.inventoryLink = inventoryLink;
+    }
+
+    public List<PropertyUnitCreateRequest> getUnits() {
+        return units;
+    }
+
+    public void setUnits(List<PropertyUnitCreateRequest> units) {
+        this.units = units;
     }
 }

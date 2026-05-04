@@ -2,12 +2,12 @@ package edu.cit.aligato.fortpointproperties.properties.dto;
 
 /**
  * PropertyBasicDTO - For PUBLIC users (unauthenticated)
- * Limited to: propertyName, description, location, priceRangeMin, priceRangeMax
+ * Limited to: name, basicDescription, location, priceRangeMin, priceRangeMax
  */
 public class PropertyBasicDTO {
     private String id;
-    private String propertyName;
-    private String description;
+    private String name;
+    private String basicDescription;
     private String location;
     private Double priceRangeMin;
     private Double priceRangeMax;
@@ -16,11 +16,11 @@ public class PropertyBasicDTO {
     public PropertyBasicDTO() {
     }
 
-    public PropertyBasicDTO(String id, String propertyName, String description, String location, 
+    public PropertyBasicDTO(String id, String name, String basicDescription, String location, 
                            Double priceRangeMin, Double priceRangeMax) {
         this.id = id;
-        this.propertyName = propertyName;
-        this.description = description;
+        this.name = name;
+        this.basicDescription = basicDescription;
         this.location = location;
         this.priceRangeMin = priceRangeMin;
         this.priceRangeMax = priceRangeMax;
@@ -35,20 +35,20 @@ public class PropertyBasicDTO {
         this.id = id;
     }
 
-    public String getPropertyName() {
-        return propertyName;
+    public String getName() {
+        return name;
     }
 
-    public void setPropertyName(String propertyName) {
-        this.propertyName = propertyName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getBasicDescription() {
+        return basicDescription;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setBasicDescription(String basicDescription) {
+        this.basicDescription = basicDescription;
     }
 
     public String getLocation() {

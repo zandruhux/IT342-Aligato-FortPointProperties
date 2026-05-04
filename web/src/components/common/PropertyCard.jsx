@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { property as propertyFavorite } from '../../api/property';
 
 const PropertyCard = ({ property, onClick, isFavoritedInitially = false, onFavoriteChange }) => {
-  const { propertyName, description, location, priceRangeMin, priceRangeMax, id } = property;
+  const { name, basicDescription, location, priceRangeMin, priceRangeMax, id } = property;
   const [isFavorited, setIsFavorited] = useState(isFavoritedInitially);
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -84,9 +84,13 @@ const PropertyCard = ({ property, onClick, isFavoritedInitially = false, onFavor
       className="border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white flex flex-col cursor-pointer transform hover:-translate-y-1" 
       onClick={() => onClick(id)}
       >
-        {/* Image Placeholder */}
-        <div className="h-56 bg-gray-200 relative">
-            <span className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+        {/* Property Image - Placeholder */}
+        <div className="h-56 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-500 font-medium text-sm">Photo Coming Soon</p>
+          </div>
+
+          <span className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
             Featured
             </span>
             
@@ -116,12 +120,17 @@ const PropertyCard = ({ property, onClick, isFavoritedInitially = false, onFavor
 
         {/* Card Content */}
         <div className="p-5 flex-1 flex flex-col">
-            <div className="mb-2">
-            <h3 className="text-xl font-bold text-gray-900">{displayPrice}</h3>
+            <div className="mb-2 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900">{displayPrice}</h3>
+              {property.units && property.units.length > 0 && (
+                <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
+                  {property.units.length}u
+                </span>
+              )}
             </div>
             
             <h4 className="text-[17px] font-semibold text-gray-800 mb-1 line-clamp-1">
-            {propertyName}
+            {name}
             </h4>
             
             <p className="text-sm text-gray-500 mb-4 flex items-center">
@@ -136,7 +145,7 @@ const PropertyCard = ({ property, onClick, isFavoritedInitially = false, onFavor
             {/* Description replaces the bed/bath stats from the image */}
             <div className="mt-auto pt-4 border-t border-gray-100">
             <p className="text-sm text-gray-500 line-clamp-2">
-                {description}
+                {basicDescription}
             </p>
             </div>
         </div>

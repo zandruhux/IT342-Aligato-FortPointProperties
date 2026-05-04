@@ -17,7 +17,7 @@ import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
 
 /**
  * PropertyPublicController - Public (unauthenticated) users can view limited property details
- * Limited to: propertyName, description, location, priceRangeMin, priceRangeMax
+ * Limited to: name, basicDescription, location, priceRangeMin, priceRangeMax
  */
 @RestController
 @RequestMapping("/properties")
@@ -31,7 +31,7 @@ public class PropertyPublicController {
 
     /**
      * Get all properties (Public users)
-     * Limited fields: propertyName, description, location, priceRangeMin, priceRangeMax
+     * Limited fields: name, basicDescription, location, priceRangeMin, priceRangeMax
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> getAllProperties() {
@@ -39,8 +39,8 @@ public class PropertyPublicController {
             List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
-                            dto.getPropertyName(),
-                            dto.getDescription(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
                             dto.getLocation(),
                             dto.getPriceRangeMin(),
                             dto.getPriceRangeMax()))
@@ -65,8 +65,8 @@ public class PropertyPublicController {
                     .filter(p -> p.getId().equals(id))
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
-                            dto.getPropertyName(),
-                            dto.getDescription(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
                             dto.getLocation(),
                             dto.getPriceRangeMin(),
                             dto.getPriceRangeMax()))
@@ -91,8 +91,8 @@ public class PropertyPublicController {
             List<PropertyBasicDTO> properties = propertyService.searchByLocation(location).stream()
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
-                            dto.getPropertyName(),
-                            dto.getDescription(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
                             dto.getLocation(),
                             dto.getPriceRangeMin(),
                             dto.getPriceRangeMax()))
@@ -116,8 +116,8 @@ public class PropertyPublicController {
             List<PropertyBasicDTO> properties = propertyService.getPetFriendlyProperties().stream()
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
-                            dto.getPropertyName(),
-                            dto.getDescription(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
                             dto.getLocation(),
                             dto.getPriceRangeMin(),
                             dto.getPriceRangeMax()))

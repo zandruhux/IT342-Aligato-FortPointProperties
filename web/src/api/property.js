@@ -159,5 +159,33 @@ export const property = {
   searchPropertyByDeveloper: async (developerName) => {
     const response = await axios.get(`${API_BASE_URL}admin/properties/developer/${developerName}`, getAuthHeader());
     return Array.isArray(response.data) ? response.data : response.data.data || [];
-  }
+  },
+
+  // ========== UNIT MANAGEMENT ENDPOINTS ==========
+
+  // Get all units for a property (Admin)
+  getAdminPropertyUnits: async (propertyId) => {
+    const response = await axios.get(`${API_BASE_URL}admin/properties/${propertyId}/units`, getAuthHeader());
+    return Array.isArray(response.data) ? response.data : response.data.data || [];
+  },
+
+  // Create a new unit (Admin)
+  createPropertyUnit: async (propertyId, unitData) => {
+    const response = await axios.post(`${API_BASE_URL}admin/properties/${propertyId}/units`, unitData, getAuthHeader());
+    return response.data.data || response.data;
+  },
+
+  // Update a unit (Admin)
+  updatePropertyUnit: async (propertyId, unitId, unitData) => {
+    const response = await axios.put(`${API_BASE_URL}admin/properties/${propertyId}/units/${unitId}`, unitData, getAuthHeader());
+    return response.data.data || response.data;
+  },
+
+  // Delete a unit (Admin)
+  deletePropertyUnit: async (propertyId, unitId) => {
+    const response = await axios.delete(`${API_BASE_URL}admin/properties/${propertyId}/units/${unitId}`, getAuthHeader());
+    return response.data;
+  },
+
+
 };

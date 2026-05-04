@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const AgentPropertyCard = ({ property, onViewDetails }) => {
-  const { id, propertyName, description, location, priceRangeMin, priceRangeMax } = property;
+  const { id, name, basicDescription, location, priceRangeMin, priceRangeMax } = property;
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-PH', {
@@ -27,7 +27,14 @@ const AgentPropertyCard = ({ property, onViewDetails }) => {
         <div className="flex-1">
           <div className="flex justify-between items-start gap-4 mb-4">
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900">{propertyName}</h3>
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-xl font-bold text-gray-900">{name}</h3>
+                {property.units && property.units.length > 0 && (
+                  <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+                    {property.units.length}u
+                  </span>
+                )}
+              </div>
               <p className="text-gray-500 text-sm flex items-center mt-2 font-medium">
                 <svg className="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -38,7 +45,7 @@ const AgentPropertyCard = ({ property, onViewDetails }) => {
             </div>
           </div>
 
-          <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed mb-4">{description}</p>
+          <p className="text-gray-600 text-sm line-clamp-2 leading-relaxed mb-4">{basicDescription}</p>
 
           {/* Price and Button Row */}
           <div className="flex justify-between items-center pt-4 border-t border-gray-200">

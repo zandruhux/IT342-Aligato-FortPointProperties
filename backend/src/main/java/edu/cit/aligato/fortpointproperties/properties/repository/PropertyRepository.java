@@ -13,7 +13,7 @@ import edu.cit.aligato.fortpointproperties.properties.entity.Property;
 public interface PropertyRepository extends JpaRepository<Property, String> {
     
     // Search by property name (case-insensitive)
-    List<Property> findByPropertyNameContainingIgnoreCase(String propertyName);
+    List<Property> findByNameContainingIgnoreCase(String name);
     
     // Search by location
     List<Property> findByLocationContainingIgnoreCase(String location);
@@ -21,11 +21,8 @@ public interface PropertyRepository extends JpaRepository<Property, String> {
     // Search by listing type
     List<Property> findByListingType(String listingType);
     
-    // Search by property type
-    List<Property> findByPropertyType(String propertyType);
-    
     // Find by developer
-    List<Property> findByDeveloperName(String developerName);
+    List<Property> findByDeveloper(String developer);
     
     // Search by price range
     @Query("SELECT p FROM Property p WHERE p.priceRangeMin >= :minPrice AND p.priceRangeMax <= :maxPrice")
@@ -38,5 +35,5 @@ public interface PropertyRepository extends JpaRepository<Property, String> {
     List<Property> findByParkingAvailableTrue();
     
     // Check if property name is unique
-    boolean existsByPropertyName(String propertyName);
+    boolean existsByName(String name);
 }

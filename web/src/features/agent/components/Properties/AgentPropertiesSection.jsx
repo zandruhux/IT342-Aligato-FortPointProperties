@@ -65,7 +65,10 @@ const AgentPropertiesSection = () => {
       let results = [];
       
       if (filterType === 'listing-type') {
-        results = await property.filterAgentByListingType(filterValue);
+        // Filter properties where listingType (comma-separated) includes the filterValue
+        results = properties.filter(p => 
+          p.listingType && p.listingType.includes(filterValue)
+        );
       }
 
       setDisplayedProperties(results);

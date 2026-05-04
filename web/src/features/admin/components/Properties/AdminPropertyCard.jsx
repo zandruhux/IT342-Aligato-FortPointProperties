@@ -26,7 +26,14 @@ export default function AdminPropertyCard({
         <div className="flex-1 flex flex-col justify-between">
           {/* Header */}
           <div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">{property.propertyName}</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold text-slate-900">{property.name}</h3>
+              {property.units && property.units.length > 0 && (
+                <span className="inline-block bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full">
+                  {property.units.length} unit{property.units.length !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-3 gap-4 mb-3">
               <div>
                 <p className="text-xs text-slate-600 uppercase tracking-wide font-bold">Location</p>
@@ -34,14 +41,14 @@ export default function AdminPropertyCard({
               </div>
               <div>
                 <p className="text-xs text-slate-600 uppercase tracking-wide font-bold">Developer</p>
-                <p className="text-sm text-slate-900 font-bold">{property.developerName}</p>
+                <p className="text-sm text-slate-900 font-bold">{property.developer}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-600 uppercase tracking-wide font-bold">Type</p>
+                <p className="text-xs text-slate-600 uppercase tracking-wide font-bold">Listing Type</p>
                 <p className="text-sm text-slate-900 font-bold">{property.listingType}</p>
               </div>
             </div>
-            <p className="text-sm text-slate-700 font-medium line-clamp-2">{property.description}</p>
+            <p className="text-sm text-slate-700 font-medium line-clamp-2">{property.basicDescription}</p>
           </div>
 
           {/* Footer with Price and Buttons */}

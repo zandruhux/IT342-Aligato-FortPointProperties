@@ -1,11 +1,14 @@
 package edu.cit.aligato.fortpointproperties.properties.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import edu.cit.aligato.fortpointproperties.entity.User;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,6 +16,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 @Entity
@@ -24,13 +29,13 @@ public class Property {
     private String id;
 
     @Column(nullable = false)
-    private String propertyName;
+    private String name;
 
     @Column(columnDefinition = "TEXT")
-    private String description;
+    private String basicDescription;
 
     @Column(nullable = false)
-    private String developerName;
+    private String developer;
 
     @Column(nullable = false)
     private Double priceRangeMin;
@@ -42,13 +47,7 @@ public class Property {
     private String location;
 
     @Column(nullable = false)
-    private String propertyType; // e.g., "Condo", "House", "Townhouse"
-
-    @Column(nullable = false)
-    private String unitType; // e.g., "Studio", "1-Bedroom", "2-Bedroom"
-
-    @Column(nullable = false)
-    private String listingType; // "Pre-Selling" or "Ready-For-Occupancy"
+    private String listingType; // Format: "Pre-Selling,RFO" (comma-separated)
 
     @Column(nullable = false)
     private Boolean petFriendly;
@@ -63,13 +62,13 @@ public class Property {
     private String amenities; // JSON or comma-separated list
 
     @Column(columnDefinition = "TEXT")
-    private String priceComputations; // Detailed pricing breakdown
+    private String keySellingPoints; // Marketing copy
 
     @Column(columnDefinition = "TEXT")
-    private String developerLinks; // JSON with links and PDFs
+    private String brochurePdfUrl; // URL to property brochure PDF
 
     @Column(columnDefinition = "TEXT")
-    private String pitchReadyPhrases; // Marketing copy
+    private String inventoryLink; // URL to inventory/floor plan
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -83,27 +82,40 @@ public class Property {
     @JoinColumn(name = "created_by")
     private User createdBy;
 
-
+    /**
+     * One-to-Many relationship with PropertyUnit
+     * CascadeType.ALL ensures units are saved/updated/deleted with property
+     * orphanRemoval = true removes units when they are removed from the list
+     */
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PropertyUnit> units;
 
     // --- Constructors ---
     public Property() {
+        this.units = new ArrayList<>();
     }
 
-    public Property(String propertyName, String developerName, Double priceRangeMin, Double priceRangeMax,
-                    String location, String propertyType, String unitType, String listingType) {
-        this.propertyName = propertyName;
-        this.developerName = developerName;
+    public Property(String name, String developer, Double priceRangeMin, Double priceRangeMax,
+                    String location, String listingType) {
+        this.name = name;
+        this.developer = developer;
         this.priceRangeMin = priceRangeMin;
         this.priceRangeMax = priceRangeMax;
         this.location = location;
-        this.propertyType = propertyType;
-        this.unitType = unitType;
         this.listingType = listingType;
         this.petFriendly = false;
         this.parkingAvailable = false;
+        this.units = new ArrayList<>();
     }
 
-    // --- Getters and Setters ---4
+    // --- Lifecycle Hooks ---
+    @PrePersist
+    protected void onPrePersist() {
+        // If listingType is stored as a transient list, convert to comma-separated string
+        // This method can be extended if needed for list handling
+    }
+
+    // --- Getters and Setters ---
     public User getCreatedBy() {
         return createdBy;
     }
@@ -120,28 +132,28 @@ public class Property {
         this.id = id;
     }
 
-    public String getPropertyName() {
-        return propertyName;
+    public String getName() {
+        return name;
     }
 
-    public void setPropertyName(String propertyName) {
-        this.propertyName = propertyName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public String getBasicDescription() {
+        return basicDescription;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setBasicDescription(String basicDescription) {
+        this.basicDescription = basicDescription;
     }
 
-    public String getDeveloperName() {
-        return developerName;
+    public String getDeveloper() {
+        return developer;
     }
 
-    public void setDeveloperName(String developerName) {
-        this.developerName = developerName;
+    public void setDeveloper(String developer) {
+        this.developer = developer;
     }
 
     public Double getPriceRangeMin() {
@@ -166,22 +178,6 @@ public class Property {
 
     public void setLocation(String location) {
         this.location = location;
-    }
-
-    public String getPropertyType() {
-        return propertyType;
-    }
-
-    public void setPropertyType(String propertyType) {
-        this.propertyType = propertyType;
-    }
-
-    public String getUnitType() {
-        return unitType;
-    }
-
-    public void setUnitType(String unitType) {
-        this.unitType = unitType;
     }
 
     public String getListingType() {
@@ -224,28 +220,28 @@ public class Property {
         this.amenities = amenities;
     }
 
-    public String getPriceComputations() {
-        return priceComputations;
+    public String getKeySellingPoints() {
+        return keySellingPoints;
     }
 
-    public void setPriceComputations(String priceComputations) {
-        this.priceComputations = priceComputations;
+    public void setKeySellingPoints(String keySellingPoints) {
+        this.keySellingPoints = keySellingPoints;
     }
 
-    public String getDeveloperLinks() {
-        return developerLinks;
+    public String getBrochurePdfUrl() {
+        return brochurePdfUrl;
     }
 
-    public void setDeveloperLinks(String developerLinks) {
-        this.developerLinks = developerLinks;
+    public void setBrochurePdfUrl(String brochurePdfUrl) {
+        this.brochurePdfUrl = brochurePdfUrl;
     }
 
-    public String getPitchReadyPhrases() {
-        return pitchReadyPhrases;
+    public String getInventoryLink() {
+        return inventoryLink;
     }
 
-    public void setPitchReadyPhrases(String pitchReadyPhrases) {
-        this.pitchReadyPhrases = pitchReadyPhrases;
+    public void setInventoryLink(String inventoryLink) {
+        this.inventoryLink = inventoryLink;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -262,5 +258,13 @@ public class Property {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<PropertyUnit> getUnits() {
+        return units;
+    }
+
+    public void setUnits(List<PropertyUnit> units) {
+        this.units = units;
     }
 }

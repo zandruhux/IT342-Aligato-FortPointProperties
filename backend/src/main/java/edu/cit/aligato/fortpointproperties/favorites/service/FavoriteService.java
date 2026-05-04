@@ -68,8 +68,8 @@ public class FavoriteService {
                 .map(fav -> new FavoriteDTO(
                         fav.getId(),
                         fav.getProperty().getId(),
-                        fav.getProperty().getPropertyName(),
-                        fav.getProperty().getDescription(),
+                        fav.getProperty().getName(),
+                        fav.getProperty().getBasicDescription(),
                         fav.getProperty().getLocation(),
                         fav.getProperty().getPriceRangeMin(),
                         fav.getProperty().getPriceRangeMax(),

@@ -19,7 +19,7 @@ import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
 
 /**
  * PropertyAgentController - Agents can view all properties with full details
- * Agents have access to: developerName, pitchReadyPhrases, developerLinks, priceComputations
+ * Agents have access to: developer, keySellingPoints, brochurePdfUrl, inventoryLink
  * Agents can also search and filter properties
  */
 @RestController
@@ -40,8 +40,8 @@ public class PropertyAgentController {
             List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
-                            dto.getPropertyName(),
-                            dto.getDescription(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
                             dto.getLocation(),
                             dto.getPriceRangeMin(),
                             dto.getPriceRangeMax()))
@@ -98,11 +98,11 @@ public class PropertyAgentController {
     }
 
     // Get properties by developer name (Agent view)
-    @GetMapping("/developer/{developerName}")
-    public ResponseEntity<ApiResponse<List<PropertyDTO>>> getPropertiesByDeveloper(@PathVariable String developerName) {
+    @GetMapping("/developer/{developer}")
+    public ResponseEntity<ApiResponse<List<PropertyDTO>>> getPropertiesByDeveloper(@PathVariable String developer) {
         try {
             List<PropertyDTO> properties = propertyService.getAllProperties().stream()
-                    .filter(p -> p.getDeveloperName().equalsIgnoreCase(developerName))
+                    .filter(p -> p.getDeveloper() != null && p.getDeveloper().equalsIgnoreCase(developer))
                     .toList();
 
             ApiResponse<List<PropertyDTO>> response = ApiResponse.success(properties);
