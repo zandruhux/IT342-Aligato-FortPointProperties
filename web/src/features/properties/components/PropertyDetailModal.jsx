@@ -11,7 +11,7 @@ import {
   FiUser,
   FiX,
 } from 'react-icons/fi';
-import { useAuthContext } from '../../../shared/context/AuthContext';
+import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { formatPrice, formatPriceRange, getDetailViewPermissions } from '../../../shared/utils/propertyHelpers';
 import * as propertyApi from '../api/propertyApi';
 

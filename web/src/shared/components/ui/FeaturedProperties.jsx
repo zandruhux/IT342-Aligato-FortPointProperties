@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PropertyCard from '../../../features/properties/components/PropertyCard';
 import { PropertyDetailModal } from '../../../features/properties/components';
 import * as propertyApi from '../../../features/properties/api/propertyApi';
-import { useAuthContext } from '../../../shared/context/AuthContext';
+import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { useFavorites } from '../../../features/favorites/hooks/useFavorites';
 
 const FeaturedProperties = ({ limit = 4, showViewAll = true, title = 'Featured Properties'}) => {

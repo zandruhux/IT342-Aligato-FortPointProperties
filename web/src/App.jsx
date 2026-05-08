@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import AppLayout from './app/AppLayout'
 import AppRoutes from './app/Routes'
-import { useAuthContext } from './shared/context/AuthContext'
+import { useAuthContext } from './shared/context/useAuthContext'
 import './App.css'
 
 function App() {

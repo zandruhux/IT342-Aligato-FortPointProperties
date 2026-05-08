@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useAuthContext } from '../../../shared/context/AuthContext';
+import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { useFavorites } from '../../favorites/hooks/useFavorites';
 import { useProperties, usePropertySearch, usePropertyDetailAccess } from '../hooks';
 import { PropertyCard, PropertyDetailModal } from '../components';

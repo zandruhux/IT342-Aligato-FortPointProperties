@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useAuthContext } from '../../../shared/context/AuthContext';
+import { useAuthContext } from '../../../shared/context/useAuthContext';
 import authApi from '../api/authApi';
 
 /**

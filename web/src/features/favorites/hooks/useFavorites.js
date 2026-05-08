@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import * as favoritesApi from '../api/favoritesApi';
-import { useAuthContext } from '../../../shared/context/AuthContext';
+import { useAuthContext } from '../../../shared/context/useAuthContext';
 
 /**
  * useFavorites Hook

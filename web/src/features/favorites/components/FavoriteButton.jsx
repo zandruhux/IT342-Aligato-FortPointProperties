@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFavorites } from '../hooks/useFavorites';
-import { useAuthContext } from '../../../shared/context/AuthContext';
+import { useAuthContext } from '../../../shared/context/useAuthContext';
 
 /**
  * FavoriteButton Component

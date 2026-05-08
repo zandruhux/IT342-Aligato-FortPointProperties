@@ -1,8 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { hasDetailAccess, canEditProperty, canDeleteProperty, canCreateProperty } from '../utils/propertyHelpers';
 import { getRolePermissions, isAdmin, isAgent, isRegisteredUser } from '../utils/roleRules';
-
-const AuthContext = createContext(null);
+import { AuthContext } from './AuthContextBase';
 
 /**
  * AuthProvider - Global authentication provider
@@ -128,15 +127,3 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/**
- * useAuthContext hook
- * Must be used within AuthProvider
- * @returns {Object} Auth context value
- */
-export function useAuthContext() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuthContext must be used within AuthProvider');
-  }
-  return context;
-}

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import * as propertyApi from '../api/propertyApi';
-import { useAuthContext } from '../../../shared/context/AuthContext';
+import { useAuthContext } from '../../../shared/context/useAuthContext';
 
 /**
  * useProperties Hook

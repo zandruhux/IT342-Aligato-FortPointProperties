@@ -1,5 +1,6 @@
 // Context
-export { AuthProvider, useAuthContext } from './context/AuthContext';
+export { AuthProvider } from './context/AuthContext';
+export { useAuthContext } from './context/useAuthContext';
 
 // Utils
 export { API_BASE_URL, ROLES, HTTP_STATUS, API_ENDPOINTS } from './utils/constants';
