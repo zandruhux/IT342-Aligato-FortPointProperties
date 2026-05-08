@@ -15,9 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.aligato.fortpointproperties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.dto.ErrorDetail;
-import edu.cit.aligato.fortpointproperties.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyBasicDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCreateRequest;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyDTO;
@@ -26,9 +27,24 @@ import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitDTO;
 import edu.cit.aligato.fortpointproperties.properties.entity.Property;
 import edu.cit.aligato.fortpointproperties.properties.repository.PropertyRepository;
 import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
-import edu.cit.aligato.fortpointproperties.repository.UserRepository;
 import jakarta.validation.Valid;
 
+/**
+ * PropertyAdminController - Admin-only property management endpoints
+ * 
+ * Functionality:
+ * - Retrieve all properties (full details)
+ * - Retrieve property by ID (full details)
+ * - Create new properties
+ * - Update existing properties
+ * - Delete properties
+ * - Manage property units (create, read, update, delete)
+ * 
+ * Search and Filtering:
+ * - Clients retrieve full property list and perform filtering using applySearchFilters()
+ * - No backend search endpoints - filtering is handled client-side
+ * - This follows the simplified API design pattern
+ */
 @RestController
 @RequestMapping("/admin/properties")
 @PreAuthorize("hasRole('ADMIN')")
@@ -132,6 +148,117 @@ public class PropertyAdminController {
             ErrorDetail error = new ErrorDetail("PROP-005", "Property not found", null);
             ApiResponse<Void> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * Search properties by name (Admin view)
+     * Backend search endpoint for scalability with large datasets
+     */
+    @GetMapping("/search/name")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByName(@org.springframework.web.bind.annotation.RequestParam String name) {
+        try {
+            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(name.toLowerCase()))
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
+                    .toList();
+
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            ErrorDetail error = new ErrorDetail("PROP-019", e.getMessage(), null);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Search properties by location (Admin view)
+     * Backend search endpoint for scalability with large datasets
+     */
+    @GetMapping("/search/location")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByLocation(@org.springframework.web.bind.annotation.RequestParam String location) {
+        try {
+            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
+                    .filter(p -> p.getLocation() != null && p.getLocation().toLowerCase().contains(location.toLowerCase()))
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
+                    .toList();
+
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            ErrorDetail error = new ErrorDetail("PROP-020", e.getMessage(), null);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Search properties by developer (Admin view)
+     * Backend search endpoint for scalability with large datasets
+     */
+    @GetMapping("/search/developer")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByDeveloper(@org.springframework.web.bind.annotation.RequestParam String developer) {
+        try {
+            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
+                    .filter(p -> p.getDeveloper() != null && p.getDeveloper().toLowerCase().contains(developer.toLowerCase()))
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
+                    .toList();
+
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            ErrorDetail error = new ErrorDetail("PROP-021", e.getMessage(), null);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Combined search endpoint for admin supporting optional filters
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> search(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String name,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String location,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String developer,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double minPrice,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) Double maxPrice) {
+        try {
+            List<PropertyBasicDTO> properties = propertyService.searchWithFilters(name, location, developer, minPrice, maxPrice).stream()
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
+                    .toList();
+
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            ErrorDetail error = new ErrorDetail("PROP-022", e.getMessage(), null);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

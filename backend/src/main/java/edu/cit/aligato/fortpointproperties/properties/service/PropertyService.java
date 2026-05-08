@@ -8,12 +8,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import edu.cit.aligato.fortpointproperties.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyBasicDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCreateRequest;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitCreateRequest;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitDTO;
+import edu.cit.aligato.fortpointproperties.favorites.repository.FavoriteRepository;
 import edu.cit.aligato.fortpointproperties.properties.entity.Property;
 import edu.cit.aligato.fortpointproperties.properties.entity.PropertyUnit;
 import edu.cit.aligato.fortpointproperties.properties.repository.PropertyRepository;
@@ -24,10 +25,15 @@ public class PropertyService {
 
     private final PropertyRepository propertyRepository;
     private final PropertyUnitRepository propertyUnitRepository;
+    private final FavoriteRepository favoriteRepository;
 
-    public PropertyService(PropertyRepository propertyRepository, PropertyUnitRepository propertyUnitRepository) {
+    public PropertyService(
+            PropertyRepository propertyRepository,
+            PropertyUnitRepository propertyUnitRepository,
+            FavoriteRepository favoriteRepository) {
         this.propertyRepository = propertyRepository;
         this.propertyUnitRepository = propertyUnitRepository;
+        this.favoriteRepository = favoriteRepository;
     }
 
     // --- CRUD Operations ---
@@ -172,10 +178,12 @@ public class PropertyService {
     /**
      * Delete a property (Admin only)
      */
+    @Transactional
     public void deleteProperty(String id) {
         if (!propertyRepository.existsById(id)) {
             throw new IllegalArgumentException("Property not found");
         }
+        favoriteRepository.deleteByPropertyId(id);
         propertyRepository.deleteById(id);
     }
 
@@ -205,6 +213,31 @@ public class PropertyService {
     public List<PropertyDTO> searchByListingType(String listingType) {
         return propertyRepository.findByListingType(listingType).stream()
                 .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Search properties by price range
+     */
+    public List<PropertyDTO> searchByPriceRange(Double minPrice, Double maxPrice) {
+        return propertyRepository.findByPriceRange(minPrice, maxPrice).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Search properties using multiple optional filters. All parameters are optional;
+     * if a parameter is null it will not be applied. This performs the filtering
+     * on the server side for scalability and to keep client logic simple.
+     */
+    public List<PropertyDTO> searchWithFilters(String name, String location, String developer,
+                                               Double minPrice, Double maxPrice) {
+        return getAllProperties().stream()
+                .filter(p -> name == null || (p.getName() != null && p.getName().toLowerCase().contains(name.toLowerCase())))
+                .filter(p -> location == null || (p.getLocation() != null && p.getLocation().toLowerCase().contains(location.toLowerCase())))
+                .filter(p -> developer == null || (p.getDeveloper() != null && p.getDeveloper().toLowerCase().contains(developer.toLowerCase())))
+                .filter(p -> minPrice == null || (p.getPriceRangeMin() != null && p.getPriceRangeMin() <= (p.getPriceRangeMax() != null ? p.getPriceRangeMax() : Double.MAX_VALUE) && p.getPriceRangeMax() >= minPrice))
+                .filter(p -> maxPrice == null || (p.getPriceRangeMax() != null && p.getPriceRangeMin() <= maxPrice && p.getPriceRangeMax() >= (p.getPriceRangeMin() != null ? p.getPriceRangeMin() : 0)))
                 .collect(Collectors.toList());
     }
 
