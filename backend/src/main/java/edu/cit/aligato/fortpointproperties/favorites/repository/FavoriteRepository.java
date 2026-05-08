@@ -25,4 +25,7 @@ public interface FavoriteRepository extends JpaRepository<Favorite, String> {
 
     // Get count of how many times a property was favorited
     long countByPropertyId(String propertyId);
+
+    // Delete favorites tied to a property before deleting the property itself
+    void deleteByPropertyId(String propertyId);
 }

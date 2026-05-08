@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import edu.cit.aligato.fortpointproperties.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.favorites.dto.FavoriteDTO;
 import edu.cit.aligato.fortpointproperties.favorites.entity.Favorite;
 import edu.cit.aligato.fortpointproperties.favorites.repository.FavoriteRepository;

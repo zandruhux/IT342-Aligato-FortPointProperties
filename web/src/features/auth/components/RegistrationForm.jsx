@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { registerUser } from '../../../api/auth';
+import useAuth from '../hooks/useAuth';
 
 export default function RegistrationForm({ onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -10,13 +10,12 @@ export default function RegistrationForm({ onSwitchToLogin }) {
     confirmPassword: '',
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
     feedback: [],
   });
+  const { register, loading, error, setError } = useAuth();
 
   const validatePasswordStrength = (password) => {
     const feedback = [];
@@ -46,7 +45,8 @@ export default function RegistrationForm({ onSwitchToLogin }) {
       feedback.push('a number');
     }
 
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
+    const specialCharacters = `!@#$%^&*()_+-=[]{};':"\\|,.<>/?`;
+    if ([...password].some((character) => specialCharacters.includes(character))) {
       score++;
     } else {
       feedback.push('a special character');
@@ -71,29 +71,26 @@ export default function RegistrationForm({ onSwitchToLogin }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
     setSuccess('');
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
-      setLoading(false);
       return;
     }
 
     if (passwordStrength.score < 4) {
       setError('Password is not strong enough');
-      setLoading(false);
       return;
     }
 
     try {
-      await registerUser({
-        email: formData.email,
-        password: formData.password,
+      await register({
         firstname: formData.firstName,
         lastname: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
       });
 
       setSuccess('Registration successful! Redirecting to login...');
@@ -101,9 +98,8 @@ export default function RegistrationForm({ onSwitchToLogin }) {
         onSwitchToLogin();
       }, 1500);
     } catch (err) {
-      setError(err.error?.message || err.message || 'Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
+      // Error is already set by useAuth hook
+      console.error('Registration error:', err);
     }
   };
 

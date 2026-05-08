@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.aligato.fortpointproperties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.dto.ErrorDetail;
+import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyBasicDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyDTO;
 import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
@@ -20,7 +20,9 @@ import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
 /**
  * PropertyAgentController - Agents can view all properties with full details
  * Agents have access to: developer, keySellingPoints, brochurePdfUrl, inventoryLink
- * Agents can also search and filter properties
+ * 
+ * Search and filtering is handled client-side by the frontend using applySearchFilters()
+ * This controller provides full data retrieval for agents
  */
 @RestController
 @RequestMapping("/agent/properties")
@@ -33,7 +35,10 @@ public class PropertyAgentController {
         this.propertyService = propertyService;
     }
 
-    // Get all properties (Agent view - card view)
+    /**
+     * Get all properties (Agent view - card view)
+     * Clients perform filtering using applySearchFilters() on frontend
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> getAllProperties() {
         try {
@@ -55,7 +60,9 @@ public class PropertyAgentController {
         }
     }
 
-    // Get property by ID (Agent view - advanced/detailed)
+    /**
+     * Get property by ID (Agent view - advanced/detailed)
+     */
     @GetMapping("/{id}/advanced")
     public ResponseEntity<ApiResponse<PropertyDTO>> getPropertyByIdAdvanced(@PathVariable String id) {
         try {
@@ -69,48 +76,114 @@ public class PropertyAgentController {
         }
     }
 
-    // Search properties by name (Agent view)
+    /**
+     * Search properties by name (Agent view)
+     * Backend search endpoint for scalability with large datasets
+     */
     @GetMapping("/search/name")
-    public ResponseEntity<ApiResponse<List<PropertyDTO>>> searchByName(@RequestParam String name) {
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByName(@RequestParam String name) {
         try {
-            List<PropertyDTO> properties = propertyService.searchByName(name);
-            ApiResponse<List<PropertyDTO>> response = ApiResponse.success(properties);
+            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
+                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(name.toLowerCase()))
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
+                    .toList();
+
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             ErrorDetail error = new ErrorDetail("PROP-012", e.getMessage(), null);
-            ApiResponse<List<PropertyDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Filter properties by listing type (Agent view)
-    @GetMapping("/filter/listing-type")
-    public ResponseEntity<ApiResponse<List<PropertyDTO>>> filterByListingType(@RequestParam String listingType) {
+    /**
+     * Search properties by location (Agent view)
+     * Backend search endpoint for scalability with large datasets
+     */
+    @GetMapping("/search/location")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByLocation(@RequestParam String location) {
         try {
-            List<PropertyDTO> properties = propertyService.searchByListingType(listingType);
-            ApiResponse<List<PropertyDTO>> response = ApiResponse.success(properties);
+            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
+                    .filter(p -> p.getLocation() != null && p.getLocation().toLowerCase().contains(location.toLowerCase()))
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
+                    .toList();
+
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             ErrorDetail error = new ErrorDetail("PROP-013", e.getMessage(), null);
-            ApiResponse<List<PropertyDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Get properties by developer name (Agent view)
-    @GetMapping("/developer/{developer}")
-    public ResponseEntity<ApiResponse<List<PropertyDTO>>> getPropertiesByDeveloper(@PathVariable String developer) {
+    /**
+     * Search properties by developer (Agent view)
+     * Backend search endpoint for scalability with large datasets
+     */
+    @GetMapping("/search/developer")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByDeveloper(@RequestParam String developer) {
         try {
-            List<PropertyDTO> properties = propertyService.getAllProperties().stream()
-                    .filter(p -> p.getDeveloper() != null && p.getDeveloper().equalsIgnoreCase(developer))
+            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
+                    .filter(p -> p.getDeveloper() != null && p.getDeveloper().toLowerCase().contains(developer.toLowerCase()))
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
                     .toList();
 
-            ApiResponse<List<PropertyDTO>> response = ApiResponse.success(properties);
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             ErrorDetail error = new ErrorDetail("PROP-014", e.getMessage(), null);
-            ApiResponse<List<PropertyDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Combined search endpoint supporting optional filters: name, location, developer, minPrice, maxPrice
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String developer,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
+        try {
+            List<PropertyBasicDTO> properties = propertyService.searchWithFilters(name, location, developer, minPrice, maxPrice).stream()
+                    .map(dto -> new PropertyBasicDTO(
+                            dto.getId(),
+                            dto.getName(),
+                            dto.getBasicDescription(),
+                            dto.getLocation(),
+                            dto.getPriceRangeMin(),
+                            dto.getPriceRangeMax()))
+                    .toList();
+
+            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            ErrorDetail error = new ErrorDetail("PROP-015", e.getMessage(), null);
+            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

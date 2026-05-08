@@ -11,21 +11,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import edu.cit.aligato.fortpointproperties.auth.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.auth.dto.AuthResponse;
+import edu.cit.aligato.fortpointproperties.auth.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.auth.service.AuthService;
-import edu.cit.aligato.fortpointproperties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.dto.ErrorDetail;
-import edu.cit.aligato.fortpointproperties.entity.User;
-import edu.cit.aligato.fortpointproperties.repository.UserRepository;
-import edu.cit.aligato.fortpointproperties.security.JwtUtil;
+import edu.cit.aligato.fortpointproperties.shared.security.JwtUtil;
 import jakarta.validation.Valid;
 
 
 @RestController
-@RequestMapping("/api/v1/auth") //TO CHANGE THIS PART
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final AuthService authService;

@@ -10,14 +10,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.aligato.fortpointproperties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.dto.ErrorDetail;
+import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyBasicDTO;
 import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
 
 /**
  * PropertyPublicController - Public (unauthenticated) users can view limited property details
  * Limited to: name, basicDescription, location, priceRangeMin, priceRangeMax
+ * 
+ * Search and filtering is handled client-side by the frontend using applySearchFilters()
+ * This controller provides full data retrieval for the public audience
  */
 @RestController
 @RequestMapping("/properties")
@@ -32,6 +35,7 @@ public class PropertyPublicController {
     /**
      * Get all properties (Public users)
      * Limited fields: name, basicDescription, location, priceRangeMin, priceRangeMax
+     * Clients perform filtering using applySearchFilters() on frontend
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> getAllProperties() {
@@ -84,11 +88,13 @@ public class PropertyPublicController {
 
     /**
      * Search properties by location (Public users)
+     * Backend search endpoint for scalability with large datasets
      */
     @GetMapping("/search/location")
     public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByLocation(@RequestParam String location) {
         try {
-            List<PropertyBasicDTO> properties = propertyService.searchByLocation(location).stream()
+            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
+                    .filter(p -> p.getLocation() != null && p.getLocation().toLowerCase().contains(location.toLowerCase()))
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
                             dto.getName(),
@@ -103,17 +109,21 @@ public class PropertyPublicController {
         } catch (Exception e) {
             ErrorDetail error = new ErrorDetail("PROP-008", e.getMessage(), null);
             ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     /**
-     * Get pet-friendly properties (Public users)
+     * Combined search endpoint for public users supporting optional filters
      */
-    @GetMapping("/filter/pet-friendly")
-    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> getPetFriendly() {
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
         try {
-            List<PropertyBasicDTO> properties = propertyService.getPetFriendlyProperties().stream()
+            List<PropertyBasicDTO> properties = propertyService.searchWithFilters(name, location, null, minPrice, maxPrice).stream()
                     .map(dto -> new PropertyBasicDTO(
                             dto.getId(),
                             dto.getName(),
@@ -126,9 +136,9 @@ public class PropertyPublicController {
             ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("PROP-009", e.getMessage(), null);
+            ErrorDetail error = new ErrorDetail("PROP-024", e.getMessage(), null);
             ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

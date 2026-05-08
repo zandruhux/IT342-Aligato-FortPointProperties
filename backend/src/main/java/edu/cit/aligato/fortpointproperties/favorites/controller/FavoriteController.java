@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.aligato.fortpointproperties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.dto.ErrorDetail;
-import edu.cit.aligato.fortpointproperties.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.favorites.dto.FavoriteDTO;
+import edu.cit.aligato.fortpointproperties.favorites.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.favorites.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.favorites.service.FavoriteService;
-import edu.cit.aligato.fortpointproperties.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 
 /**
  * FavoriteController - Authenticated users can manage their favorite properties

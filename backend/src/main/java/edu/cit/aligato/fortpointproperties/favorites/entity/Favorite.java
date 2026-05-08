@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import edu.cit.aligato.fortpointproperties.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.properties.entity.Property;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -5,9 +5,9 @@ import org.springframework.stereotype.Service;
 
 import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
-import edu.cit.aligato.fortpointproperties.entity.User;
-import edu.cit.aligato.fortpointproperties.repository.UserRepository;
-import edu.cit.aligato.fortpointproperties.util.PasswordValidator;
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.shared.utils.PasswordValidator;
 
 @Service
 public class AuthService {
