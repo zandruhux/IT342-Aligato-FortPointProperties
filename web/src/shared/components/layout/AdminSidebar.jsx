@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiSettings, FiFileText, FiUser, FiLogOut } from 'react-icons/fi';
-import { useAuthContext } from '../../context/AuthContext';
+import { FiHome, FiSettings, FiUser, FiLogOut } from 'react-icons/fi';
+import { useAuthContext } from '../../context/useAuthContext';
 import logo from '../../../assets/FortPointProperties_Logo.jpg';
 
 export default function AdminSidebar() {
@@ -19,7 +19,6 @@ export default function AdminSidebar() {
 
   const navItems = [
     { path: '/admin/properties', label: 'Properties', icon: FiHome },
-    { path: '/admin/articles', label: 'Articles', icon: FiFileText },
     { path: '/admin/settings', label: 'Settings', icon: FiSettings },
     { path: '/admin/profile', label: 'Profile', icon: FiUser }
   ];

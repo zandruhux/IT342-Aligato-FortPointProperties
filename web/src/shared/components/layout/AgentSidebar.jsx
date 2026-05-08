@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuthContext } from '../../context/AuthContext';
+import { useAuthContext } from '../../context/useAuthContext';
 import logo from '../../../assets/FortPointProperties_Logo.jpg';
 
 const AgentSidebar = () => {
@@ -26,7 +26,6 @@ const AgentSidebar = () => {
     { path: '/agent/properties', label: 'Properties', icon: '🏠' },
     { path: '/agent/bulletin', label: 'Bulletin Board', icon: '📋' },
     { path: '/agent/messages', label: 'Messages', icon: '💬' },
-    { path: '/agent/articles', label: 'Articles', icon: '📄' },
     { path: '/agent/profile', label: 'Profile', icon: '👤' },
   ];
 

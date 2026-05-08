@@ -6,10 +6,8 @@ import { PropertyListPage } from '../features/properties/pages'
 import { FavoritePage } from '../features/favorites/pages'
 import { AgentPropertiesListPage as AgentPropertiesPage } from '../features/properties/pages'
 import { AgentBulletin, AgentMessages } from '../features/bulletin'
-import { AgentArticles } from '../features/articles/pages'
 import { AgentProfile } from '../features/profile/pages'
 import { AdminPropertiesListPage as AdminPropertiesPage } from '../features/properties/pages'
-import { AdminArticles } from '../features/articles/pages'
 import { AdminSettings } from '../features/settings'
 import { AdminProfile } from '../features/profile/pages'
 
@@ -49,10 +47,6 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
         element={isLoggedIn ? <AgentMessages onLogout={onLogout} /> : <Navigate to="/login" />} 
       />
       <Route 
-        path="/agent/articles" 
-        element={isLoggedIn ? <AgentArticles onLogout={onLogout} /> : <Navigate to="/login" />} 
-      />
-      <Route 
         path="/agent/profile" 
         element={isLoggedIn ? <AgentProfile onLogout={onLogout} /> : <Navigate to="/login" />} 
       />
@@ -61,10 +55,6 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       <Route 
         path="/admin/properties" 
         element={isLoggedIn ? <AdminPropertiesPage onLogout={onLogout} /> : <Navigate to="/login" />} 
-      />
-      <Route 
-        path="/admin/articles" 
-        element={isLoggedIn ? <AdminArticles onLogout={onLogout} /> : <Navigate to="/login" />} 
       />
       <Route 
         path="/admin/settings" 

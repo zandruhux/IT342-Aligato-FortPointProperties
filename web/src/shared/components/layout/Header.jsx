@@ -43,13 +43,6 @@ export default function Header({ isLoggedIn, onLogout }) {
               Favorites
             </Link>
           )}
-          <Link
-            to="/articles"
-            className="hover:opacity-80 transition no-underline"
-            style={{ color: '#747474' }}
-          >
-            Articles
-          </Link>
         </div>
 
         {isLoggedIn ? (

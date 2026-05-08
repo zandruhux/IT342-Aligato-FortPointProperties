@@ -208,7 +208,6 @@ export default function HomePage() {
             <div>
               <h4 className="text-white font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Articles</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Market Reports</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Buyer Guide</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
