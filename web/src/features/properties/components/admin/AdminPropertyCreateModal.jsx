@@ -55,7 +55,7 @@ export default function AdminPropertyCreateModal({ isOpen, onClose, onSubmit, is
         ? prev.listingType.filter(t => t !== type)
         : [...prev.listingType, type]
     }));
-    if (errors[listingType]) {
+    if (errors.listingType) {
         setErrors(prev => ({ ...prev, listingType: undefined }));
     }
   };
