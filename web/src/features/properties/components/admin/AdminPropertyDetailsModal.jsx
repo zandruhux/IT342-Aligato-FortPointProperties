@@ -1,16 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FiX, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 
-export default function AdminPropertyDetailsModal({ 
-  isOpen, 
-  onClose, 
+const normalizePropertyForForm = (property) => {
+  const listingTypeArray = property?.listingType
+    ? property.listingType.split(',').map(t => t.trim())
+    : [];
+
+  return {
+    ...property,
+    listingType: listingTypeArray,
+    units: property?.units || []
+  };
+};
+
+export default function AdminPropertyDetailsModal(props) {
+  if (!props.isOpen || !props.property) return null;
+
+  return (
+    <AdminPropertyDetailsModalContent
+      key={`${props.property.id || props.property.name || 'property'}-${props.mode || 'view'}`}
+      {...props}
+    />
+  );
+}
+
+function AdminPropertyDetailsModalContent({
+  onClose,
   property,
   onUpdate,
   isLoading,
   mode = 'view' // 'view' or 'edit'
 }) {
   const [isEditMode, setIsEditMode] = useState(mode === 'edit');
-  const [formData, setFormData] = useState(property || {});
+  const [formData, setFormData] = useState(() => normalizePropertyForForm(property));
   const [errors, setErrors] = useState({});
 
   // Unit management state
@@ -27,21 +49,6 @@ export default function AdminPropertyDetailsModal({
   const [editingUnitIndex, setEditingUnitIndex] = useState(null);
   const [unitErrors, setUnitErrors] = useState({});
   const financingOptions = ['Cash Only', 'Bank Financing', 'In-House'];
-
-  useEffect(() => {
-    if (property) {
-      // Parse listingType from comma-separated string to array
-      const listingTypeArray = property.listingType 
-        ? property.listingType.split(',').map(t => t.trim())
-        : [];
-      
-      setFormData({
-        ...property,
-        listingType: listingTypeArray,
-        units: property.units || []
-      });
-    }
-  }, [property]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -173,8 +180,6 @@ export default function AdminPropertyDetailsModal({
       onUpdate(formData);
     }
   };
-
-  if (!isOpen || !property) return null;
 
   return (
     <div className="fixed inset-0 bg-transparent backdrop-brightness-30 flex items-center justify-center z-50 p-4">
