@@ -1,4 +1,4 @@
-package edu.cit.aligato.fortpointproperties.dto;
+package edu.cit.aligato.fortpointproperties.auth.dto;
 
 public class ErrorDetail {
     private String code;
@@ -11,7 +11,6 @@ public class ErrorDetail {
         this.details = details;
     }
 
-    // Getters and Setters
     public String getCode() {
         return code;
     }

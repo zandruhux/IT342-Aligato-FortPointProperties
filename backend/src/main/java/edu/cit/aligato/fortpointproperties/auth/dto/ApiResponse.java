@@ -1,4 +1,4 @@
-package edu.cit.aligato.fortpointproperties.dto;
+package edu.cit.aligato.fortpointproperties.auth.dto;
 
 import java.time.ZonedDateTime;
 
@@ -23,7 +23,6 @@ public class ApiResponse<T> {
         return new ApiResponse<>(false, null, error);
     }
 
-    // Getters and Setters
     public boolean isSuccess() {
         return success;
     }
