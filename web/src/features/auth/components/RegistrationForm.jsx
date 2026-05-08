@@ -45,7 +45,8 @@ export default function RegistrationForm({ onSwitchToLogin }) {
       feedback.push('a number');
     }
 
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?]/.test(password)) {
+    const specialCharacters = `!@#$%^&*()_+-=[]{};':"\\|,.<>/?`;
+    if ([...password].some((character) => specialCharacters.includes(character))) {
       score++;
     } else {
       feedback.push('a special character');
