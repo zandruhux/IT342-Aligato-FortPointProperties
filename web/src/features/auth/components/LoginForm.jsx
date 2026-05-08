@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { loginUser } from '../../../api/auth';
+import useAuth from '../hooks/useAuth';
 
 export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
   const [formData, setFormData] = useState({
@@ -7,9 +7,8 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
     password: '',
   });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const { login, loading, error, setError } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,24 +21,10 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
     setSuccess('');
 
     try {
-      const response = await loginUser(formData);
-
-      // Store tokens and user info with new nested structure
-      localStorage.setItem('accessToken', response.accessToken);
-      localStorage.setItem('refreshToken', response.refreshToken);
-      localStorage.setItem('user', JSON.stringify({
-        id: response.user.id,
-        email: response.user.email,
-        firstname: response.user.firstname,
-        lastname: response.user.lastname,
-        role: response.user.role,
-      }));
-
+      await login(formData);
       setSuccess('Login successful! Redirecting...');
 
       // Navigate to home page after brief delay
@@ -47,9 +32,8 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
         if (onLoginSuccess) onLoginSuccess();
       }, 1500);
     } catch (err) {
-      setError(err.error?.message || err.message || 'Login failed. Please check your credentials.');
-    } finally {
-      setLoading(false);
+      // Error is already set by useAuth hook
+      console.error('Login error:', err);
     }
   };
 
