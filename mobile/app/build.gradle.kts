@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.userregistrationandauthentication"
+    namespace = "com.example.fortpointproperties"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.userregistrationandauthentication"
+        applicationId = "com.example.fortpointproperties"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

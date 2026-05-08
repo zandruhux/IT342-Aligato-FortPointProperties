@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "User Registration and Authentication"
+rootProject.name = "Fort Point Properties"
 include(":app")
