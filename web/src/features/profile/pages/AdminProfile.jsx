@@ -12,7 +12,7 @@ export default function AdminProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   const getInitials = (name) => {
     return name

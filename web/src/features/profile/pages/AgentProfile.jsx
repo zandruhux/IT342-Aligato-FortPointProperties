@@ -12,7 +12,7 @@ export default function AgentProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   const getInitials = (name) => {
     return name
