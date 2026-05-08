@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import PropertySearchFilter from '../Properties/PropertySearchFilter';
-import AgentPropertyCard from '../Properties/AgentPropertyCard';
-import AgentPropertyDetailsModal from '../Properties/AgentPropertyDetailsModal';
-import { property } from '../../../../api/property';
+import PropertySearchFilter from '../PropertySearchFilter';
+import PropertyCard from '../PropertyCard';
+import AgentPropertyDetailsModal from './AgentPropertyDetailsModal';
+import * as propertyApi from '../../api/propertyApi';
 
 const AgentPropertiesSection = () => {
   const [properties, setProperties] = useState([]);
@@ -23,7 +23,7 @@ const AgentPropertiesSection = () => {
   const fetchAllProperties = async () => {
     setLoading(true);
     try {
-      const data = await property.getAllAgentProperties();
+      const data = await propertyApi.getAgentAllProperties();
       setProperties(data);
       setDisplayedProperties(data);
       setHasSearched(false);
@@ -42,9 +42,9 @@ const AgentPropertiesSection = () => {
       let results = [];
       
       if (searchType === 'name') {
-        results = await property.searchAgentByName(searchValue);
+        results = await propertyApi.searchAgentPropertyByName(searchValue);
       } else if (searchType === 'developer') {
-        results = await property.searchAgentByDeveloper(searchValue);
+        results = await propertyApi.searchAgentPropertyByDeveloper(searchValue);
       }
 
       setDisplayedProperties(results);
@@ -124,10 +124,10 @@ const AgentPropertiesSection = () => {
         {displayedProperties && displayedProperties.length > 0 ? (
           <div className="space-y-2">
             {displayedProperties.map((prop) => (
-              <AgentPropertyCard
+              <PropertyCard
                 key={prop.id}
                 property={prop}
-                onViewDetails={handleViewDetails}
+                onView={handleViewDetails}
               />
             ))}
           </div>

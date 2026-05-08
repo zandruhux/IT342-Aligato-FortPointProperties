@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { property } from '../../../../api/property';
-import AdminPropertyCard from './AdminPropertyCard';
-import PropertySearchFilter from './PropertySearchFilter';
+import * as propertyApi from '../../api/propertyApi';
+import PropertyCard from '../PropertyCard';
+import PropertySearchFilter from '../PropertySearchFilter';
 import AdminPropertyCreateModal from './AdminPropertyCreateModal';
 import AdminPropertyDetailsModal from './AdminPropertyDetailsModal';
 import { FiPlus, FiAlertCircle } from 'react-icons/fi';
@@ -27,7 +27,7 @@ export default function AdminPropertiesSection() {
     setIsLoading(true);
     setError('');
     try {
-      const data = await property.getAllAdminProperties();
+      const data = await propertyApi.getAdminAllProperties();
       setProperties(Array.isArray(data) ? data : []);
     } catch (err) {
       setError('Failed to fetch properties. Please try again.');
@@ -41,7 +41,7 @@ export default function AdminPropertiesSection() {
     setIsLoading(true);
     setError('');
     try {
-      const newProperty = await property.createProperty(formData);
+      const newProperty = await propertyApi.createProperty(formData);
       setProperties([...properties, newProperty]);
       setIsCreateModalOpen(false);
       setSuccess('Property created successfully!');
@@ -58,7 +58,7 @@ export default function AdminPropertiesSection() {
     setIsLoading(true);
     setError('');
     try {
-      const data = await property.getAdminPropertyById(propertyId);
+      const data = await propertyApi.getAdminPropertyById(propertyId);
       setSelectedProperty(data);
       setDetailsMode('view');
       setIsDetailsModalOpen(true);
@@ -74,7 +74,7 @@ export default function AdminPropertiesSection() {
     setIsLoading(true);
     setError('');
     try {
-      const data = await property.getAdminPropertyById(propertyId);
+      const data = await propertyApi.getAdminPropertyById(propertyId);
       setSelectedProperty(data);
       setDetailsMode('edit');
       setIsDetailsModalOpen(true);
@@ -90,7 +90,7 @@ export default function AdminPropertiesSection() {
     setIsLoading(true);
     setError('');
     try {
-      const updated = await property.updateProperty(selectedProperty.id, updatedData);
+      const updated = await propertyApi.updateProperty(selectedProperty.id, updatedData);
       setProperties(properties.map(p => p.id === selectedProperty.id ? updated : p));
       setIsDetailsModalOpen(false);
       setSelectedProperty(null);
@@ -112,7 +112,7 @@ export default function AdminPropertiesSection() {
     setIsLoading(true);
     setError('');
     try {
-      await property.deleteProperty(propertyId);
+      await propertyApi.deleteProperty(propertyId);
       setProperties(properties.filter(p => p.id !== propertyId));
       setSuccess('Property deleted successfully!');
       setTimeout(() => setSuccess(''), 3000);
@@ -130,11 +130,11 @@ export default function AdminPropertiesSection() {
     try {
       let results = [];
       if (searchBy === 'name') {
-        results = await property.searchPropertyByName(searchTerm);
+        results = await propertyApi.searchAdminPropertyByName(searchTerm);
       } else if (searchBy === 'developer') {
-        results = await property.searchPropertyByDeveloper(searchTerm);
+        results = await propertyApi.searchAdminPropertyByDeveloper(searchTerm);
       } else if (searchBy === 'location') {
-        results = await property.searchPropertyByLocation(searchTerm);
+        results = await propertyApi.searchAdminPropertyByLocation(searchTerm);
       }
       setProperties(Array.isArray(results) ? results : []);
     } catch (err) {
@@ -214,7 +214,7 @@ export default function AdminPropertiesSection() {
       ) : (
         <div className="space-y-4">
           {properties.map(prop => (
-            <AdminPropertyCard
+            <PropertyCard
               key={prop.id}
               property={prop}
               onView={handleViewProperty}
