@@ -1,9 +1,11 @@
 export const API_BASE_URL = 'http://localhost:8080';
+export const WS_BASE_URL = `${API_BASE_URL}/ws`;
 
 export const ROLES = {
   ADMIN: 'ADMIN',
   AGENT: 'AGENT',
   USER: 'USER',
+  REGISTERED_USER: 'REGISTERED_USER',
   PUBLIC: 'PUBLIC',
 };
 
@@ -79,5 +81,10 @@ export const API_ENDPOINTS = {
     REMOVE: (propertyId) => `/user/favorites/${propertyId}`,
     CHECK: (propertyId) => `/user/favorites/${propertyId}/check`,
     COUNT: '/user/favorites/count',
+  },
+
+  MESSAGING: {
+    CONVERSATIONS: '/api/messaging/conversations',
+    MESSAGES: (conversationId) => `/api/messaging/conversations/${conversationId}/messages`,
   },
 };
