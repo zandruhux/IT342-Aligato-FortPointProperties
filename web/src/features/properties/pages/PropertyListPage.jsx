@@ -90,7 +90,7 @@ export default function PropertyListPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">All Properties</h1>
           <p className="text-gray-600 text-lg">
-            Handpicked properties curated for discerning buyers
+            Handpicked properties curated for discerning clients
           </p>
         </div>
 
