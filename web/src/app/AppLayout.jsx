@@ -1,6 +1,7 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom'
 import Header from '../shared/components/layout/Header'
+import FloatingChatWidget from '../features/messaging/components/FloatingChatWidget'
 
 /**
  * AppLayout - Global application layout wrapper
@@ -26,6 +27,7 @@ const AppLayout = ({ children, isLoggedIn, onLogout }) => {
       <main className="flex-1">
         {children}
       </main>
+      <FloatingChatWidget />
     </div>
   )
 }
