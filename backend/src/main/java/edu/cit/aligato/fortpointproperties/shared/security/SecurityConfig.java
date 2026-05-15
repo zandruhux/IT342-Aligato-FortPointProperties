@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -62,11 +64,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // --- PUBLIC ENDPOINTS ---
                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/properties").permitAll()
                 .requestMatchers("/properties/{id}").permitAll()
                 .requestMatchers("/properties/search/location").permitAll()
 
                 // --- AUTHENTICATED USER ENDPOINTS ---
+                .requestMatchers("/api/messaging/**").hasAnyRole("REGISTERED_USER", "AGENT")
                 .requestMatchers("/api/v1/auth/profile").authenticated()
                 .requestMatchers("/user/properties").authenticated()
                 .requestMatchers("/user/properties/{id}/advanced").authenticated()
