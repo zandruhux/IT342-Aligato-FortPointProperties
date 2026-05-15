@@ -211,3 +211,53 @@ WHERE id NOT IN (SELECT DISTINCT unit_id FROM property_unit_financing);
 -- 5. monthly_equity and total_selling_price are MANUALLY ENTERED (not calculated)
 --    Future formula (if needed): totalSellingPrice = reservationFee + (monthlyEquity * equityPeriodMonths)
 -- 6. listingType is inherited from parent property (not duplicated in units)
+
+-- ============================================
+-- PHASE 3: REAL-TIME MESSAGING
+-- ============================================
+-- Date: 2026-05-15
+-- Adds persistent conversations and messages for registered users and agents
+
+CREATE TABLE IF NOT EXISTS conversations (
+    id BIGSERIAL PRIMARY KEY,
+    registered_user_id VARCHAR(36) NOT NULL,
+    assigned_agent_id VARCHAR(36),
+    status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_conversations_status CHECK (status IN ('OPEN', 'ASSIGNED', 'CLOSED')),
+    CONSTRAINT fk_conversations_registered_user FOREIGN KEY (registered_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_conversations_assigned_agent FOREIGN KEY (assigned_agent_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id BIGSERIAL PRIMARY KEY,
+    conversation_id BIGINT NOT NULL,
+    sender_id VARCHAR(36) NOT NULL,
+    sender_role VARCHAR(30) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_messages_sender_role CHECK (sender_role IN ('REGISTERED_USER', 'AGENT')),
+    CONSTRAINT fk_messages_conversation FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+    CONSTRAINT fk_messages_sender FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversations_registered_user_id ON conversations(registered_user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_assigned_agent_id ON conversations(assigned_agent_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_status ON conversations(status);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id_created_at ON messages(conversation_id, created_at);
+
+CREATE OR REPLACE FUNCTION update_conversations_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_conversations_updated_at ON conversations;
+
+CREATE TRIGGER trigger_conversations_updated_at
+BEFORE UPDATE ON conversations
+FOR EACH ROW
+EXECUTE FUNCTION update_conversations_updated_at();
