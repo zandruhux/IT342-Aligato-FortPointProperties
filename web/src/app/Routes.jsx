@@ -5,7 +5,8 @@ import HomePage from '../features/public/pages'
 import { PropertyListPage } from '../features/properties/pages'
 import { FavoritePage } from '../features/favorites/pages'
 import { AgentPropertiesListPage as AgentPropertiesPage } from '../features/properties/pages'
-import { AgentBulletin, AgentMessages } from '../features/bulletin'
+import { AgentBulletin } from '../features/bulletin'
+import { AgentInboxPage, RegisteredUserMessagesPage } from '../features/messaging'
 import { AgentProfile } from '../features/profile/pages'
 import { AdminPropertiesListPage as AdminPropertiesPage } from '../features/properties/pages'
 import { AdminSettings } from '../features/settings'
@@ -32,6 +33,10 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
         path="/favorites" 
         element={isLoggedIn ? <FavoritePage /> : <Navigate to="/login" />} 
       />
+      <Route
+        path="/messages"
+        element={isLoggedIn ? <RegisteredUserMessagesPage /> : <Navigate to="/login" />}
+      />
 
       {/* Agent Routes - Authentication + Agent role required */}
       <Route 
@@ -44,7 +49,7 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       />
       <Route 
         path="/agent/messages" 
-        element={isLoggedIn ? <AgentMessages onLogout={onLogout} /> : <Navigate to="/login" />} 
+        element={isLoggedIn ? <AgentInboxPage onLogout={onLogout} /> : <Navigate to="/login" />}
       />
       <Route 
         path="/agent/profile" 

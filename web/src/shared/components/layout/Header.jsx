@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuthContext } from '../../context/useAuthContext';
 import logo from '../../../assets/FortPointProperties_Logo.jpg';
 
 export default function Header({ isLoggedIn, onLogout }) {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const canUseMessages = isLoggedIn && (user?.role === 'registered_user' || user?.role === 'USER' || user?.role === 'REGISTERED_USER');
 
   return (
     <header className="bg-white shadow-sm">
@@ -41,6 +44,15 @@ export default function Header({ isLoggedIn, onLogout }) {
               style={{ color: '#747474' }}
             >
               Favorites
+            </Link>
+          )}
+          {canUseMessages && (
+            <Link
+              to="/messages"
+              className="hover:opacity-80 transition no-underline"
+              style={{ color: '#747474' }}
+            >
+              Messages
             </Link>
           )}
         </div>
