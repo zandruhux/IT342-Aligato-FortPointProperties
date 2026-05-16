@@ -7,6 +7,7 @@ export default function Header({ isLoggedIn, onLogout }) {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const canUseMessages = isLoggedIn && (user?.role === 'registered_user' || user?.role === 'USER' || user?.role === 'REGISTERED_USER');
+  const canUseCareer = canUseMessages;
 
   return (
     <header className="bg-white shadow-sm">
@@ -44,6 +45,15 @@ export default function Header({ isLoggedIn, onLogout }) {
               style={{ color: '#747474' }}
             >
               Favorites
+            </Link>
+          )}
+          {canUseCareer && (
+            <Link
+              to="/career"
+              className="hover:opacity-80 transition no-underline"
+              style={{ color: '#747474' }}
+            >
+              Career
             </Link>
           )}
           {canUseMessages && (

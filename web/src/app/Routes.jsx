@@ -11,6 +11,34 @@ import { AgentProfile } from '../features/profile/pages'
 import { AdminPropertiesListPage as AdminPropertiesPage } from '../features/properties/pages'
 import { AdminSettings } from '../features/settings'
 import { AdminProfile } from '../features/profile/pages'
+import {
+  AdminCareerApplicationDetailsPage,
+  AdminCareerApplicationsPage,
+  AgentDashboardPage,
+  CareerApplicationPage,
+} from '../features/careerApplication'
+import { useAuthContext } from '../shared/context/useAuthContext'
+
+const normalizeRole = (role) => {
+  if (role === 'registered_user' || role === 'USER') {
+    return 'REGISTERED_USER'
+  }
+  return role || ''
+}
+
+const RequireRole = ({ isLoggedIn, allowedRoles, children }) => {
+  const { user } = useAuthContext()
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" />
+  }
+
+  if (!allowedRoles.includes(normalizeRole(user?.role))) {
+    return <Navigate to="/" replace />
+  }
+
+  return children
+}
 
 /**
  * AppRoutes - Centralized route definitions
@@ -34,40 +62,108 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
         element={isLoggedIn ? <FavoritePage /> : <Navigate to="/login" />} 
       />
       <Route
+        path="/career"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['REGISTERED_USER']}>
+            <CareerApplicationPage />
+          </RequireRole>
+        }
+      />
+      <Route
         path="/messages"
         element={isLoggedIn ? <RegisteredUserMessagesPage /> : <Navigate to="/login" />}
       />
 
       {/* Agent Routes - Authentication + Agent role required */}
+      <Route
+        path="/agent/dashboard"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
+            <AgentDashboardPage onLogout={onLogout} />
+          </RequireRole>
+        }
+      />
       <Route 
         path="/agent/properties" 
-        element={isLoggedIn ? <AgentPropertiesPage onLogout={onLogout} /> : <Navigate to="/login" />} 
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
+            <AgentPropertiesPage onLogout={onLogout} />
+          </RequireRole>
+        } 
       />
       <Route 
         path="/agent/bulletin" 
-        element={isLoggedIn ? <AgentBulletin onLogout={onLogout} /> : <Navigate to="/login" />} 
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
+            <AgentBulletin onLogout={onLogout} />
+          </RequireRole>
+        } 
       />
       <Route 
         path="/agent/messages" 
-        element={isLoggedIn ? <AgentInboxPage onLogout={onLogout} /> : <Navigate to="/login" />}
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
+            <AgentInboxPage onLogout={onLogout} />
+          </RequireRole>
+        }
       />
       <Route 
         path="/agent/profile" 
-        element={isLoggedIn ? <AgentProfile onLogout={onLogout} /> : <Navigate to="/login" />} 
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
+            <AgentProfile onLogout={onLogout} />
+          </RequireRole>
+        } 
       />
 
       {/* Admin Routes - Authentication + Admin role required */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <AdminPropertiesPage onLogout={onLogout} />
+          </RequireRole>
+        }
+      />
       <Route 
         path="/admin/properties" 
-        element={isLoggedIn ? <AdminPropertiesPage onLogout={onLogout} /> : <Navigate to="/login" />} 
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <AdminPropertiesPage onLogout={onLogout} />
+          </RequireRole>
+        } 
+      />
+      <Route
+        path="/admin/career-applications"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <AdminCareerApplicationsPage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/career-applications/:id"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <AdminCareerApplicationDetailsPage />
+          </RequireRole>
+        }
       />
       <Route 
         path="/admin/settings" 
-        element={isLoggedIn ? <AdminSettings onLogout={onLogout} /> : <Navigate to="/login" />} 
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <AdminSettings onLogout={onLogout} />
+          </RequireRole>
+        } 
       />
       <Route 
         path="/admin/profile" 
-        element={isLoggedIn ? <AdminProfile onLogout={onLogout} /> : <Navigate to="/login" />} 
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <AdminProfile onLogout={onLogout} />
+          </RequireRole>
+        } 
       />
 
       {/* Auth Routes - Only accessible when not logged in */}

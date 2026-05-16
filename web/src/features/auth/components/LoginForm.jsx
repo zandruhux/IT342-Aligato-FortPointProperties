@@ -24,12 +24,12 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
     setSuccess('');
 
     try {
-      await login(formData);
+      const userData = await login(formData);
       setSuccess('Login successful! Redirecting...');
 
       // Navigate to home page after brief delay
       setTimeout(() => {
-        if (onLoginSuccess) onLoginSuccess();
+        if (onLoginSuccess) onLoginSuccess(userData);
       }, 1500);
     } catch (err) {
       // Error is already set by useAuth hook

@@ -18,28 +18,28 @@ function App() {
   // Handle role-based redirects
   useEffect(() => {
     if (isLoggedIn && user && location.pathname === '/') {
-      const role = user.role || ''
+      const role = normalizeRole(user.role)
       
       // Redirect ADMIN to admin dashboard
       if (role === 'ADMIN') {
-        navigate('/admin/properties')
+        navigate('/admin/dashboard')
       }
       
       // Redirect AGENT to agent dashboard
       if (role === 'AGENT') {
-        navigate('/agent/properties')
+        navigate('/agent/dashboard')
       }
     }
   }, [isLoggedIn, user, location.pathname, navigate])
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (loggedInUser) => {
     // Check user role and navigate accordingly
-    const role = user?.role || ''
+    const role = normalizeRole(loggedInUser?.role || user?.role)
     
     if (role === 'ADMIN') {
-      navigate('/admin/properties')
+      navigate('/admin/dashboard')
     } else if (role === 'AGENT') {
-      navigate('/agent/properties')
+      navigate('/agent/dashboard')
     } else {
       navigate('/')
     }
@@ -59,6 +59,13 @@ function App() {
       />
     </AppLayout>
   )
+}
+
+const normalizeRole = (role) => {
+  if (role === 'registered_user' || role === 'USER') {
+    return 'REGISTERED_USER'
+  }
+  return role || ''
 }
 
 export default App

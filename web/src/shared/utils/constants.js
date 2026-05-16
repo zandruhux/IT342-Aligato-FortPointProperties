@@ -87,4 +87,14 @@ export const API_ENDPOINTS = {
     CONVERSATIONS: '/api/messaging/conversations',
     MESSAGES: (conversationId) => `/api/messaging/conversations/${conversationId}/messages`,
   },
+
+  CAREER_APPLICATIONS: {
+    SUBMIT: '/api/career-applications',
+    ME: '/api/career-applications/me',
+    ADMIN_ALL: '/api/admin/career-applications',
+    ADMIN_BY_ID: (id) => `/api/admin/career-applications/${id}`,
+    RESUME: (id) => `/api/admin/career-applications/${id}/resume`,
+    ACCEPT: (id) => `/api/admin/career-applications/${id}/accept`,
+    REJECT: (id) => `/api/admin/career-applications/${id}/reject`,
+  },
 };

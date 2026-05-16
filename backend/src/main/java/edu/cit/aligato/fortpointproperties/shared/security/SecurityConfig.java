@@ -71,6 +71,8 @@ public class SecurityConfig {
 
                 // --- AUTHENTICATED USER ENDPOINTS ---
                 .requestMatchers("/api/messaging/**").hasAnyRole("REGISTERED_USER", "AGENT")
+                .requestMatchers("/api/career-applications").hasRole("REGISTERED_USER")
+                .requestMatchers("/api/career-applications/me").hasAnyRole("REGISTERED_USER", "AGENT")
                 .requestMatchers("/api/v1/auth/profile").authenticated()
                 .requestMatchers("/user/properties").authenticated()
                 .requestMatchers("/user/properties/{id}/advanced").authenticated()
@@ -97,6 +99,8 @@ public class SecurityConfig {
                 .requestMatchers("/admin/properties/search/location").hasRole("ADMIN")
                 .requestMatchers("/admin/properties/search/developer").hasRole("ADMIN")
                 .requestMatchers("/api/v1/auth/users").hasRole("ADMIN")
+                .requestMatchers("/api/admin/career-applications").hasRole("ADMIN")
+                .requestMatchers("/api/admin/career-applications/**").hasRole("ADMIN")
 
                 // fallback
                 .anyRequest().authenticated()
