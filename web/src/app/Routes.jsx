@@ -12,6 +12,12 @@ import { AdminPropertiesListPage as AdminPropertiesPage } from '../features/prop
 import { AdminSettings } from '../features/settings'
 import { AdminProfile } from '../features/profile/pages'
 import {
+  ArticleCreatePage,
+  ArticleDetailsPage,
+  ArticleEditPage,
+  ArticleListPage,
+} from '../features/article'
+import {
   AdminCareerApplicationDetailsPage,
   AdminCareerApplicationsPage,
   AgentDashboardPage,
@@ -55,8 +61,17 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       {/* Public Routes - No authentication required */}
       <Route path="/" element={<HomePage />} />
       <Route path="/properties" element={<PropertyListPage />} />
+      <Route path="/blogs" element={<ArticleListPage />} />
 
       {/* Registered Users - Authentication required */}
+      <Route
+        path="/blogs/:id"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN', 'AGENT', 'REGISTERED_USER']}>
+            <ArticleDetailsPage />
+          </RequireRole>
+        }
+      />
       <Route 
         path="/favorites" 
         element={isLoggedIn ? <FavoritePage /> : <Navigate to="/login" />} 
@@ -164,6 +179,22 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
             <AdminProfile onLogout={onLogout} />
           </RequireRole>
         } 
+      />
+      <Route
+        path="/admin/blogs/create"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <ArticleCreatePage />
+          </RequireRole>
+        }
+      />
+      <Route
+        path="/admin/blogs/:id/edit"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <ArticleEditPage />
+          </RequireRole>
+        }
       />
 
       {/* Auth Routes - Only accessible when not logged in */}
