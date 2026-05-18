@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FiHome, FiInbox, FiLogOut, FiMessageSquare, FiUser } from 'react-icons/fi';
+import { FiFileText, FiHome, FiInbox, FiLogOut, FiMessageSquare, FiUser } from 'react-icons/fi';
 import { useAuthContext } from '../../context/useAuthContext';
 import logo from '../../../assets/FortPointProperties_Logo.jpg';
 
@@ -25,6 +25,7 @@ const AgentSidebar = () => {
   const navItems = [
     { path: '/agent/dashboard', label: 'Dashboard', icon: FiHome },
     { path: '/agent/properties', label: 'Properties', icon: FiHome },
+    { path: '/blogs', label: 'Blogs', icon: FiFileText },
     { path: '/agent/bulletin', label: 'Bulletin Board', icon: FiInbox },
     { path: '/agent/messages', label: 'Messages', icon: FiMessageSquare },
     { path: '/agent/profile', label: 'Profile', icon: FiUser },
