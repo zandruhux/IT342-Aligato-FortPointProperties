@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Environment variables
+.env
+.env.local
+!.env.example
 
 # uploads
 uploads/
