@@ -20,7 +20,7 @@ export default function ArticleListPage() {
   const { isLoggedIn, user } = useAuthContext();
   const [showPrompt, setShowPrompt] = useState(false);
   const [deletingId, setDeletingId] = useState('');
-  const { articles, setArticles, loading, error } = useArticles(isLoggedIn);
+  const { articles, setArticles, loading, error } = useArticles();
   const articleActions = useArticleActions();
 
   const role = normalizeRole(user?.role);

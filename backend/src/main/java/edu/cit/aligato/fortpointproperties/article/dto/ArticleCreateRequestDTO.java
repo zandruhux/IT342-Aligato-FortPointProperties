@@ -1,15 +1,13 @@
 package edu.cit.aligato.fortpointproperties.article.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class ArticleCreateRequestDTO {
     private String title;
     private String description;
+    private MultipartFile coverPhoto;
 
     public ArticleCreateRequestDTO() {
-    }
-
-    public ArticleCreateRequestDTO(String title, String description) {
-        this.title = title;
-        this.description = description;
     }
 
     public String getTitle() {
@@ -26,5 +24,13 @@ public class ArticleCreateRequestDTO {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public MultipartFile getCoverPhoto() {
+        return coverPhoto;
+    }
+
+    public void setCoverPhoto(MultipartFile coverPhoto) {
+        this.coverPhoto = coverPhoto;
     }
 }
