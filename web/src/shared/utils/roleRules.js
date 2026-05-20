@@ -9,8 +9,16 @@
 export const USER_ROLES = {
   ADMIN: 'ADMIN',
   AGENT: 'AGENT',
-  USER: 'USER', // Registered user (not admin/agent)
+  USER: 'REGISTERED_USER', // Registered user (not admin/agent)
   PUBLIC: null, // Public user (not logged in)
+};
+
+export const normalizeRole = (userRole) => {
+  if (userRole === 'registered_user' || userRole === 'USER' || userRole === USER_ROLES.USER) {
+    return USER_ROLES.USER;
+  }
+
+  return userRole || USER_ROLES.PUBLIC;
 };
 
 /**
@@ -19,6 +27,7 @@ export const USER_ROLES = {
  * @returns {Object} Permissions object
  */
 export const getRolePermissions = (userRole) => {
+  const role = normalizeRole(userRole);
   const basePermissions = {
     canViewProperties: true,
     canViewDetailedView: true,
@@ -26,7 +35,7 @@ export const getRolePermissions = (userRole) => {
     canSearch: true,
   };
 
-  if (userRole === USER_ROLES.ADMIN) {
+  if (role === USER_ROLES.ADMIN) {
     return {
       ...basePermissions,
       canCreateProperty: true,
@@ -38,7 +47,7 @@ export const getRolePermissions = (userRole) => {
     };
   }
 
-  if (userRole === USER_ROLES.AGENT) {
+  if (role === USER_ROLES.AGENT) {
     return {
       ...basePermissions,
       canCreateProperty: false,
@@ -50,7 +59,7 @@ export const getRolePermissions = (userRole) => {
     };
   }
 
-  if (userRole === USER_ROLES.USER) {
+  if (role === USER_ROLES.USER) {
     return {
       ...basePermissions,
       canCreateProperty: false,
@@ -80,11 +89,13 @@ export const getRolePermissions = (userRole) => {
  * @returns {Array} Array of available search types
  */
 export const getVisibleSearchTypes = (userRole) => {
-  if (userRole === USER_ROLES.ADMIN || userRole === USER_ROLES.AGENT) {
+  const role = normalizeRole(userRole);
+
+  if (role === USER_ROLES.ADMIN || role === USER_ROLES.AGENT) {
     return ['name', 'location', 'developer', 'priceRange'];
   }
 
-  if (userRole === USER_ROLES.USER) {
+  if (role === USER_ROLES.USER) {
     return ['name', 'location', 'priceRange'];
   }
 
@@ -98,13 +109,14 @@ export const getVisibleSearchTypes = (userRole) => {
  * @returns {Object} Filter options
  */
 export const getVisibleFilters = (userRole) => {
+  const role = normalizeRole(userRole);
   const baseFilters = {
     listingType: true,
     priceRange: true,
     amenities: false,
   };
 
-  if (userRole === USER_ROLES.ADMIN || userRole === USER_ROLES.AGENT) {
+  if (role === USER_ROLES.ADMIN || role === USER_ROLES.AGENT) {
     return {
       ...baseFilters,
       developer: true,
@@ -120,7 +132,7 @@ export const getVisibleFilters = (userRole) => {
  * @returns {boolean}
  */
 export const canAccessSearch = (userRole) => {
-  return userRole !== null; // Public cannot search
+  return normalizeRole(userRole) !== USER_ROLES.PUBLIC; // Public cannot search
 };
 
 /**
@@ -129,7 +141,7 @@ export const canAccessSearch = (userRole) => {
  * @returns {boolean}
  */
 export const canUseAdvancedFilters = (userRole) => {
-  return ['ADMIN', 'AGENT'].includes(userRole);
+  return [USER_ROLES.ADMIN, USER_ROLES.AGENT].includes(normalizeRole(userRole));
 };
 
 /**
@@ -138,13 +150,14 @@ export const canUseAdvancedFilters = (userRole) => {
  * @returns {string} Display name
  */
 export const getRoleDisplayName = (userRole) => {
+  const role = normalizeRole(userRole);
   const displayNames = {
     ADMIN: 'Administrator',
     AGENT: 'Real Estate Agent',
-    USER: 'User',
+    REGISTERED_USER: 'User',
   };
 
-  return displayNames[userRole] || 'Guest';
+  return displayNames[role] || 'Guest';
 };
 
 /**
@@ -153,7 +166,7 @@ export const getRoleDisplayName = (userRole) => {
  * @returns {boolean}
  */
 export const isAuthenticated = (userRole) => {
-  return userRole !== null && userRole !== undefined;
+  return normalizeRole(userRole) !== USER_ROLES.PUBLIC;
 };
 
 /**
@@ -162,7 +175,7 @@ export const isAuthenticated = (userRole) => {
  * @returns {boolean}
  */
 export const isAdmin = (userRole) => {
-  return userRole === USER_ROLES.ADMIN;
+  return normalizeRole(userRole) === USER_ROLES.ADMIN;
 };
 
 /**
@@ -171,7 +184,7 @@ export const isAdmin = (userRole) => {
  * @returns {boolean}
  */
 export const isAgent = (userRole) => {
-  return userRole === USER_ROLES.AGENT;
+  return normalizeRole(userRole) === USER_ROLES.AGENT;
 };
 
 /**
@@ -180,6 +193,5 @@ export const isAgent = (userRole) => {
  * @returns {boolean}
  */
 export const isRegisteredUser = (userRole) => {
-  // Accept both normalized 'USER' and some backends that return 'registered_user'
-  return userRole === USER_ROLES.USER || userRole === 'registered_user';
+  return normalizeRole(userRole) === USER_ROLES.USER;
 };

@@ -38,7 +38,7 @@ const AppLayout = ({ children, isLoggedIn, onLogout }) => {
 }
 
 const normalizeRole = (role) => {
-  if (role === 'registered_user' || role === 'USER') {
+  if (role === 'registered_user' || role === 'USER' || role === 'REGISTERED_USER') {
     return 'REGISTERED_USER'
   }
   return role || ''
