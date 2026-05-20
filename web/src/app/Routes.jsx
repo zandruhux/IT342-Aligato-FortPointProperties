@@ -5,7 +5,7 @@ import HomePage from '../features/public/pages'
 import { PropertyListPage } from '../features/properties/pages'
 import { FavoritePage } from '../features/favorites/pages'
 import { AgentPropertiesListPage as AgentPropertiesPage } from '../features/properties/pages'
-import { AdminDashboardPage } from '../features/properties/pages'
+import { AdminDashboardPage, AgentDashboardPage } from '../features/dashboard'
 import { AgentBulletin } from '../features/bulletin'
 import { AgentInboxPage, RegisteredUserMessagesPage } from '../features/messaging'
 import { AgentProfile } from '../features/profile/pages'
@@ -21,13 +21,12 @@ import {
 import {
   AdminCareerApplicationDetailsPage,
   AdminCareerApplicationsPage,
-  AgentDashboardPage,
   CareerApplicationPage,
 } from '../features/careerApplication'
 import { useAuthContext } from '../shared/context/useAuthContext'
 
 const normalizeRole = (role) => {
-  if (role === 'registered_user' || role === 'USER') {
+  if (role === 'registered_user' || role === 'USER' || role === 'REGISTERED_USER') {
     return 'REGISTERED_USER'
   }
   return role || ''
