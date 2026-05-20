@@ -1,13 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import propertyImage from '../../../assets/property.png';
-import PropertySearchFilter from '../../../features/properties/components/PropertySearchFilter';
+import PropertySearchFilter from '../properties/PropertySearchFilter';
 
 export default function HeroSection({ showSearch = false }) {
   const navigate = useNavigate();
 
-  const handleHeroSearch = (searchTerm) => {
-    navigate(`/properties?location=${encodeURIComponent(searchTerm)}`);
+  const handleHeroSearch = (searchTerm, searchType) => {
+    const params = new URLSearchParams();
+    if (searchTerm) {
+      params.set('searchType', searchType);
+      params.set('searchTerm', searchTerm);
+    }
+    navigate(`/properties${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   return (
@@ -30,9 +35,8 @@ export default function HeroSection({ showSearch = false }) {
             {showSearch && (
               <div className="mb-8">
                 <PropertySearchFilter
-                  searchTypes={[{ value: 'location', label: 'Location' }]}
                   onSearch={handleHeroSearch}
-                  showPriceRange={false}
+                  showSort={false}
                   title=""
                 />
               </div>
