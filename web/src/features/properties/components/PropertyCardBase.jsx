@@ -1,4 +1,4 @@
-import React from 'react';
+import { formatPrice } from '../../../shared/utils/propertyHelpers';
 
 /**
  * PropertyCardBase Component
@@ -24,18 +24,15 @@ const PropertyCardBase = ({
   isFavorited = false,
   isLoadingFavorite = false,
 }) => {
-  const { name, basicDescription, location, priceRangeMin, priceRangeMax, id } = property;
-
-  // Format price to PHP currency
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
+  const { name, basicDescription, location, priceRangeMin, priceRangeMax, id, hasPromo, coverPhotoUrl } = property;
+  const firstPhotoUrl = coverPhotoUrl || property?.photos?.[0]?.photoUrl || property?.photos?.[0]?.url;
 
   const displayPrice =
+    priceRangeMin == null && priceRangeMax == null
+      ? 'Price on request'
+      : priceRangeMin == null || priceRangeMax == null
+      ? formatPrice(priceRangeMin ?? priceRangeMax)
+      :
     priceRangeMin === priceRangeMax
       ? formatPrice(priceRangeMin)
       : `${formatPrice(priceRangeMin)} - ${formatPrice(priceRangeMax)}`;
@@ -58,15 +55,26 @@ const PropertyCardBase = ({
       className="border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white flex flex-col cursor-pointer transform hover:-translate-y-1"
       onClick={handleCardClick}
     >
-      {/* Property Image - Placeholder */}
       <div className="h-56 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-500 font-medium text-sm">Photo Coming Soon</p>
-        </div>
+        {firstPhotoUrl ? (
+          <img
+            src={firstPhotoUrl}
+            alt={name || 'Property'}
+            className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="text-center">
+            <p className="text-gray-500 font-medium text-sm">Photo Coming Soon</p>
+          </div>
+        )}
 
-        <span className="absolute top-3 left-3 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-          Featured
-        </span>
+        {hasPromo && (
+          <span className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+            ONGOING PROMO!
+          </span>
+        )}
 
         {/* Heart Favorite Button */}
         {showFavoriteButton && (
@@ -86,15 +94,9 @@ const PropertyCardBase = ({
             )}
           </button>
         )}
-
-        <div className="flex items-center justify-center w-full h-full text-gray-500 font-medium">
-          [Image Placeholder]
-        </div>
       </div>
 
-      {/* Card Content */}
       <div className="p-5 flex-1 flex flex-col">
-        {/* Price and Header Right Content */}
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-xl font-bold text-gray-900">{displayPrice}</h3>
           {headerRightContent}
@@ -124,7 +126,6 @@ const PropertyCardBase = ({
           {location}
         </p>
 
-        {/* Footer Content */}
         <div className="mt-auto pt-4 border-t border-gray-100">
           {footerContent || (
             <p className="text-sm text-gray-500 line-clamp-2">{basicDescription}</p>

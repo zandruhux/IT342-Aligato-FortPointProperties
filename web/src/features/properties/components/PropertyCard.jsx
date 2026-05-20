@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import PropertyCardBase from './PropertyCardBase';
 
 /**
@@ -20,10 +20,6 @@ function PropertyCard({
     if (onClick) return onClick(property.id);
     if (onView) return onView(property.id);
   };
-
-  const headerRightContent = property.units && property.units.length > 0
-    ? (<span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">{property.units.length}u</span>)
-    : (property.listingType ? (<span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full">{property.listingType}</span>) : null);
 
   let footerContent = null;
   if (onEdit || onDelete) {
@@ -47,7 +43,6 @@ function PropertyCard({
     <PropertyCardBase
       property={property}
       onClick={handleCardClick}
-      headerRightContent={headerRightContent}
       footerContent={footerContent}
       showFavoriteButton={showFavoriteButton}
       onFavoriteToggle={onFavoriteToggle}
