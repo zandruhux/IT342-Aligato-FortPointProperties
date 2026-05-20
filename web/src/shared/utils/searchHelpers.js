@@ -77,6 +77,45 @@ export const filterByPriceRange = (properties, minPrice, maxPrice) => {
   });
 };
 
+const getPriceValue = (property, field, fallbackField) => {
+  const value = Number(property?.[field]);
+  if (Number.isFinite(value)) return value;
+
+  const fallback = Number(property?.[fallbackField]);
+  return Number.isFinite(fallback) ? fallback : null;
+};
+
+export const sortPropertiesByPrice = (properties = [], sortMode = '') => {
+  if (!sortMode) return properties;
+
+  const sortConfig = {
+    minPrice: {
+      field: 'priceRangeMin',
+      fallbackField: 'priceRangeMax',
+      direction: 'asc',
+    },
+    maxPrice: {
+      field: 'priceRangeMax',
+      fallbackField: 'priceRangeMin',
+      direction: 'desc',
+    },
+  };
+
+  const config = sortConfig[sortMode];
+  if (!config) return properties;
+
+  return [...properties].sort((a, b) => {
+    const aPrice = getPriceValue(a, config.field, config.fallbackField);
+    const bPrice = getPriceValue(b, config.field, config.fallbackField);
+
+    if (aPrice === null && bPrice === null) return 0;
+    if (aPrice === null) return 1;
+    if (bPrice === null) return -1;
+
+    return config.direction === 'asc' ? aPrice - bPrice : bPrice - aPrice;
+  });
+};
+
 /**
  * Apply multiple filters to properties (AND logic)
  * @param {Array} properties - Array of property objects
@@ -102,7 +141,16 @@ export const applySearchFilters = (properties, filters = {}) => {
     results = filterByPriceRange(results, filters.minPrice, filters.maxPrice);
   }
 
-  return results;
+  if (filters.listingType) {
+    results = results.filter((prop) => {
+      const values = Array.isArray(prop.listingTypes)
+        ? prop.listingTypes
+        : String(prop.listingType || '').split(',').map((item) => item.trim());
+      return values.includes(filters.listingType);
+    });
+  }
+
+  return sortPropertiesByPrice(results, filters.sortMode);
 };
 
 /**
@@ -115,6 +163,8 @@ export const hasActiveFilters = (filters = {}) => {
     filters.name ||
     filters.location ||
     filters.developer ||
+    filters.listingType ||
+    filters.sortMode ||
     filters.minPrice !== null ||
     filters.maxPrice !== null
   );
@@ -131,6 +181,8 @@ export const getDefaultFilters = () => {
     developer: '',
     minPrice: null,
     maxPrice: null,
+    listingType: '',
+    sortMode: '',
   };
 };
 

@@ -115,7 +115,7 @@ export default function HomePage() {
             {/* Testimonial 3 */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
               <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                "As a first-time buyer, I was nervous about the process. Fort Point Properties's team made everything smooth and stress-free."
+                "As a first-time client, I was nervous about the process. Fort Point Properties's team made everything smooth and stress-free."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 overflow-hidden flex-shrink-0">
@@ -124,7 +124,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Angela Reyes</h4>
-                  <p className="text-xs text-gray-500">First-time Buyer</p>
+                  <p className="text-xs text-gray-500">First-time Client</p>
                 </div>
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function HomePage() {
               <h4 className="text-white font-semibold mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li><a href="#" className="hover:text-white transition-colors">Market Reports</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Buyer Guide</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Client Guide</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
               </ul>
             </div>

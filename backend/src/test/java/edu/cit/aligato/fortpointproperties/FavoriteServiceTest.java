@@ -25,6 +25,7 @@ import edu.cit.aligato.fortpointproperties.favorites.entity.Favorite;
 import edu.cit.aligato.fortpointproperties.favorites.repository.FavoriteRepository;
 import edu.cit.aligato.fortpointproperties.favorites.service.FavoriteService;
 import edu.cit.aligato.fortpointproperties.properties.entity.Property;
+import edu.cit.aligato.fortpointproperties.properties.entity.PropertyUnit;
 import edu.cit.aligato.fortpointproperties.properties.repository.PropertyRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +46,7 @@ public class FavoriteServiceTest {
         user.setId("u1");
         Property prop = new Property();
         prop.setId("p1");
+        prop.setVisible(true);
 
         when(propertyRepository.findById("p1")).thenReturn(Optional.of(prop));
         when(favoriteRepository.existsByUserIdAndPropertyId(user.getId(), "p1")).thenReturn(false);
@@ -64,6 +66,7 @@ public class FavoriteServiceTest {
         user.setId("u2");
         Property prop = new Property();
         prop.setId("p2");
+        prop.setVisible(true);
 
         when(propertyRepository.findById("p2")).thenReturn(Optional.of(prop));
         when(favoriteRepository.existsByUserIdAndPropertyId(user.getId(), "p2")).thenReturn(true);
@@ -125,8 +128,9 @@ public class FavoriteServiceTest {
         prop.setName("Tower One");
         prop.setBasicDescription("Near business district");
         prop.setLocation("Cebu City");
-        prop.setPriceRangeMin(1500000.0);
-        prop.setPriceRangeMax(3500000.0);
+        prop.setVisible(true);
+        prop.getUnits().add(unit(prop, 1500000.0));
+        prop.getUnits().add(unit(prop, 3500000.0));
 
         Favorite favorite = new Favorite(user, prop);
         favorite.setId("f5");
@@ -173,5 +177,16 @@ public class FavoriteServiceTest {
         when(favoriteRepository.countByPropertyId("p8")).thenReturn(4L);
 
         assertEquals(4L, favoriteService.getPropertyFavoriteCount("p8"));
+    }
+
+    private PropertyUnit unit(Property property, Double price) {
+        PropertyUnit unit = new PropertyUnit();
+        unit.setProperty(property);
+        unit.setUnitType("Unit");
+        unit.setReservationFee(25000.0);
+        unit.setEquityPeriodMonths(24);
+        unit.setMonthlyEquity(15000.0);
+        unit.setTotalSellingPrice(price);
+        return unit;
     }
 }

@@ -1,9 +1,6 @@
-//import * as propertyApi from '../../properties/api/propertyApi';
-//import axiosInstance from '../../../shared/api/axiosInstance';
 import axiosInstance from '../../../shared/utils/api';
 import { API_ENDPOINTS } from '../../../shared/utils/constants';
 
-//HELPER FUNCTION
 const extractResponseData = (response) => {
   return Array.isArray(response.data) ? response.data : response.data.data || [];
 };
@@ -11,7 +8,6 @@ const extractResponseData = (response) => {
 export const getAllFavorites = async () => {
   try {
     const response = await axiosInstance.get(API_ENDPOINTS.FAVORITES.ALL);
-    console.log("Favorites: ", response.data);
     return extractResponseData(response);
     
   } catch (error) {

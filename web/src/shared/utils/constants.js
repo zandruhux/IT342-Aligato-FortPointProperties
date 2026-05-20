@@ -1,11 +1,28 @@
 export const API_BASE_URL = 'http://localhost:8080';
+export const WS_BASE_URL = `${API_BASE_URL}/ws`;
 
 export const ROLES = {
   ADMIN: 'ADMIN',
   AGENT: 'AGENT',
   USER: 'USER',
+  REGISTERED_USER: 'REGISTERED_USER',
   PUBLIC: 'PUBLIC',
 };
+
+export const LISTING_TYPES = [
+  { value: 'PRE_SELLING', label: 'Pre-Selling' },
+  { value: 'RFO', label: 'RFO' },
+  { value: 'RENT_TO_OWN', label: 'Rent-to-Own' },
+  { value: 'RESALE', label: 'Resale' },
+];
+
+export const FINANCING_TYPES = [
+  { value: 'BANK_FINANCING', label: 'Bank Financing' },
+  { value: 'PAG_IBIG_HDMF', label: 'Pag-IBIG HDMF' },
+  { value: 'IN_HOUSE_FINANCING', label: 'In-House Financing' },
+  { value: 'DEFERRED_CASH', label: 'Deferred Cash' },
+  { value: 'SPOT_CASH', label: 'Spot Cash' },
+];
 
 export const HTTP_STATUS = {
   OK: 200,
@@ -64,6 +81,8 @@ export const API_ENDPOINTS = {
     SEARCH_LOCATION: '/admin/properties/search/location',
     SEARCH_DEVELOPER: '/admin/properties/search/developer',
     SEARCH: '/admin/properties/search',
+    AMENITIES: '/admin/properties/amenities',
+    PHOTO_UPLOAD: '/admin/properties/photos/upload',
     UNITS: {
       ALL: (propertyId) => `/admin/properties/${propertyId}/units`,
       CREATE: (propertyId) => `/admin/properties/${propertyId}/units`,
@@ -79,5 +98,29 @@ export const API_ENDPOINTS = {
     REMOVE: (propertyId) => `/user/favorites/${propertyId}`,
     CHECK: (propertyId) => `/user/favorites/${propertyId}/check`,
     COUNT: '/user/favorites/count',
+  },
+
+  MESSAGING: {
+    CONVERSATIONS: '/api/messaging/conversations',
+    MESSAGES: (conversationId) => `/api/messaging/conversations/${conversationId}/messages`,
+  },
+
+  CAREER_APPLICATIONS: {
+    SUBMIT: '/api/career-applications',
+    ME: '/api/career-applications/me',
+    ADMIN_ALL: '/api/admin/career-applications',
+    ADMIN_BY_ID: (id) => `/api/admin/career-applications/${id}`,
+    RESUME: (id) => `/api/admin/career-applications/${id}/resume`,
+    ACCEPT: (id) => `/api/admin/career-applications/${id}/accept`,
+    REJECT: (id) => `/api/admin/career-applications/${id}/reject`,
+  },
+
+  ARTICLES: {
+    PUBLIC: '/api/articles/public',
+    ALL: '/api/articles',
+    BY_ID: (id) => `/api/articles/${id}`,
+    CREATE: '/api/articles',
+    UPDATE: (id) => `/api/articles/${id}`,
+    DELETE: (id) => `/api/articles/${id}`,
   },
 };

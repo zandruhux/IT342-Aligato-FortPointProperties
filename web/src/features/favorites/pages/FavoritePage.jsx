@@ -34,6 +34,8 @@ export default function FavoritePage() {
     name: fav.propertyName,
     location: fav.location,
     basicDescription: fav.description,
+    hasPromo: fav.hasPromo,
+    coverPhotoUrl: fav.coverPhotoUrl,
     isFavorite: true // Optional: Force the heart to be filled on this page
   });
 

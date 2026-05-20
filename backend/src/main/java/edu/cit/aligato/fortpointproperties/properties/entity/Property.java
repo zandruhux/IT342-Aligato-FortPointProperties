@@ -2,22 +2,32 @@ package edu.cit.aligato.fortpointproperties.properties.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
+import edu.cit.aligato.fortpointproperties.properties.enums.FinancingType;
+import edu.cit.aligato.fortpointproperties.properties.enums.ListingType;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 @Entity
@@ -38,37 +48,53 @@ public class Property {
     private String developer;
 
     @Column(nullable = false)
-    private Double priceRangeMin;
-
-    @Column(nullable = false)
-    private Double priceRangeMax;
-
-    @Column(nullable = false)
     private String location;
 
-    @Column(nullable = false)
-    private String listingType; // Format: "Pre-Selling,RFO" (comma-separated)
+    @ElementCollection(targetClass = ListingType.class, fetch = FetchType.LAZY)
+    @CollectionTable(name = "property_listing_types", joinColumns = @JoinColumn(name = "property_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "listing_type", nullable = false)
+    private Set<ListingType> listingTypes = new HashSet<>();
+
+    @ElementCollection(targetClass = FinancingType.class, fetch = FetchType.LAZY)
+    @CollectionTable(name = "property_financing_types", joinColumns = @JoinColumn(name = "property_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "financing_type", nullable = false)
+    private Set<FinancingType> financingTypes = new HashSet<>();
 
     @Column(nullable = false)
-    private Boolean petFriendly;
+    private Boolean petFriendly = false;
 
     @Column(nullable = false)
-    private Boolean parkingAvailable;
+    private Boolean parkingAvailable = false;
 
     @Column(nullable = false)
-    private String turnoverDate; // Format: YYYY-MM
+    private Boolean hasPromo = false;
+
+    @Column(nullable = false)
+    private Boolean featured = false;
+
+    @Column(nullable = false)
+    private Boolean visible = true;
+
+    @Column(nullable = false)
+    private String turnoverDate;
+
+    @ManyToMany
+    @JoinTable(
+            name = "property_amenities",
+            joinColumns = @JoinColumn(name = "property_id"),
+            inverseJoinColumns = @JoinColumn(name = "amenity_id"))
+    private Set<Amenity> amenities = new HashSet<>();
 
     @Column(columnDefinition = "TEXT")
-    private String amenities; // JSON or comma-separated list
+    private String keySellingPoints;
 
     @Column(columnDefinition = "TEXT")
-    private String keySellingPoints; // Marketing copy
+    private String brochurePdfUrl;
 
     @Column(columnDefinition = "TEXT")
-    private String brochurePdfUrl; // URL to property brochure PDF
-
-    @Column(columnDefinition = "TEXT")
-    private String inventoryLink; // URL to inventory/floor plan
+    private String inventoryLink;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -78,52 +104,19 @@ public class Property {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;
 
-    /**
-     * One-to-Many relationship with PropertyUnit
-     * CascadeType.ALL ensures units are saved/updated/deleted with property
-     * orphanRemoval = true removes units when they are removed from the list
-     */
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PropertyUnit> units;
+    private List<PropertyUnit> units = new ArrayList<>();
 
-    // --- Constructors ---
+    @OneToMany(mappedBy = "property", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PropertyPhoto> photos = new ArrayList<>();
+
     public Property() {
-        this.units = new ArrayList<>();
     }
 
-    public Property(String name, String developer, Double priceRangeMin, Double priceRangeMax,
-                    String location, String listingType) {
-        this.name = name;
-        this.developer = developer;
-        this.priceRangeMin = priceRangeMin;
-        this.priceRangeMax = priceRangeMax;
-        this.location = location;
-        this.listingType = listingType;
-        this.petFriendly = false;
-        this.parkingAvailable = false;
-        this.units = new ArrayList<>();
-    }
-
-    // --- Lifecycle Hooks ---
-    @PrePersist
-    protected void onPrePersist() {
-        // If listingType is stored as a transient list, convert to comma-separated string
-        // This method can be extended if needed for list handling
-    }
-
-    // --- Getters and Setters ---
-    public User getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(User createdBy) {
-        this.createdBy = createdBy;
-    }
-    
     public String getId() {
         return id;
     }
@@ -156,22 +149,6 @@ public class Property {
         this.developer = developer;
     }
 
-    public Double getPriceRangeMin() {
-        return priceRangeMin;
-    }
-
-    public void setPriceRangeMin(Double priceRangeMin) {
-        this.priceRangeMin = priceRangeMin;
-    }
-
-    public Double getPriceRangeMax() {
-        return priceRangeMax;
-    }
-
-    public void setPriceRangeMax(Double priceRangeMax) {
-        this.priceRangeMax = priceRangeMax;
-    }
-
     public String getLocation() {
         return location;
     }
@@ -180,12 +157,20 @@ public class Property {
         this.location = location;
     }
 
-    public String getListingType() {
-        return listingType;
+    public Set<ListingType> getListingTypes() {
+        return listingTypes;
     }
 
-    public void setListingType(String listingType) {
-        this.listingType = listingType;
+    public void setListingTypes(Set<ListingType> listingTypes) {
+        this.listingTypes = listingTypes;
+    }
+
+    public Set<FinancingType> getFinancingTypes() {
+        return financingTypes;
+    }
+
+    public void setFinancingTypes(Set<FinancingType> financingTypes) {
+        this.financingTypes = financingTypes;
     }
 
     public Boolean getPetFriendly() {
@@ -204,6 +189,30 @@ public class Property {
         this.parkingAvailable = parkingAvailable;
     }
 
+    public Boolean getHasPromo() {
+        return hasPromo;
+    }
+
+    public void setHasPromo(Boolean hasPromo) {
+        this.hasPromo = hasPromo;
+    }
+
+    public Boolean getFeatured() {
+        return featured;
+    }
+
+    public void setFeatured(Boolean featured) {
+        this.featured = featured;
+    }
+
+    public Boolean getVisible() {
+        return visible;
+    }
+
+    public void setVisible(Boolean visible) {
+        this.visible = visible;
+    }
+
     public String getTurnoverDate() {
         return turnoverDate;
     }
@@ -212,11 +221,11 @@ public class Property {
         this.turnoverDate = turnoverDate;
     }
 
-    public String getAmenities() {
+    public Set<Amenity> getAmenities() {
         return amenities;
     }
 
-    public void setAmenities(String amenities) {
+    public void setAmenities(Set<Amenity> amenities) {
         this.amenities = amenities;
     }
 
@@ -260,11 +269,27 @@ public class Property {
         this.updatedAt = updatedAt;
     }
 
+    public User getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(User createdBy) {
+        this.createdBy = createdBy;
+    }
+
     public List<PropertyUnit> getUnits() {
         return units;
     }
 
     public void setUnits(List<PropertyUnit> units) {
         this.units = units;
+    }
+
+    public List<PropertyPhoto> getPhotos() {
+        return photos;
+    }
+
+    public void setPhotos(List<PropertyPhoto> photos) {
+        this.photos = photos;
     }
 }

@@ -9,6 +9,8 @@ import edu.cit.aligato.fortpointproperties.favorites.dto.FavoriteDTO;
 import edu.cit.aligato.fortpointproperties.favorites.entity.Favorite;
 import edu.cit.aligato.fortpointproperties.favorites.repository.FavoriteRepository;
 import edu.cit.aligato.fortpointproperties.properties.entity.Property;
+import edu.cit.aligato.fortpointproperties.properties.entity.PropertyPhoto;
+import edu.cit.aligato.fortpointproperties.properties.entity.PropertyUnit;
 import edu.cit.aligato.fortpointproperties.properties.repository.PropertyRepository;
 
 @Service
@@ -30,6 +32,9 @@ public class FavoriteService {
         // Check if property exists
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+        if (!Boolean.TRUE.equals(property.getVisible())) {
+            throw new IllegalArgumentException("Property not found");
+        }
 
         // Check if already favorited
         if (favoriteRepository.existsByUserIdAndPropertyId(user.getId(), propertyId)) {
@@ -65,14 +70,17 @@ public class FavoriteService {
         List<Favorite> favorites = favoriteRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
 
         return favorites.stream()
+                .filter(fav -> Boolean.TRUE.equals(fav.getProperty().getVisible()))
                 .map(fav -> new FavoriteDTO(
                         fav.getId(),
                         fav.getProperty().getId(),
                         fav.getProperty().getName(),
                         fav.getProperty().getBasicDescription(),
                         fav.getProperty().getLocation(),
-                        fav.getProperty().getPriceRangeMin(),
-                        fav.getProperty().getPriceRangeMax(),
+                        calculateMinPrice(fav.getProperty()),
+                        calculateMaxPrice(fav.getProperty()),
+                        fav.getProperty().getHasPromo(),
+                        coverPhotoUrl(fav.getProperty()),
                         fav.getCreatedAt()))
                 .toList();
     }
@@ -96,5 +104,29 @@ public class FavoriteService {
      */
     public long getPropertyFavoriteCount(String propertyId) {
         return favoriteRepository.countByPropertyId(propertyId);
+    }
+
+    private Double calculateMinPrice(Property property) {
+        return property.getUnits().stream()
+                .map(PropertyUnit::getTotalSellingPrice)
+                .filter(java.util.Objects::nonNull)
+                .min(Double::compareTo)
+                .orElse(null);
+    }
+
+    private Double calculateMaxPrice(Property property) {
+        return property.getUnits().stream()
+                .map(PropertyUnit::getTotalSellingPrice)
+                .filter(java.util.Objects::nonNull)
+                .max(Double::compareTo)
+                .orElse(null);
+    }
+
+    private String coverPhotoUrl(Property property) {
+        return property.getPhotos().stream()
+                .sorted(java.util.Comparator.comparing(PropertyPhoto::getDisplayOrder))
+                .map(PropertyPhoto::getPhotoUrl)
+                .findFirst()
+                .orElse(null);
     }
 }

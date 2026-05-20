@@ -10,31 +10,57 @@ const extractResponseData = (response) => {
   return Array.isArray(response.data) ? response.data : response.data.data || [];
 };
 
+const extractErrorMessage = (error, fallback) => {
+  const responseError = error.response?.data?.error;
+  if (typeof responseError === 'string') return responseError;
+  if (responseError?.message) return responseError.message;
+  if (error.response?.data?.message) return error.response.data.message;
+  if (error.message) return error.message;
+  return fallback;
+};
+
+const propertyListCache = new Map();
+const propertyListRequests = new Map();
+
+const normalizeRole = (role) => {
+  const normalized = String(role || 'PUBLIC').trim().toUpperCase();
+
+  if (normalized === 'ADMIN') return 'ADMIN';
+  if (normalized === 'AGENT') return 'AGENT';
+  if (normalized === 'USER' || normalized === 'REGISTERED_USER' || normalized === 'REGISTERED_USEER') {
+    return 'REGISTERED_USER';
+  }
+
+  return 'PUBLIC';
+};
+
 /**
  * Get the endpoint base object for a given role
  */
 const getEndpointForRole = (role) => {
+  const normalizedRole = normalizeRole(role);
   const roleMap = {
     'ADMIN': API_ENDPOINTS.PROPERTIES_ADMIN,
     'AGENT': API_ENDPOINTS.PROPERTIES_AGENT,
-    'USER': API_ENDPOINTS.PROPERTIES_USER,
-    'registered_user': API_ENDPOINTS.PROPERTIES_USER, // Backend role name
+    'REGISTERED_USER': API_ENDPOINTS.PROPERTIES_USER,
     'PUBLIC': API_ENDPOINTS.PROPERTIES_PUBLIC,
   };
-  return roleMap[role] || API_ENDPOINTS.PROPERTIES_PUBLIC;
+  return roleMap[normalizedRole] || API_ENDPOINTS.PROPERTIES_PUBLIC;
 };
 
 /**
  * Generic method to search properties by role
  */
 const searchPropertiesByRole = async (role, params = {}) => {
+  const normalizedRole = normalizeRole(role);
   try {
-    const endpoint = getEndpointForRole(role);
-    const response = await axiosInstance.get(endpoint.SEARCH, { params });
-    console.log(`[propertyApi] searchPropertiesByRole role=${role} params=`, params, 'response:', response.data);
+    const endpoint = getEndpointForRole(normalizedRole);
+    const searchParams = { ...(params || {}) };
+    delete searchParams.sortMode;
+    const response = await axiosInstance.get(endpoint.SEARCH, { params: searchParams });
     return extractResponseData(response);
   } catch (error) {
-    throw error.response?.data?.error || `Failed to search ${role.toLowerCase()} properties`;
+    throw new Error(extractErrorMessage(error, `Failed to search ${normalizedRole.toLowerCase()} properties`));
   }
 };
 
@@ -42,14 +68,45 @@ const searchPropertiesByRole = async (role, params = {}) => {
  * Generic method to get all properties by role
  */
 const getAllPropertiesByRole = async (role) => {
-  try {
-    const endpoint = getEndpointForRole(role);
-    const response = await axiosInstance.get(endpoint.ALL);
-    console.log(`[propertyApi] getAllPropertiesByRole role=${role} response:`, response.data);
-    return extractResponseData(response);
-  } catch (error) {
-    throw error.response?.data?.error || `Failed to fetch ${role.toLowerCase()} properties`;
+  const normalizedRole = normalizeRole(role);
+  const cacheKey = normalizedRole;
+
+  if (propertyListCache.has(cacheKey)) {
+    return propertyListCache.get(cacheKey);
   }
+
+  if (propertyListRequests.has(cacheKey)) {
+    return propertyListRequests.get(cacheKey);
+  }
+
+  try {
+    const endpoint = getEndpointForRole(normalizedRole);
+    const request = axiosInstance.get(endpoint.ALL)
+      .then((response) => {
+        const data = extractResponseData(response);
+        propertyListCache.set(cacheKey, data);
+        return data;
+      })
+      .catch((error) => {
+        throw new Error(extractErrorMessage(error, `Failed to fetch ${normalizedRole.toLowerCase()} properties`));
+      })
+      .finally(() => {
+        propertyListRequests.delete(cacheKey);
+      });
+
+    propertyListRequests.set(cacheKey, request);
+    return request;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, `Failed to fetch ${normalizedRole.toLowerCase()} properties`));
+  }
+};
+
+export const invalidatePropertyListCache = (role = null) => {
+  if (role) {
+    propertyListCache.delete(normalizeRole(role));
+    return;
+  }
+  propertyListCache.clear();
 };
 
 /**
@@ -57,14 +114,14 @@ const getAllPropertiesByRole = async (role) => {
  */
 const getPropertyDetailsByRole = async (role, id) => {
   try {
-    const endpoint = getEndpointForRole(role);
+    const normalizedRole = normalizeRole(role);
+    const endpoint = getEndpointForRole(normalizedRole);
     // Handle different endpoint methods (DETAILS vs BY_ID)
     const detailsEndpoint = typeof endpoint.DETAILS === 'function' ? endpoint.DETAILS(id) : endpoint.BY_ID(id);
     const response = await axiosInstance.get(detailsEndpoint);
-    console.log(`[propertyApi] getPropertyDetailsByRole role=${role} id=${id} response:`, response.data);
     return response.data.data || response.data;
   } catch (error) {
-    throw error.response?.data?.error || `Failed to fetch property details`;
+    throw new Error(extractErrorMessage(error, 'Failed to fetch property details'));
   }
 };
 
@@ -79,7 +136,7 @@ const getPropertyDetailsByRole = async (role, id) => {
  * @param {object} params - Search parameters { name, location, developer, minPrice, maxPrice }
  */
 export const searchProperties = async (role, params = {}) => {
-  const finalRole = role || 'PUBLIC';
+  const finalRole = normalizeRole(role);
   return searchPropertiesByRole(finalRole, params);
 };
 
@@ -90,7 +147,7 @@ export const searchProperties = async (role, params = {}) => {
  * @param {string} role - User role (ADMIN, AGENT, USER, PUBLIC)
  */
 export const getProperties = async (role) => {
-  const finalRole = role || 'PUBLIC';
+  const finalRole = normalizeRole(role);
   return getAllPropertiesByRole(finalRole);
 };
 
@@ -102,7 +159,7 @@ export const getProperties = async (role) => {
  * @param {number} id - Property ID
  */
 export const getPropertyDetails = async (role, id) => {
-  const finalRole = role || 'PUBLIC';
+  const finalRole = normalizeRole(role);
   return getPropertyDetailsByRole(finalRole, id);
 };
 
@@ -126,64 +183,11 @@ export const getPublicFeaturedProperties = async (limit = 4) => {
 };
 
 /**
- * Combined search for public properties using optional filters
- */
-export const searchPublicProperties = async (params = {}) => {
-  return searchPropertiesByRole('PUBLIC', params);
-};
-
-
-// ========== REGISTERED USER DATA RETRIEVAL & SEARCH ==========
-
-/**
- * Get all properties (registered user - limited fields)
- * Accessible to: Authenticated users (non-admin, non-agent)
- */
-export const getUserProperties = async () => {
-  return getAllPropertiesByRole('registered_user');
-};
-
-/**
  * Get property details (registered user view)
  * Accessible to: Authenticated users (non-admin, non-agent)
  */
 export const getUserPropertyDetails = async (id) => {
-  return getPropertyDetailsByRole('registered_user', id);
-};
-
-/**
- * Search user properties by name
- * Accessible to: Authenticated users (non-admin, non-agent)
- */
-export const searchUserPropertyByName = async (name) => {
-  return searchPropertiesByRole('registered_user', { name });
-};
-
-/**
- * Search user properties by location
- * Accessible to: Authenticated users (non-admin, non-agent)
- */
-export const searchUserPropertyByLocation = async (location) => {
-  return searchPropertiesByRole('registered_user', { location });
-};
-
-/**
- * Combined search for user properties using optional filters
- */
-export const searchUserProperties = async (params = {}) => {
-  return searchPropertiesByRole('registered_user', params);
-};
-
-
-
-// ========== AGENT DATA RETRIEVAL & SEARCH ==========
-
-/**
- * Get all properties (agent view - full details)
- * Accessible to: Agents
- */
-export const getAgentAllProperties = async () => {
-  return getAllPropertiesByRole('AGENT');
+  return getPropertyDetailsByRole('REGISTERED_USER', id);
 };
 
 /**
@@ -195,85 +199,11 @@ export const getAgentPropertyDetails = async (id) => {
 };
 
 /**
- * Search agent properties by name
- * Accessible to: Agents
- */
-export const searchAgentPropertyByName = async (name) => {
-  return searchPropertiesByRole('AGENT', { name });
-};
-
-/**
- * Search agent properties by location
- * Accessible to: Agents
- */
-export const searchAgentPropertyByLocation = async (location) => {
-  return searchPropertiesByRole('AGENT', { location });
-};
-
-/**
- * Search agent properties by developer
- * Accessible to: Agents
- */
-export const searchAgentPropertyByDeveloper = async (developerName) => {
-  return searchPropertiesByRole('AGENT', { developer: developerName });
-};
-
-/**
- * Combined search for agent properties using optional filters
- */
-export const searchAgentProperties = async (params = {}) => {
-  return searchPropertiesByRole('AGENT', params);
-};
-
-
-
-// ========== ADMIN DATA RETRIEVAL, SEARCH & CRUD ==========
-
-/**
- * Get all properties (admin view - full details)
- * Accessible to: Admins
- */
-export const getAdminAllProperties = async () => {
-  return getAllPropertiesByRole('ADMIN');
-};
-
-/**
  * Get property details (admin view - full details)
  * Accessible to: Admins
  */
 export const getAdminPropertyById = async (id) => {
   return getPropertyDetailsByRole('ADMIN', id);
-};
-
-/**
- * Search admin properties by name
- * Accessible to: Admins
- */
-export const searchAdminPropertyByName = async (name) => {
-  return searchPropertiesByRole('ADMIN', { name });
-};
-
-/**
- * Search admin properties by location
- * Accessible to: Admins
- */
-export const searchAdminPropertyByLocation = async (location) => {
-  return searchPropertiesByRole('ADMIN', { location });
-};
-
-/**
- * Search admin properties by developer
- * Accessible to: Admins
- */
-export const searchAdminPropertyByDeveloper = async (developerName) => {
-  return searchPropertiesByRole('ADMIN', { developer: developerName });
-};
-
-/**
- * Combined search for admin properties using optional filters
- */
-export const searchAdminProperties = async (params = {}) => {
-  return searchPropertiesByRole('ADMIN', params);
 };
 
 /**
@@ -286,9 +216,33 @@ export const createProperty = async (propertyData) => {
       API_ENDPOINTS.PROPERTIES_ADMIN.CREATE,
       propertyData
     );
+    invalidatePropertyListCache();
     return response.data.data || response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to create property';
+    throw new Error(extractErrorMessage(error, 'Failed to create property'));
+  }
+};
+
+export const uploadPropertyPhoto = async (file, displayOrder = 0) => {
+  try {
+    // Validate file size (max 5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error(`File size exceeds maximum allowed size of 5MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+    }
+
+    const formData = new FormData();
+    formData.append('photo', file);
+    formData.append('displayOrder', String(displayOrder));
+    
+    const response = await axiosInstance.post(
+      API_ENDPOINTS.PROPERTIES_ADMIN.PHOTO_UPLOAD,
+      formData
+    );
+
+    return response.data.data || response.data;
+  } catch (error) {
+    throw new Error(extractErrorMessage(error, 'Failed to upload property photo'));
   }
 };
 
@@ -302,9 +256,10 @@ export const updateProperty = async (id, propertyData) => {
       API_ENDPOINTS.PROPERTIES_ADMIN.UPDATE(id),
       propertyData
     );
+    invalidatePropertyListCache();
     return response.data.data || response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to update property';
+    throw new Error(extractErrorMessage(error, 'Failed to update property'));
   }
 };
 
@@ -317,106 +272,25 @@ export const deleteProperty = async (id) => {
     const response = await axiosInstance.delete(
       API_ENDPOINTS.PROPERTIES_ADMIN.DELETE(id)
     );
+    invalidatePropertyListCache();
     return response.data;
   } catch (error) {
     throw error.response?.data?.error || 'Failed to delete property';
   }
 };
 
-
-
-// ========== FAVORITES MANAGEMENT ==========
-
-/**
- * Get all favorited properties
- * Accessible to: Authenticated users
- */
-export const getAllFavorites = async () => {
+export const getAmenities = async (defaultsOnly = false) => {
   try {
-    const response = await axiosInstance.get(API_ENDPOINTS.FAVORITES.ALL);
+    const response = await axiosInstance.get(API_ENDPOINTS.PROPERTIES_ADMIN.AMENITIES, {
+      params: { defaultsOnly },
+    });
     return extractResponseData(response);
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to fetch favorites';
+    throw error.response?.data?.error || 'Failed to fetch amenities';
   }
 };
-
-/**
- * Add property to favorites
- * Accessible to: Authenticated users
- */
-export const addToFavorites = async (propertyId) => {
-  try {
-    const response = await axiosInstance.post(
-      API_ENDPOINTS.FAVORITES.ADD(propertyId),
-      {}
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response?.data?.error || 'Failed to add to favorites';
-  }
-};
-
-/**
- * Remove property from favorites
- * Accessible to: Authenticated users
- */
-export const removeFromFavorites = async (propertyId) => {
-  try {
-    const response = await axiosInstance.delete(
-      API_ENDPOINTS.FAVORITES.REMOVE(propertyId)
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response?.data?.error || 'Failed to remove from favorites';
-  }
-};
-
-/**
- * Check if a property is favorited
- * Accessible to: Authenticated users
- */
-export const checkIfFavorited = async (propertyId) => {
-  try {
-    const response = await axiosInstance.get(
-      API_ENDPOINTS.FAVORITES.CHECK(propertyId)
-    );
-    return response.data.data;
-  } catch (error) {
-    throw error.response?.data?.error || 'Failed to check favorite status';
-  }
-};
-
-/**
- * Get count of favorited properties
- * Accessible to: Authenticated users
- */
-export const getFavoriteCount = async () => {
-  try {
-    const response = await axiosInstance.get(API_ENDPOINTS.FAVORITES.COUNT);
-    return response.data.data;
-  } catch (error) {
-    throw error.response?.data?.error || 'Failed to fetch favorite count';
-  }
-};
-
-
 
 // ========== UNIT MANAGEMENT (ADMIN ONLY) ==========
-
-/**
- * Get all units for a property
- * Accessible to: Admins
- */
-export const getAdminPropertyUnits = async (propertyId) => {
-  try {
-    const response = await axiosInstance.get(
-      API_ENDPOINTS.PROPERTIES_ADMIN.UNITS.ALL(propertyId)
-    );
-    return extractResponseData(response);
-  } catch (error) {
-    throw error.response?.data?.error || 'Failed to fetch property units';
-  }
-};
 
 /**
  * Create a new unit for a property

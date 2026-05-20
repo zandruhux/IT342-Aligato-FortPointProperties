@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +19,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -60,18 +62,30 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
+                // --- CORS PREFLIGHT ---
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                
                 // --- PUBLIC ENDPOINTS ---
                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/properties").permitAll()
                 .requestMatchers("/properties/{id}").permitAll()
                 .requestMatchers("/properties/search/location").permitAll()
+                .requestMatchers("/properties/search").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/articles/public").permitAll()
 
                 // --- AUTHENTICATED USER ENDPOINTS ---
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/articles").hasAnyRole("ADMIN", "AGENT", "REGISTERED_USER")
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/articles/{id}").hasAnyRole("ADMIN", "AGENT", "REGISTERED_USER")
+                .requestMatchers("/api/messaging/**").hasAnyRole("REGISTERED_USER", "AGENT")
+                .requestMatchers("/api/career-applications").hasRole("REGISTERED_USER")
+                .requestMatchers("/api/career-applications/me").hasAnyRole("REGISTERED_USER", "AGENT")
                 .requestMatchers("/api/v1/auth/profile").authenticated()
                 .requestMatchers("/user/properties").authenticated()
                 .requestMatchers("/user/properties/{id}/advanced").authenticated()
                 .requestMatchers("/user/properties/search/name").authenticated()
                 .requestMatchers("/user/properties/search/location").authenticated()
+                .requestMatchers("/user/properties/search").authenticated()
                 .requestMatchers("/user/favorites").authenticated()
                 .requestMatchers("/user/favorites/{propertyId}").authenticated()
                 .requestMatchers("/user/favorites/{propertyId}/check").authenticated()
@@ -83,16 +97,25 @@ public class SecurityConfig {
                 .requestMatchers("/agent/properties/search/name").hasAnyRole("AGENT", "ADMIN")
                 .requestMatchers("/agent/properties/search/location").hasAnyRole("AGENT", "ADMIN")
                 .requestMatchers("/agent/properties/search/developer").hasAnyRole("AGENT", "ADMIN")
+                .requestMatchers("/agent/properties/search").hasAnyRole("AGENT", "ADMIN")
 
                 // --- ADMIN ENDPOINTS ---
-                .requestMatchers("/admin/properties").hasRole("ADMIN")
-                .requestMatchers("/admin/properties/{id}").hasRole("ADMIN")
-                .requestMatchers("/admin/properties/{propertyId}/units").hasRole("ADMIN")
-                .requestMatchers("/admin/properties/{propertyId}/units/{unitId}").hasRole("ADMIN")
-                .requestMatchers("/admin/properties/search/name").hasRole("ADMIN")
-                .requestMatchers("/admin/properties/search/location").hasRole("ADMIN")
-                .requestMatchers("/admin/properties/search/developer").hasRole("ADMIN")
+                .requestMatchers("/admin/properties").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/photos/upload").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/{id}").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/amenities").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/{propertyId}/units").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/{propertyId}/units/{unitId}").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/search/name").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/search/location").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/search/developer").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/admin/properties/search").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/articles").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/articles/{id}").hasRole("ADMIN")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/articles/{id}").hasRole("ADMIN")
                 .requestMatchers("/api/v1/auth/users").hasRole("ADMIN")
+                .requestMatchers("/api/admin/career-applications").hasRole("ADMIN")
+                .requestMatchers("/api/admin/career-applications/**").hasRole("ADMIN")
 
                 // fallback
                 .anyRequest().authenticated()

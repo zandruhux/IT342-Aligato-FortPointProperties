@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   FiCheckCircle,
   FiDollarSign,
@@ -6,13 +6,15 @@ import {
   FiExternalLink,
   FiFileText,
   FiHome,
+  FiImage,
   FiMapPin,
   FiTrash2,
   FiUser,
   FiX,
 } from 'react-icons/fi';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
-import { formatPrice, formatPriceRange, getDetailViewPermissions } from '../../../shared/utils/propertyHelpers';
+import { financingTypeLabel, formatPrice, formatPriceRange, getDetailViewPermissions, listingTypeLabel, normalizeAmenities, normalizeListingTypes } from '../../../shared/utils/propertyHelpers';
+import { FINANCING_TYPES, LISTING_TYPES } from '../../../shared/utils/constants';
 import * as propertyApi from '../api/propertyApi';
 
 const isRegisteredUserRole = (role) => role === 'registered_user' || role === 'USER';
@@ -33,24 +35,64 @@ const toEditState = (property = {}) => ({
   name: property.name || '',
   basicDescription: property.basicDescription || '',
   developer: property.developer || '',
-  priceRangeMin: property.priceRangeMin ?? '',
-  priceRangeMax: property.priceRangeMax ?? '',
   location: property.location || '',
-  listingType: asList(property.listingType),
+  listingTypes: normalizeListingTypes(property),
+  financingTypes: asList(property.financingTypes),
   petFriendly: !!property.petFriendly,
   parkingAvailable: !!property.parkingAvailable,
+  hasPromo: !!property.hasPromo,
+  featured: !!property.featured,
+  visible: property.visible !== false,
   turnoverDate: property.turnoverDate || '',
-  amenities: property.amenities || '',
+  amenityIds: normalizeAmenities(property).map((amenity) => amenity.id).filter(Boolean),
+  customAmenities: '',
   keySellingPoints: property.keySellingPoints || '',
   brochurePdfUrl: property.brochurePdfUrl || '',
   inventoryLink: property.inventoryLink || '',
+  photos: Array.isArray(property.photos)
+    ? property.photos
+      .map((photo, index) => ({
+        photoUrl: photo.photoUrl || photo.url || photo,
+        displayOrder: photo.displayOrder ?? index,
+      }))
+      .filter((photo) => photo.photoUrl)
+    : [],
+  units: Array.isArray(property.units)
+    ? property.units.map((unit) => ({ ...unit }))
+    : [],
 });
 
-const toUpdatePayload = (formData) => ({
-  ...formData,
-  priceRangeMin: Number(formData.priceRangeMin),
-  priceRangeMax: Number(formData.priceRangeMax),
-});
+const toUpdatePayload = (formData) => {
+  return {
+    ...formData,
+    customAmenities: asList(formData.customAmenities),
+    units: (formData.units || []).map((unit) => ({
+      unitType: unit.unitType,
+      floorArea: unit.floorArea === '' || unit.floorArea === null || unit.floorArea === undefined ? null : Number(unit.floorArea),
+      lotArea: unit.lotArea === '' || unit.lotArea === null || unit.lotArea === undefined ? null : Number(unit.lotArea),
+      reservationFee: Number(unit.reservationFee),
+      equityPeriodMonths: Number(unit.equityPeriodMonths),
+      monthlyEquity: Number(unit.monthlyEquity),
+      totalSellingPrice: Number(unit.totalSellingPrice),
+    })),
+    photos: (formData.photos || []).map((photo, index) => ({
+      photoUrl: photo.photoUrl,
+      displayOrder: index,
+    })),
+  };
+};
+
+const withFreshCoverPhoto = (property = {}) => {
+  const orderedPhotos = Array.isArray(property.photos)
+    ? [...property.photos].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+    : [];
+
+  return {
+    ...property,
+    photos: orderedPhotos,
+    coverPhotoUrl: orderedPhotos[0]?.photoUrl || orderedPhotos[0]?.url || property.coverPhotoUrl,
+  };
+};
 
 const emptyUnitForm = {
   unitType: '',
@@ -60,7 +102,6 @@ const emptyUnitForm = {
   equityPeriodMonths: '',
   monthlyEquity: '',
   totalSellingPrice: '',
-  financingTypes: [],
 };
 
 const toUnitForm = (unit = {}) => ({
@@ -71,7 +112,6 @@ const toUnitForm = (unit = {}) => ({
   equityPeriodMonths: unit.equityPeriodMonths ?? '',
   monthlyEquity: unit.monthlyEquity ?? '',
   totalSellingPrice: unit.totalSellingPrice ?? '',
-  financingTypes: asList(unit.financingTypes),
 });
 
 const toUnitPayload = (unitForm) => ({
@@ -82,7 +122,6 @@ const toUnitPayload = (unitForm) => ({
   equityPeriodMonths: Number(unitForm.equityPeriodMonths),
   monthlyEquity: Number(unitForm.monthlyEquity),
   totalSellingPrice: Number(unitForm.totalSellingPrice),
-  financingTypes: unitForm.financingTypes,
 });
 
 const DetailItem = ({ icon: Icon, label, value }) => (
@@ -138,6 +177,48 @@ const LinkField = ({ label, href }) => {
   );
 };
 
+const PhotoGallery = ({ photos = [], onPhotoClick }) => {
+  const normalizedPhotos = photos
+    .map((photo, index) => ({
+      photoUrl: photo.photoUrl || photo.url || photo,
+      displayOrder: photo.displayOrder ?? index,
+    }))
+    .filter((photo) => photo.photoUrl)
+    .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+
+  if (!normalizedPhotos.length) {
+    return (
+      <section>
+        <h3 className="mb-3 text-base font-bold text-slate-900">Property Photos</h3>
+        <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm font-medium text-slate-600">
+          No property photos available.
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <h3 className="mb-3 text-base font-bold text-slate-900">Property Photos</h3>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        {normalizedPhotos.map((photo, index) => (
+          <div key={`${photo.photoUrl}-${index}`} className="overflow-hidden rounded-lg border border-slate-200 bg-white cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onPhotoClick?.(photo.photoUrl)}>
+            <div className="aspect-[4/3] bg-slate-100">
+              <img
+                src={photo.photoUrl}
+                alt={`Property photo ${index + 1}`}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
 const UnitsTable = ({ units = [] }) => {
   if (!units.length) {
     return (
@@ -154,7 +235,7 @@ const UnitsTable = ({ units = [] }) => {
     <section>
       <h3 className="mb-3 text-base font-bold text-slate-900">Property Units ({units.length})</h3>
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-        <table className="w-full min-w-[820px] text-left text-sm">
+        <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-slate-100 text-xs uppercase tracking-wide text-slate-700">
             <tr>
               <th className="px-4 py-3 font-bold">Unit Type</th>
@@ -164,7 +245,6 @@ const UnitsTable = ({ units = [] }) => {
               <th className="px-4 py-3 font-bold">Equity Period</th>
               <th className="px-4 py-3 font-bold">Monthly Equity</th>
               <th className="px-4 py-3 font-bold">Total Price</th>
-              <th className="px-4 py-3 font-bold">Financing</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
@@ -181,19 +261,6 @@ const UnitsTable = ({ units = [] }) => {
                 </td>
                 <td className="px-4 py-3 text-slate-700">{formatPrice(unit.monthlyEquity)}</td>
                 <td className="px-4 py-3 font-semibold text-slate-900">{formatPrice(unit.totalSellingPrice)}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {asList(unit.financingTypes).length > 0 ? (
-                      asList(unit.financingTypes).map((type) => (
-                        <span key={type} className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
-                          {type}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-slate-500">N/A</span>
-                    )}
-                  </div>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -219,8 +286,12 @@ export function PropertyDetailModal({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [unitForm, setUnitForm] = useState(emptyUnitForm);
-  const [editingUnitId, setEditingUnitId] = useState(null);
-  const [isSavingUnit, setIsSavingUnit] = useState(false);
+  const [editingUnitIndex, setEditingUnitIndex] = useState(null);
+  const [photoFiles, setPhotoFiles] = useState([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState([]);
+  const [availableAmenities, setAvailableAmenities] = useState([]);
+  const [amenitySearch, setAmenitySearch] = useState('');
+  const [fullscreenPhoto, setFullscreenPhoto] = useState(null);
   const [error, setError] = useState(null);
 
   const role = user?.role;
@@ -228,6 +299,39 @@ export function PropertyDetailModal({
   const isAdmin = role === 'ADMIN';
   const isAdminOrAgent = isAdminOrAgentRole(role);
   const isRegisteredUser = isRegisteredUserRole(role);
+  const customAmenityNames = asList(formData.customAmenities);
+  const topAmenities = useMemo(() => {
+    return [...availableAmenities]
+      .sort((a, b) => {
+        const countDiff = (b.usageCount || 0) - (a.usageCount || 0);
+        if (countDiff !== 0) return countDiff;
+        return String(a.name || '').localeCompare(String(b.name || ''));
+      })
+      .slice(0, 5);
+  }, [availableAmenities]);
+  const amenitySearchMatches = useMemo(() => {
+    const term = amenitySearch.trim().toLowerCase();
+    if (!term) return [];
+
+    return availableAmenities
+      .filter((amenity) => !formData.amenityIds.includes(amenity.id))
+      .filter((amenity) => String(amenity.name || '').toLowerCase().includes(term))
+      .slice(0, 6);
+  }, [amenitySearch, availableAmenities, formData.amenityIds]);
+  const searchedAmenityExists = availableAmenities.some(
+    (amenity) => String(amenity.name || '').toLowerCase() === amenitySearch.trim().toLowerCase()
+  ) || customAmenityNames.some(
+    (amenity) => amenity.toLowerCase() === amenitySearch.trim().toLowerCase()
+  );
+
+  useEffect(() => {
+    const urls = photoFiles.map((file) => URL.createObjectURL(file));
+    setPhotoPreviewUrls(urls);
+
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [photoFiles]);
 
   useEffect(() => {
     let mounted = true;
@@ -240,7 +344,12 @@ export function PropertyDetailModal({
       setIsEditing(initialEdit && role === 'ADMIN');
       setDetailProperty(null);
       setUnitForm(emptyUnitForm);
-      setEditingUnitId(null);
+      setEditingUnitIndex(null);
+      setPhotoFiles([]);
+      setAmenitySearch('');
+      if (initialEdit && role === 'ADMIN') {
+        await loadAmenities();
+      }
 
       try {
         let response = null;
@@ -279,8 +388,8 @@ export function PropertyDetailModal({
   if (!isOpen || !property) return null;
 
   const currentProperty = detailProperty || property;
-  const listingTypes = asList(currentProperty.listingType);
-  const amenities = asList(currentProperty.amenities);
+  const listingTypes = normalizeListingTypes(currentProperty);
+  const amenities = normalizeAmenities(currentProperty);
 
   const setField = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -289,10 +398,70 @@ export function PropertyDetailModal({
   const toggleListingType = (type) => {
     setFormData((prev) => ({
       ...prev,
-      listingType: prev.listingType.includes(type)
-        ? prev.listingType.filter((item) => item !== type)
-        : [...prev.listingType, type],
+      listingTypes: prev.listingTypes.includes(type)
+        ? prev.listingTypes.filter((item) => item !== type)
+        : [...prev.listingTypes, type],
     }));
+  };
+
+  const toggleAmenity = (amenityId) => {
+    setFormData((prev) => ({
+      ...prev,
+      amenityIds: prev.amenityIds.includes(amenityId)
+        ? prev.amenityIds.filter((id) => id !== amenityId)
+        : [...prev.amenityIds, amenityId],
+    }));
+  };
+
+  const addAmenity = (amenityId) => {
+    setFormData((prev) => prev.amenityIds.includes(amenityId)
+      ? prev
+      : { ...prev, amenityIds: [...prev.amenityIds, amenityId] });
+    setAmenitySearch('');
+  };
+
+  const addCustomAmenity = (amenityName) => {
+    const normalizedName = amenityName.trim();
+    if (!normalizedName) return;
+
+    const alreadyExists = availableAmenities.some(
+      (amenity) => String(amenity.name || '').toLowerCase() === normalizedName.toLowerCase()
+    ) || asList(formData.customAmenities).some(
+      (amenity) => amenity.toLowerCase() === normalizedName.toLowerCase()
+    );
+
+    if (alreadyExists) {
+      setAmenitySearch('');
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      customAmenities: [...asList(prev.customAmenities), normalizedName],
+    }));
+    setAmenitySearch('');
+  };
+
+  const removeCustomAmenity = (amenityName) => {
+    setFormData((prev) => ({
+      ...prev,
+      customAmenities: asList(prev.customAmenities).filter((item) => item !== amenityName),
+    }));
+  };
+
+  const getSelectedAmenityName = (amenityId) => {
+    const amenity = availableAmenities.find((item) => item.id === amenityId)
+      || amenities.find((item) => item.id === amenityId);
+    return amenity?.name || 'Amenity';
+  };
+
+  const loadAmenities = async () => {
+    try {
+      const amenities = await propertyApi.getAmenities(false);
+      setAvailableAmenities(amenities);
+    } catch {
+      setAvailableAmenities([]);
+    }
   };
 
   const handleSave = async () => {
@@ -301,15 +470,30 @@ export function PropertyDetailModal({
     setIsSaving(true);
     setError(null);
     try {
-      const updated = await propertyApi.updateProperty(currentProperty.id, toUpdatePayload(formData));
-      setDetailProperty(updated);
-      setFormData(toEditState(updated));
+      const uploadedPhotos = await uploadQueuedPhotos();
+      const payload = toUpdatePayload({
+        ...formData,
+        photos: [...formData.photos, ...uploadedPhotos],
+      });
+      const updated = await propertyApi.updateProperty(currentProperty.id, payload);
+      const updatedWithCover = withFreshCoverPhoto(updated);
+      setDetailProperty(updatedWithCover);
+      setFormData(toEditState(updatedWithCover));
+      setPhotoFiles([]);
       setIsEditing(false);
-      onPropertyUpdated?.(updated);
+      onPropertyUpdated?.(updatedWithCover);
     } catch (err) {
       setError(err?.message || err || 'Failed to update property');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleStartEdit = async () => {
+    setFormData(toEditState(currentProperty));
+    setIsEditing(true);
+    if (!availableAmenities.length) {
+      await loadAmenities();
     }
   };
 
@@ -335,7 +519,7 @@ export function PropertyDetailModal({
   };
 
   const toggleFinancingType = (type) => {
-    setUnitForm((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       financingTypes: prev.financingTypes.includes(type)
         ? prev.financingTypes.filter((item) => item !== type)
@@ -343,59 +527,74 @@ export function PropertyDetailModal({
     }));
   };
 
-  const refreshAdminDetails = async () => {
-    const refreshed = await propertyApi.getAdminPropertyById(currentProperty.id);
-    setDetailProperty(refreshed);
-    onPropertyUpdated?.(refreshed);
-    return refreshed;
+  const handlePhotoFileChange = (event) => {
+    setPhotoFiles(Array.from(event.target.files || []));
   };
 
-  const handleEditUnit = (unit) => {
-    setEditingUnitId(unit.id);
+  const removeExistingPhoto = (photoIndex) => {
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, index) => index !== photoIndex),
+    }));
+  };
+
+  const moveExistingPhoto = (photoIndex, direction) => {
+    setFormData((prev) => {
+      const photos = [...prev.photos];
+      const targetIndex = photoIndex + direction;
+      if (targetIndex < 0 || targetIndex >= photos.length) {
+        return prev;
+      }
+      [photos[photoIndex], photos[targetIndex]] = [photos[targetIndex], photos[photoIndex]];
+      return { ...prev, photos };
+    });
+  };
+
+  const uploadQueuedPhotos = async () => {
+    if (!photoFiles.length) {
+      return [];
+    }
+
+    const startIndex = formData.photos.length;
+    const uploadedPhotos = [];
+    for (const [index, file] of photoFiles.entries()) {
+      uploadedPhotos.push(await propertyApi.uploadPropertyPhoto(file, startIndex + index));
+    }
+    return uploadedPhotos;
+  };
+
+  const handleEditUnit = (unit, index) => {
+    setEditingUnitIndex(index);
     setUnitForm(toUnitForm(unit));
   };
 
   const handleCancelUnitEdit = () => {
-    setEditingUnitId(null);
+    setEditingUnitIndex(null);
     setUnitForm(emptyUnitForm);
   };
 
-  const handleSaveUnit = async () => {
-    if (!isAdmin || !currentProperty.id) return;
+  const handleSaveUnit = () => {
+    const unitPayload = toUnitPayload(unitForm);
+    if (!unitPayload.unitType || !unitPayload.totalSellingPrice) return;
 
-    setIsSavingUnit(true);
-    setError(null);
-    try {
-      if (editingUnitId) {
-        await propertyApi.updatePropertyUnit(currentProperty.id, editingUnitId, toUnitPayload(unitForm));
-      } else {
-        await propertyApi.createPropertyUnit(currentProperty.id, toUnitPayload(unitForm));
-      }
-      await refreshAdminDetails();
-      handleCancelUnitEdit();
-    } catch (err) {
-      setError(err?.message || err || 'Failed to save property unit');
-    } finally {
-      setIsSavingUnit(false);
-    }
+    setFormData((prev) => ({
+      ...prev,
+      units: editingUnitIndex !== null
+        ? prev.units.map((unit, index) => (
+          index === editingUnitIndex ? { ...unit, ...unitPayload } : unit
+        ))
+        : [...prev.units, unitPayload],
+    }));
+    handleCancelUnitEdit();
   };
 
-  const handleDeleteUnit = async (unitId) => {
-    if (!isAdmin || !currentProperty.id || !unitId) return;
-    if (!window.confirm('Delete this unit? This action cannot be undone.')) return;
-
-    setIsSavingUnit(true);
-    setError(null);
-    try {
-      await propertyApi.deletePropertyUnit(currentProperty.id, unitId);
-      await refreshAdminDetails();
-      if (editingUnitId === unitId) {
-        handleCancelUnitEdit();
-      }
-    } catch (err) {
-      setError(err?.message || err || 'Failed to delete property unit');
-    } finally {
-      setIsSavingUnit(false);
+  const handleDeleteUnit = (unitIndex) => {
+    setFormData((prev) => ({
+      ...prev,
+      units: prev.units.filter((_, index) => index !== unitIndex),
+    }));
+    if (editingUnitIndex === unitIndex) {
+      handleCancelUnitEdit();
     }
   };
 
@@ -421,13 +620,20 @@ export function PropertyDetailModal({
               <p className="mt-1 text-sm font-medium text-blue-100">{currentProperty.developer}</p>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-white hover:bg-blue-900/60"
-            aria-label="Close property details"
-          >
-            <FiX size={24} />
-          </button>
+          <div className="flex items-center gap-3">
+            {currentProperty.hasPromo && !isEditing && (
+              <div className="rounded-lg bg-yellow-500 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                ONGOING PROMO!
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="rounded-lg p-2 text-white hover:bg-blue-900/60"
+              aria-label="Close property details"
+            >
+              <FiX size={24} />
+            </button>
+          </div>
         </div>
 
         <div className="overflow-y-auto px-6 py-6">
@@ -446,6 +652,116 @@ export function PropertyDetailModal({
           {isEditing ? (
             <div className="space-y-6">
               <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <FiImage className="text-blue-600" size={18} />
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Property Photos</h3>
+                    <p className="text-sm text-slate-500">The first photo is used as the card cover.</p>
+                  </div>
+                </div>
+
+                {/* Existing Photos */}
+                {formData.photos.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-3">Existing Photos ({formData.photos.length})</p>
+                    <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                      {formData.photos.map((photo, index) => (
+                        <div key={`${photo.photoUrl}-${index}`} className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                          <div className="aspect-[4/3] bg-slate-100 cursor-pointer hover:opacity-75 transition-opacity" onClick={() => setFullscreenPhoto(photo.photoUrl)}>
+                          <img
+                            src={photo.photoUrl}
+                            alt={`Property photo ${index + 1}`}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          </div>
+                          <div className="space-y-3 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                                {index === 0 ? 'Cover Photo' : `Photo ${index + 1}`}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => removeExistingPhoto(index)}
+                                className="rounded border border-red-200 bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => moveExistingPhoto(index, -1)}
+                                disabled={index === 0}
+                                className="flex-1 rounded border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-white disabled:opacity-40"
+                              >
+                                ↑ Move Up
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveExistingPhoto(index, 1)}
+                                disabled={index === formData.photos.length - 1}
+                                className="flex-1 rounded border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-white disabled:opacity-40"
+                              >
+                                ↓ Move Down
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Photos Preview */}
+                {photoFiles.length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-600 mb-3 text-blue-700">New Photos to Upload ({photoFiles.length})</p>
+                    <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {photoFiles.map((file, index) => (
+                        <div key={`${file.name}-${index}`} className="overflow-hidden rounded-lg border border-blue-300 bg-blue-50">
+                          <div className="aspect-[16/9] bg-slate-100 cursor-pointer hover:opacity-75 transition-opacity" onClick={() => setFullscreenPhoto(photoPreviewUrls[index])}>
+                            <img
+                              src={photoPreviewUrls[index]}
+                              alt={`New photo: ${file.name}`}
+                              className="h-full w-full object-cover"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </div>
+                          <div className="space-y-2 p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-bold uppercase tracking-wide text-blue-700 truncate">{file.name}</span>
+                            </div>
+                            <p className="text-xs text-slate-600">{(file.size / 1024 / 1024).toFixed(2)}MB</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {formData.photos.length === 0 && photoFiles.length === 0 && (
+                  <div className="mb-5 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 text-center text-sm font-medium text-slate-600">
+                    No photos yet. Add some to get started!
+                  </div>
+                )}
+
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                  <FiImage size={16} />
+                  Add Photos
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    multiple
+                    onChange={handlePhotoFileChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
                 <div className="mb-4">
                   <h3 className="text-base font-bold text-slate-900">Property Information</h3>
                   <p className="text-sm text-slate-500">Update the main property fields.</p>
@@ -456,12 +772,6 @@ export function PropertyDetailModal({
                 </FormField>
                 <FormField label="Developer">
                   <input className={inputClass} value={formData.developer} onChange={(event) => setField('developer', event.target.value)} />
-                </FormField>
-                <FormField label="Minimum Price">
-                  <input className={inputClass} type="number" value={formData.priceRangeMin} onChange={(event) => setField('priceRangeMin', event.target.value)} />
-                </FormField>
-                <FormField label="Maximum Price">
-                  <input className={inputClass} type="number" value={formData.priceRangeMax} onChange={(event) => setField('priceRangeMax', event.target.value)} />
                 </FormField>
                 <FormField label="Location">
                   <input className={inputClass} value={formData.location} onChange={(event) => setField('location', event.target.value)} />
@@ -474,21 +784,123 @@ export function PropertyDetailModal({
                 </FormField>
                 <FormField label="Listing Type" span>
                   <div className="flex flex-wrap gap-3 rounded-lg border border-slate-300 p-3">
-                    {['Pre-Selling', 'RFO', 'Rent-To-Own', 'Resale'].map((type) => (
-                      <label key={type} className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    {LISTING_TYPES.map((type) => (
+                      <label key={type.value} className="flex items-center gap-2 text-sm font-medium text-slate-700">
                         <input
                           type="checkbox"
-                          checked={formData.listingType.includes(type)}
-                          onChange={() => toggleListingType(type)}
+                          checked={formData.listingTypes.includes(type.value)}
+                          onChange={() => toggleListingType(type.value)}
                           className="h-4 w-4 rounded border-slate-300 text-blue-600"
                         />
-                        {type}
+                        {type.label}
+                      </label>
+                    ))}
+                  </div>
+                </FormField>
+                <FormField label="Financing Types" span>
+                  <div className="flex flex-wrap gap-3 rounded-lg border border-slate-300 p-3">
+                    {FINANCING_TYPES.map((type) => (
+                      <label key={type.value} className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <input type="checkbox" checked={formData.financingTypes.includes(type.value)} onChange={() => toggleFinancingType(type.value)} className="h-4 w-4 rounded border-slate-300 text-blue-600" />
+                        {type.label}
                       </label>
                     ))}
                   </div>
                 </FormField>
                 <FormField label="Amenities" span>
-                  <textarea className={inputClass} rows={2} value={formData.amenities} onChange={(event) => setField('amenities', event.target.value)} />
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-slate-300 p-3">
+                      <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-600">Top amenities</p>
+                      {topAmenities.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                          {topAmenities.map((amenity) => (
+                            <label key={amenity.id} className="flex items-center gap-2 rounded-full border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700">
+                              <input
+                                type="checkbox"
+                                checked={formData.amenityIds.includes(amenity.id)}
+                                onChange={() => toggleAmenity(amenity.id)}
+                                className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                              />
+                              <span>{amenity.name}</span>
+                              <span className="text-xs font-semibold text-slate-400">{amenity.usageCount || 0}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-600">No amenities available.</p>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        className={inputClass}
+                        value={amenitySearch}
+                        onChange={(event) => setAmenitySearch(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            if (amenitySearchMatches.length > 0) {
+                              addAmenity(amenitySearchMatches[0].id);
+                            } else {
+                              addCustomAmenity(amenitySearch);
+                            }
+                          }
+                        }}
+                        placeholder="Search amenities or type a new one"
+                      />
+                      {amenitySearch.trim() && (
+                        <div className="absolute left-0 right-0 z-20 mt-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                          {amenitySearchMatches.map((amenity) => (
+                            <button
+                              key={amenity.id}
+                              type="button"
+                              onClick={() => addAmenity(amenity.id)}
+                              className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            >
+                              <span>{amenity.name}</span>
+                              <span className="text-xs text-slate-400">{amenity.usageCount || 0} uses</span>
+                            </button>
+                          ))}
+                          {!searchedAmenityExists && (
+                            <button
+                              type="button"
+                              onClick={() => addCustomAmenity(amenitySearch)}
+                              className="w-full px-4 py-3 text-left text-sm font-semibold text-blue-700 hover:bg-blue-50"
+                            >
+                              Add "{amenitySearch.trim()}" as custom amenity
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {(formData.amenityIds.length > 0 || customAmenityNames.length > 0) && (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.amenityIds.map((amenityId) => {
+                          return (
+                            <button
+                              key={amenityId}
+                              type="button"
+                              onClick={() => toggleAmenity(amenityId)}
+                              className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                            >
+                              {getSelectedAmenityName(amenityId)} x
+                            </button>
+                          );
+                        })}
+                        {customAmenityNames.map((amenityName) => (
+                          <button
+                            key={amenityName}
+                            type="button"
+                            onClick={() => removeCustomAmenity(amenityName)}
+                            className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                          >
+                            {amenityName} x
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </FormField>
                 <FormField label="Key Selling Points" span>
                   <textarea className={inputClass} rows={3} value={formData.keySellingPoints} onChange={(event) => setField('keySellingPoints', event.target.value)} />
@@ -508,6 +920,18 @@ export function PropertyDetailModal({
                     <input type="checkbox" checked={formData.parkingAvailable} onChange={(event) => setField('parkingAvailable', event.target.checked)} />
                     Parking Available
                   </label>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <input type="checkbox" checked={formData.hasPromo} onChange={(event) => setField('hasPromo', event.target.checked)} />
+                    Ongoing Promo
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <input type="checkbox" checked={formData.featured} onChange={(event) => setField('featured', event.target.checked)} />
+                    Featured
+                  </label>
+                  <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                    <input type="checkbox" checked={formData.visible} onChange={(event) => setField('visible', event.target.checked)} />
+                    Visible
+                  </label>
                 </div>
                 </div>
               </div>
@@ -515,7 +939,7 @@ export function PropertyDetailModal({
               <div className="rounded-lg border border-slate-200 bg-white p-5">
                 <div className="mb-4">
                   <h3 className="text-base font-bold text-slate-900">Property Units</h3>
-                  <p className="text-sm text-slate-500">Add, edit, or remove units using the unit management API.</p>
+                  <p className="text-sm text-slate-500">Add, edit, or remove units locally. They are saved with the property form.</p>
                 </div>
 
                 <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -540,35 +964,18 @@ export function PropertyDetailModal({
                   <FormField label="Total Selling Price">
                     <input className={inputClass} type="number" value={unitForm.totalSellingPrice} onChange={(event) => setUnitField('totalSellingPrice', event.target.value)} />
                   </FormField>
-                  <FormField label="Financing Types" span>
-                    <div className="flex flex-wrap gap-3 rounded-lg border border-slate-300 p-3">
-                      {['Cash Only', 'Bank Financing', 'In-House'].map((type) => (
-                        <label key={type} className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={unitForm.financingTypes.includes(type)}
-                            onChange={() => toggleFinancingType(type)}
-                            className="h-4 w-4 rounded border-slate-300 text-blue-600"
-                          />
-                          {type}
-                        </label>
-                      ))}
-                    </div>
-                  </FormField>
                 </div>
 
                 <div className="mb-5 flex flex-wrap gap-3">
                   <button
                     onClick={handleSaveUnit}
-                    disabled={isSavingUnit}
                     className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-60"
                   >
-                    {isSavingUnit ? 'Saving Unit...' : editingUnitId ? 'Update Unit' : 'Add Unit'}
+                    {editingUnitIndex !== null ? 'Update Unit' : 'Add Unit'}
                   </button>
-                  {editingUnitId && (
+                  {editingUnitIndex !== null && (
                     <button
                       onClick={handleCancelUnitEdit}
-                      disabled={isSavingUnit}
                       className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                     >
                       Cancel Unit Edit
@@ -576,10 +983,10 @@ export function PropertyDetailModal({
                   )}
                 </div>
 
-                {(currentProperty.units || []).length > 0 ? (
+                {(formData.units || []).length > 0 ? (
                   <div className="space-y-3">
-                    {(currentProperty.units || []).map((unit) => (
-                      <div key={unit.id} className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
+                    {(formData.units || []).map((unit, index) => (
+                      <div key={unit.id || `${unit.unitType}-${index}`} className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
                         <div>
                           <p className="font-bold text-slate-900">{unit.unitType || 'Unit'}</p>
                           <p className="text-sm text-slate-600">
@@ -588,13 +995,13 @@ export function PropertyDetailModal({
                         </div>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleEditUnit(unit)}
+                            onClick={() => handleEditUnit(unit, index)}
                             className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
                           >
                             Edit Unit
                           </button>
                           <button
-                            onClick={() => handleDeleteUnit(unit.id)}
+                            onClick={() => handleDeleteUnit(index)}
                             className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
                           >
                             Delete Unit
@@ -612,6 +1019,8 @@ export function PropertyDetailModal({
             </div>
           ) : (
             <div className="space-y-7">
+              <PhotoGallery photos={currentProperty.photos || []} onPhotoClick={setFullscreenPhoto} />
+
               <section className="rounded-lg border border-slate-200 bg-white p-5">
                 <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
                   <FiHome className="text-blue-600" />
@@ -630,7 +1039,14 @@ export function PropertyDetailModal({
                     <DetailItem
                       icon={FiFileText}
                       label="Listing Type"
-                      value={listingTypes.length ? listingTypes.join(', ') : currentProperty.listingType}
+                      value={listingTypes.length ? listingTypes.map(listingTypeLabel).join(', ') : currentProperty.listingType}
+                    />
+                  )}
+                  {permissions.financingTypes && (
+                    <DetailItem
+                      icon={FiDollarSign}
+                      label="Financing"
+                      value={asList(currentProperty.financingTypes).map(financingTypeLabel).join(', ')}
                     />
                   )}
                   {permissions.turnoverDate && <DetailItem icon={FiFileText} label="Turnover Date" value={currentProperty.turnoverDate} />}
@@ -650,8 +1066,8 @@ export function PropertyDetailModal({
                   {amenities.length > 0 ? (
                     <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-4">
                       {amenities.map((amenity) => (
-                        <span key={amenity} className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                          {amenity}
+                        <span key={amenity.id || amenity.name} className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                          {amenity.name}
                         </span>
                       ))}
                     </div>
@@ -713,7 +1129,7 @@ export function PropertyDetailModal({
               ) : (
                 <>
                   <button
-                    onClick={() => setIsEditing(true)}
+                    onClick={handleStartEdit}
                     className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-5 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
                   >
                     <FiEdit2 size={16} />
@@ -741,6 +1157,26 @@ export function PropertyDetailModal({
           </button>
         </div>
       </div>
+      {fullscreenPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setFullscreenPhoto(null)}
+        >
+          <button
+            onClick={() => setFullscreenPhoto(null)}
+            className="absolute right-6 top-6 rounded-lg bg-white/20 p-2 text-white hover:bg-white/30"
+            aria-label="Close fullscreen photo"
+          >
+            <FiX size={32} />
+          </button>
+          <img
+            src={fullscreenPhoto}
+            alt="Fullscreen property photo"
+            className="max-h-[90vh] max-w-[90vw] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

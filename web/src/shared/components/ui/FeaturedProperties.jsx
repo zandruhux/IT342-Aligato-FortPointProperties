@@ -73,7 +73,7 @@ const FeaturedProperties = ({ limit = 4, showViewAll = true, title = 'Featured P
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl font-bold text-slate-900">{title}</h2>
-            <p className="text-slate-600 mt-2">Handpicked properties curated for discerning buyers</p>
+            <p className="text-slate-600 mt-2">Handpicked properties curated for discerning clients</p>
           </div>
           {showViewAll && (
             <button
