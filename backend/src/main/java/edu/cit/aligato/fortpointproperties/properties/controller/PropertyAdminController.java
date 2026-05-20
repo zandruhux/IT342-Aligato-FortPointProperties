@@ -1,6 +1,7 @@
 package edu.cit.aligato.fortpointproperties.properties.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,353 +14,191 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.properties.dto.AmenityDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
-import edu.cit.aligato.fortpointproperties.properties.dto.PropertyBasicDTO;
-import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCreateRequest;
-import edu.cit.aligato.fortpointproperties.properties.dto.PropertyDTO;
-import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitCreateRequest;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyAdminDetailDTO;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCardDTO;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCreateRequestDTO;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyPhotoDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitDTO;
-import edu.cit.aligato.fortpointproperties.properties.entity.Property;
-import edu.cit.aligato.fortpointproperties.properties.repository.PropertyRepository;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUnitRequestDTO;
+import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUpdateRequestDTO;
+import edu.cit.aligato.fortpointproperties.properties.enums.ListingType;
+import edu.cit.aligato.fortpointproperties.properties.service.PropertyPhotoStorageService;
 import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
 import jakarta.validation.Valid;
 
-/**
- * PropertyAdminController - Admin-only property management endpoints
- * 
- * Functionality:
- * - Retrieve all properties (full details)
- * - Retrieve property by ID (full details)
- * - Create new properties
- * - Update existing properties
- * - Delete properties
- * - Manage property units (create, read, update, delete)
- * 
- * Search and Filtering:
- * - Clients retrieve full property list and perform filtering using applySearchFilters()
- * - No backend search endpoints - filtering is handled client-side
- * - This follows the simplified API design pattern
- */
 @RestController
 @RequestMapping("/admin/properties")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ADMIN')")
 public class PropertyAdminController {
 
     private final PropertyService propertyService;
+    private final PropertyPhotoStorageService propertyPhotoStorageService;
     private final UserRepository userRepository;
-    private final PropertyRepository propertyRepository;
 
-    public PropertyAdminController(PropertyService propertyService, UserRepository userRepository,
-                                    PropertyRepository propertyRepository) {
+    public PropertyAdminController(
+            PropertyService propertyService,
+            PropertyPhotoStorageService propertyPhotoStorageService,
+            UserRepository userRepository) {
         this.propertyService = propertyService;
+        this.propertyPhotoStorageService = propertyPhotoStorageService;
         this.userRepository = userRepository;
-        this.propertyRepository = propertyRepository;
     }
 
-    
     @PostMapping
-    public ResponseEntity<ApiResponse<PropertyDTO>> createProperty(@Valid @RequestBody PropertyCreateRequest request) {
+    public ResponseEntity<ApiResponse<PropertyAdminDetailDTO>> createProperty(
+            @Valid @RequestBody PropertyCreateRequestDTO request) {
         try {
-            // Get the authenticated user email from Spring Security
             String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-            User currentUser = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-            //Saves to the Database
-            Property property = propertyService.createProperty(request, currentUser);
-            
-            // Convert to DTO (includes createdBy information)
-            PropertyDTO dto = propertyService.convertPropertyToDTO(property);
-
-            ApiResponse<PropertyDTO> response = ApiResponse.success(dto);
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
+            User currentUser = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            return new ResponseEntity<>(ApiResponse.success(propertyService.createProperty(request, currentUser)), HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("PROP-001", e.getMessage(), null);
-            ApiResponse<PropertyDTO> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("PROP-001", e.getMessage(), null)), HttpStatus.BAD_REQUEST);
         }
     }
 
-    // ADMIN - GETS ALL PROPERTIES (card view)
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> getAllProperties() {
-        try {
-            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
-                    .map(dto -> new PropertyBasicDTO(
-                            dto.getId(),
-                            dto.getName(),
-                            dto.getBasicDescription(),
-                            dto.getLocation(),
-                            dto.getPriceRangeMin(),
-                            dto.getPriceRangeMax()))
-                    .toList();
-            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("PROP-002", e.getMessage(), null);
-            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<ApiResponse<List<PropertyCardDTO>>> getAllProperties() {
+        return ResponseEntity.ok(ApiResponse.success(propertyService.getAdminCards()));
     }
 
-    // ADMIN - GET PROPERTY BY ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PropertyDTO>> getPropertyById(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<PropertyAdminDetailDTO>> getPropertyById(@PathVariable String id) {
         try {
-            PropertyDTO property = propertyService.getPropertyById(id);
-            ApiResponse<PropertyDTO> response = ApiResponse.success(property);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(ApiResponse.success(propertyService.getAdminDetail(id)));
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("PROP-003", "Property not found", null);
-            ApiResponse<PropertyDTO> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("PROP-003", "Property not found", null)), HttpStatus.NOT_FOUND);
         }
     }
 
-    // ADMIN - UPDATE PROPERTY
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PropertyDTO>> updateProperty(@PathVariable String id, 
-                                                                   @Valid @RequestBody PropertyCreateRequest request) {
+    public ResponseEntity<ApiResponse<PropertyAdminDetailDTO>> updateProperty(
+            @PathVariable String id,
+            @Valid @RequestBody PropertyUpdateRequestDTO request) {
         try {
-            Property property = propertyService.updateProperty(id, request);
-            PropertyDTO dto = propertyService.convertPropertyToDTO(property);
-
-            ApiResponse<PropertyDTO> response = ApiResponse.success(dto);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(ApiResponse.success(propertyService.updateProperty(id, request)));
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("PROP-004", e.getMessage(), null);
-            ApiResponse<PropertyDTO> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("PROP-004", e.getMessage(), null)), HttpStatus.NOT_FOUND);
         }
     }
 
-    // ADMIN - DELETE PROPERTY
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProperty(@PathVariable String id) {
         try {
             propertyService.deleteProperty(id);
-            ApiResponse<Void> response = ApiResponse.success(null);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(ApiResponse.success(null));
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("PROP-005", "Property not found", null);
-            ApiResponse<Void> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("PROP-005", "Property not found", null)), HttpStatus.NOT_FOUND);
         }
     }
 
-    /**
-     * Search properties by name (Admin view)
-     * Backend search endpoint for scalability with large datasets
-     */
-    @GetMapping("/search/name")
-    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByName(@org.springframework.web.bind.annotation.RequestParam String name) {
-        try {
-            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
-                    .filter(p -> p.getName() != null && p.getName().toLowerCase().contains(name.toLowerCase()))
-                    .map(dto -> new PropertyBasicDTO(
-                            dto.getId(),
-                            dto.getName(),
-                            dto.getBasicDescription(),
-                            dto.getLocation(),
-                            dto.getPriceRangeMin(),
-                            dto.getPriceRangeMax()))
-                    .toList();
-
-            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("PROP-019", e.getMessage(), null);
-            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Search properties by location (Admin view)
-     * Backend search endpoint for scalability with large datasets
-     */
-    @GetMapping("/search/location")
-    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByLocation(@org.springframework.web.bind.annotation.RequestParam String location) {
-        try {
-            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
-                    .filter(p -> p.getLocation() != null && p.getLocation().toLowerCase().contains(location.toLowerCase()))
-                    .map(dto -> new PropertyBasicDTO(
-                            dto.getId(),
-                            dto.getName(),
-                            dto.getBasicDescription(),
-                            dto.getLocation(),
-                            dto.getPriceRangeMin(),
-                            dto.getPriceRangeMax()))
-                    .toList();
-
-            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("PROP-020", e.getMessage(), null);
-            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Search properties by developer (Admin view)
-     * Backend search endpoint for scalability with large datasets
-     */
-    @GetMapping("/search/developer")
-    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> searchByDeveloper(@org.springframework.web.bind.annotation.RequestParam String developer) {
-        try {
-            List<PropertyBasicDTO> properties = propertyService.getAllProperties().stream()
-                    .filter(p -> p.getDeveloper() != null && p.getDeveloper().toLowerCase().contains(developer.toLowerCase()))
-                    .map(dto -> new PropertyBasicDTO(
-                            dto.getId(),
-                            dto.getName(),
-                            dto.getBasicDescription(),
-                            dto.getLocation(),
-                            dto.getPriceRangeMin(),
-                            dto.getPriceRangeMax()))
-                    .toList();
-
-            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("PROP-021", e.getMessage(), null);
-            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    /**
-     * Combined search endpoint for admin supporting optional filters
-     */
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<PropertyBasicDTO>>> search(
-            @org.springframework.web.bind.annotation.RequestParam(required = false) String name,
-            @org.springframework.web.bind.annotation.RequestParam(required = false) String location,
-            @org.springframework.web.bind.annotation.RequestParam(required = false) String developer,
-            @org.springframework.web.bind.annotation.RequestParam(required = false) Double minPrice,
-            @org.springframework.web.bind.annotation.RequestParam(required = false) Double maxPrice) {
-        try {
-            List<PropertyBasicDTO> properties = propertyService.searchWithFilters(name, location, developer, minPrice, maxPrice).stream()
-                    .map(dto -> new PropertyBasicDTO(
-                            dto.getId(),
-                            dto.getName(),
-                            dto.getBasicDescription(),
-                            dto.getLocation(),
-                            dto.getPriceRangeMin(),
-                            dto.getPriceRangeMax()))
-                    .toList();
+    public ResponseEntity<ApiResponse<List<PropertyCardDTO>>> search(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String location,
+            @RequestParam(required = false) String developer,
+            @RequestParam(required = false) ListingType listingType,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
+        return ResponseEntity.ok(ApiResponse.success(
+                propertyService.searchCards(name, location, developer, listingType, minPrice, maxPrice, true)));
+    }
 
-            ApiResponse<List<PropertyBasicDTO>> response = ApiResponse.success(properties);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("PROP-022", e.getMessage(), null);
-            ApiResponse<List<PropertyBasicDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    @GetMapping("/search/name")
+    public ResponseEntity<ApiResponse<List<PropertyCardDTO>>> searchByName(@RequestParam String name) {
+        return search(name, null, null, null, null, null);
+    }
+
+    @GetMapping("/search/location")
+    public ResponseEntity<ApiResponse<List<PropertyCardDTO>>> searchByLocation(@RequestParam String location) {
+        return search(null, location, null, null, null, null);
+    }
+
+    @GetMapping("/search/developer")
+    public ResponseEntity<ApiResponse<List<PropertyCardDTO>>> searchByDeveloper(@RequestParam String developer) {
+        return search(null, null, developer, null, null, null);
+    }
+
+    @GetMapping("/amenities")
+    public ResponseEntity<ApiResponse<List<AmenityDTO>>> getAmenities(
+            @RequestParam(defaultValue = "false") boolean defaultsOnly) {
+        return ResponseEntity.ok(ApiResponse.success(propertyService.getAmenities(defaultsOnly)));
+    }
+
+    @PostMapping("/amenities")
+    public ResponseEntity<ApiResponse<AmenityDTO>> createAmenity(@RequestBody Map<String, Object> request) {
+        String name = request.get("name") == null ? null : String.valueOf(request.get("name"));
+        Boolean defaultAmenity = request.get("defaultAmenity") instanceof Boolean b ? b : false;
+        try {
+            return new ResponseEntity<>(ApiResponse.success(propertyService.createAmenity(name, defaultAmenity)), HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("AMENITY-001", e.getMessage(), null)), HttpStatus.BAD_REQUEST);
         }
     }
 
-    // ========== UNIT MANAGEMENT ENDPOINTS ==========
+    @PostMapping("/photos/upload")
+    public ResponseEntity<ApiResponse<PropertyPhotoDTO>> uploadPropertyPhoto(
+            @RequestParam("photo") MultipartFile photo,
+            @RequestParam(defaultValue = "0") Integer displayOrder) {
+        try {
+            PropertyPhotoStorageService.UploadedPropertyPhoto uploadedPhoto =
+                    propertyPhotoStorageService.uploadPhoto(photo);
+            return new ResponseEntity<>(
+                    ApiResponse.success(new PropertyPhotoDTO(uploadedPhoto.getUrl(), displayOrder)),
+                    HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(
+                    ApiResponse.error(new ErrorDetail("PROPERTY-PHOTO-001", e.getMessage(), null)),
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
 
-    /**
-     * Get all units for a property
-     */
     @GetMapping("/{propertyId}/units")
     public ResponseEntity<ApiResponse<List<PropertyUnitDTO>>> getPropertyUnits(@PathVariable String propertyId) {
-        try {
-            List<PropertyUnitDTO> units = propertyService.getPropertyUnits(propertyId);
-            ApiResponse<List<PropertyUnitDTO>> response = ApiResponse.success(units);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("UNIT-001", e.getMessage(), null);
-            ApiResponse<List<PropertyUnitDTO>> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return ResponseEntity.ok(ApiResponse.success(propertyService.getPropertyUnits(propertyId)));
     }
 
-    /**
-     * Add a new unit to a property
-     */
     @PostMapping("/{propertyId}/units")
     public ResponseEntity<ApiResponse<PropertyUnitDTO>> createPropertyUnit(
             @PathVariable String propertyId,
-            @Valid @RequestBody PropertyUnitCreateRequest request) {
+            @Valid @RequestBody PropertyUnitRequestDTO request) {
         try {
-            var unit = propertyService.createPropertyUnit(propertyId, request);
-            var dto = new PropertyUnitDTO();
-            dto.setId(unit.getId());
-            dto.setUnitType(unit.getUnitType());
-            dto.setFloorArea(unit.getFloorArea());
-            dto.setLotArea(unit.getLotArea());
-            dto.setReservationFee(unit.getReservationFee());
-            dto.setEquityPeriodMonths(unit.getEquityPeriodMonths());
-            dto.setMonthlyEquity(unit.getMonthlyEquity());
-            dto.setTotalSellingPrice(unit.getTotalSellingPrice());
-            dto.setFinancingTypes(unit.getFinancingTypes());
-            dto.setCreatedAt(unit.getCreatedAt());
-            dto.setUpdatedAt(unit.getUpdatedAt());
-
-            ApiResponse<PropertyUnitDTO> response = ApiResponse.success(dto);
-            return new ResponseEntity<>(response, HttpStatus.CREATED);
+            return new ResponseEntity<>(ApiResponse.success(propertyService.createPropertyUnit(propertyId, request)), HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("UNIT-002", e.getMessage(), null);
-            ApiResponse<PropertyUnitDTO> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("UNIT-002", e.getMessage(), null)), HttpStatus.BAD_REQUEST);
         }
     }
 
-    /**
-     * Update a unit
-     */
     @PutMapping("/{propertyId}/units/{unitId}")
     public ResponseEntity<ApiResponse<PropertyUnitDTO>> updatePropertyUnit(
             @PathVariable String propertyId,
             @PathVariable String unitId,
-            @Valid @RequestBody PropertyUnitCreateRequest request) {
+            @Valid @RequestBody PropertyUnitRequestDTO request) {
         try {
-            var unit = propertyService.updatePropertyUnit(unitId, request);
-            var dto = new PropertyUnitDTO();
-            dto.setId(unit.getId());
-            dto.setUnitType(unit.getUnitType());
-            dto.setFloorArea(unit.getFloorArea());
-            dto.setLotArea(unit.getLotArea());
-            dto.setReservationFee(unit.getReservationFee());
-            dto.setEquityPeriodMonths(unit.getEquityPeriodMonths());
-            dto.setMonthlyEquity(unit.getMonthlyEquity());
-            dto.setTotalSellingPrice(unit.getTotalSellingPrice());
-            dto.setFinancingTypes(unit.getFinancingTypes());
-            dto.setCreatedAt(unit.getCreatedAt());
-            dto.setUpdatedAt(unit.getUpdatedAt());
-
-            ApiResponse<PropertyUnitDTO> response = ApiResponse.success(dto);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(ApiResponse.success(propertyService.updatePropertyUnit(unitId, request)));
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("UNIT-002", e.getMessage(), null);
-            ApiResponse<PropertyUnitDTO> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("UNIT-002", e.getMessage(), null)), HttpStatus.NOT_FOUND);
         }
     }
 
-    /**
-     * Delete a unit from a property
-     */
     @DeleteMapping("/{propertyId}/units/{unitId}")
     public ResponseEntity<ApiResponse<Void>> deletePropertyUnit(
             @PathVariable String propertyId,
             @PathVariable String unitId) {
         try {
             propertyService.deletePropertyUnit(unitId);
-            ApiResponse<Void> response = ApiResponse.success(null);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(ApiResponse.success(null));
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("UNIT-003", "Unit not found", null);
-            ApiResponse<Void> errorResponse = ApiResponse.error(error);
-            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(ApiResponse.error(new ErrorDetail("UNIT-003", "Unit not found", null)), HttpStatus.NOT_FOUND);
         }
     }
-
-
 }
