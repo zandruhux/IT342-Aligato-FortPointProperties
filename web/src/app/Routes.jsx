@@ -5,6 +5,7 @@ import HomePage from '../features/public/pages'
 import { PropertyListPage } from '../features/properties/pages'
 import { FavoritePage } from '../features/favorites/pages'
 import { AgentPropertiesListPage as AgentPropertiesPage } from '../features/properties/pages'
+import { AdminDashboardPage } from '../features/properties/pages'
 import { AgentBulletin } from '../features/bulletin'
 import { AgentInboxPage, RegisteredUserMessagesPage } from '../features/messaging'
 import { AgentProfile } from '../features/profile/pages'
@@ -136,7 +137,7 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
         path="/admin/dashboard"
         element={
           <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
-            <AdminPropertiesPage onLogout={onLogout} />
+            <AdminDashboardPage onLogout={onLogout} />
           </RequireRole>
         }
       />
