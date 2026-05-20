@@ -1,25 +1,22 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useProperties, usePropertySearch, usePropertyDetailAccess } from '../hooks';
 import { PropertyCard, PropertySearchFilter, PropertyDetailModal } from '../components';
 import { AgentSidebar } from '../../../shared/components/layout';
+import { LISTING_TYPES } from '../../../shared/utils/constants';
 
 /**
  * AgentPropertiesListPage Component
- * Refactored to use vertical slicing architecture
  * Displays properties assigned to the agent
  */
 export default function AgentPropertiesListPage() {
   const { properties, loading, error, fetchProperties } = useProperties();
   const {
     results: filterResults,
+    filters,
     search,
     updateFilters,
     clearFilters,
     hasSearched,
-    searchByName,
-    searchByLocation,
-    searchByDeveloper,
-    setPriceRange,
   } = usePropertySearch();
   const {
     isDetailModalOpen,
@@ -38,8 +35,31 @@ export default function AgentPropertiesListPage() {
       clearFilters();
       return;
     }
-    updateFilters({ listingType });
-    await search();
+    const nextFilters = { ...filters, listingType };
+    updateFilters(nextFilters);
+    await search(nextFilters);
+  };
+
+  const handleSearch = async (searchTerm, searchType) => {
+    if (!searchTerm.trim()) {
+      clearFilters();
+      return;
+    }
+
+    const nextFilters = {
+      ...filters,
+      name: searchType === 'name' ? searchTerm : '',
+      location: searchType === 'location' ? searchTerm : '',
+      developer: searchType === 'developer' ? searchTerm : '',
+    };
+    updateFilters(nextFilters);
+    await search(nextFilters);
+  };
+
+  const handleSortChange = async (sortMode) => {
+    const nextFilters = { ...filters, sortMode };
+    updateFilters(nextFilters);
+    await search(nextFilters);
   };
 
   const handlePropertyClick = (propertyId) => {
@@ -63,10 +83,8 @@ export default function AgentPropertiesListPage() {
       {/* Sidebar */}
       <AgentSidebar />
       
-      {/* Main Content */}
       <div className="flex-1 ml-56 bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Section */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">My Properties</h1>
             <p className="text-gray-600 text-lg">
@@ -85,21 +103,13 @@ export default function AgentPropertiesListPage() {
           {/* Filter Section */}
           <div className="mb-8">
             <PropertySearchFilter
-              searchTypes={[
-                { value: 'name', label: 'Property Name' },
-                { value: 'location', label: 'Location' },
-                { value: 'developer', label: 'Developer' },
-              ]}
-              onSearch={(term, type) => {
-                if (type === 'name') searchByName(term);
-                else if (type === 'location') searchByLocation(term);
-                else if (type === 'developer') searchByDeveloper(term);
-              }}
-              onPriceRangeChange={(min, max) => setPriceRange(min, max)}
+              onSearch={handleSearch}
+              onSortChange={handleSortChange}
               onClearFilters={() => {
                 clearFilters();
                 fetchProperties();
               }}
+              sortMode={filters.sortMode}
               isLoading={loading}
             />
 
@@ -111,9 +121,9 @@ export default function AgentPropertiesListPage() {
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">All Listings</option>
-                  <option value="Pre-Selling">Pre-Selling</option>
-                  <option value="RFO">Ready for Occupancy (RFO)</option>
-                  <option value="Resale">Resale</option>
+                  {LISTING_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
                 </select>
                 {hasSearched && (
                   <button

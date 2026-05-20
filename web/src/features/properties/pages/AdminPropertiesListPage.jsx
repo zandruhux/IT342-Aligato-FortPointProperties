@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { useProperties, usePropertySearch, usePropertyDetailAccess } from '../hooks';
 import { PropertyCard, PropertySearchFilter, PropertyDetailModal } from '../components';
@@ -8,12 +8,11 @@ import { AdminSidebar } from '../../../shared/components/layout';
 
 /**
  * AdminPropertiesListPage Component
- * Refactored to use vertical slicing architecture
  * Displays all properties with management capabilities
  */
 export default function AdminPropertiesListPage() {
   const { properties, loading, error, fetchProperties, setProperties, setError } = useProperties();
-  const { results: searchResults, search, updateFilters, clearFilters, hasSearched } = usePropertySearch();
+  const { results: searchResults, filters, search, updateFilters, clearFilters, hasSearched } = usePropertySearch();
   const {
     isDetailModalOpen,
     selectedProperty,
@@ -22,6 +21,7 @@ export default function AdminPropertiesListPage() {
   } = usePropertyDetailAccess();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createSuccess, setCreateSuccess] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [openDetailsInEditMode, setOpenDetailsInEditMode] = useState(false);
 
@@ -38,7 +38,7 @@ export default function AdminPropertiesListPage() {
         return;
       }
 
-      const filterObj = {};
+      const filterObj = { ...filters, name: '', location: '', developer: '' };
       if (searchType === 'name') {
         filterObj.name = searchTerm;
       } else if (searchType === 'location') {
@@ -48,18 +48,18 @@ export default function AdminPropertiesListPage() {
       }
 
       updateFilters(filterObj);
-      await search();
-    } catch (err) {
-      console.error('Search error:', err);
+      await search(filterObj);
+    } catch {
       setError('Search failed');
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handlePriceRangeChange = async (minPrice, maxPrice) => {
-    updateFilters({ minPrice, maxPrice });
-    await search();
+  const handleSortChange = async (sortMode) => {
+    const nextFilters = { ...filters, sortMode };
+    updateFilters(nextFilters);
+    await search(nextFilters);
   };
 
   const handleClearFilters = () => {
@@ -93,13 +93,13 @@ export default function AdminPropertiesListPage() {
       if (hasSearched) {
         clearFilters();
       }
-    } catch (err) {
+    } catch {
       setError('Failed to delete property');
-      console.error('Delete error:', err);
     }
   };
 
   const handleCreateProperty = async (formData) => {
+    setIsCreating(true);
     try {
       const newProperty = await propertyApi.createProperty(formData);
       setProperties([...properties, newProperty]);
@@ -109,15 +109,26 @@ export default function AdminPropertiesListPage() {
       // Refresh properties list
       fetchProperties();
     } catch (err) {
-      setError('Failed to create property. Please try again.');
-      console.error('Create error:', err);
+      setError(err?.message || 'Failed to create property. Please try again.');
+      throw err;
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleDetailUpdated = (updatedProperty) => {
+    const orderedPhotos = Array.isArray(updatedProperty.photos)
+      ? [...updatedProperty.photos].sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+      : [];
+    const propertyWithFreshCover = {
+      ...updatedProperty,
+      photos: orderedPhotos,
+      coverPhotoUrl: orderedPhotos[0]?.photoUrl || orderedPhotos[0]?.url || updatedProperty.coverPhotoUrl,
+    };
+
     setProperties((prevProperties) =>
       prevProperties.map((property) =>
-        property.id === updatedProperty.id ? { ...property, ...updatedProperty } : property
+        property.id === updatedProperty.id ? { ...property, ...propertyWithFreshCover } : property
       )
     );
   };
@@ -138,10 +149,8 @@ export default function AdminPropertiesListPage() {
       {/* Sidebar */}
       <AdminSidebar />
       
-      {/* Main Content */}
       <div className="flex-1 ml-64 bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Section */}
           <div className="mb-8 flex justify-between items-start">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">Manage Properties</h1>
@@ -173,14 +182,10 @@ export default function AdminPropertiesListPage() {
           {/* Search Section */}
           <div className="mb-8">
             <PropertySearchFilter
-              searchTypes={[
-                { value: 'name', label: 'Property Name' },
-                { value: 'location', label: 'Location' },
-                { value: 'developer', label: 'Developer' },
-              ]}
               onSearch={handleSearch}
-              onPriceRangeChange={handlePriceRangeChange}
+              onSortChange={handleSortChange}
               onClearFilters={handleClearFilters}
+              sortMode={filters.sortMode}
               isLoading={isSearching || loading}
             />
           </div>
@@ -217,6 +222,7 @@ export default function AdminPropertiesListPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateProperty}
+        isLoading={isCreating}
       />
 
       {/* Property Detail Modal */}

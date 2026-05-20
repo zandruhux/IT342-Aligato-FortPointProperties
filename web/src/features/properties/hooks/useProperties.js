@@ -7,7 +7,7 @@ import { useAuthContext } from '../../../shared/context/useAuthContext';
  * Manages fetching and state for properties based on user role
  */
 export const useProperties = () => {
-  const { isLoggedIn, user } = useAuthContext();
+  const { authReady, isLoggedIn, user } = useAuthContext();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -17,25 +17,11 @@ export const useProperties = () => {
     setLoading(true);
     setError(null);
     try {
-      let data;
-      if (!isLoggedIn) {
-        // Public user
-        data = await propertyApi.getPublicProperties();
-        console.log('Fetched public properties:', data);
-      } else if (user?.role === 'ADMIN') {
-        // Admin user
-        data = await propertyApi.getAdminAllProperties();
-        console.log('Fetched admin properties:', data);
-      } else if (user?.role === 'AGENT') {
-        // Agent user
-        data = await propertyApi.getAgentAllProperties();
-      } else if (user?.role === 'registered_user' || user?.role === 'USER') {
-        // Registered user
-        data = await propertyApi.getUserProperties();
-      } else {
-        // Public user (fallback) 
-        data = await propertyApi.getPublicProperties();
+      if (!authReady) {
+        return;
       }
+
+      const data = await propertyApi.getProperties(isLoggedIn ? user?.role : 'PUBLIC');
       setProperties(data || []);
     } catch (err) {
       setError(err?.message || 'Failed to fetch properties');
@@ -43,7 +29,7 @@ export const useProperties = () => {
     } finally {
       setLoading(false);
     }
-  }, [isLoggedIn, user?.role]);
+  }, [authReady, isLoggedIn, user?.role]);
 
   // Fetch featured properties (public)
   const fetchFeaturedProperties = useCallback(async (limit = 4) => {

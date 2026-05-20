@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { useFavorites } from '../../favorites/hooks/useFavorites';
 import { useProperties, usePropertySearch, usePropertyDetailAccess } from '../hooks';
-import { PropertyCard, PropertyDetailModal } from '../components';
+import { PropertyCard, PropertyDetailModal, PropertySearchFilter } from '../components';
 
 /**
  * PropertyListPage Component
@@ -12,11 +12,18 @@ import { PropertyCard, PropertyDetailModal } from '../components';
  */
 export default function PropertyListPage() {
   const [searchParams] = useSearchParams();
-  const { isLoggedIn, isRegisteredUser } = useAuthContext();
+  const { authReady, isLoggedIn, isRegisteredUser } = useAuthContext();
   const { favoriteIds, loading: favoritesLoading, fetchFavorites, toggleFavorite } = useFavorites();
   const [pendingFavoriteIds, setPendingFavoriteIds] = useState(new Set());
   const { properties, loading, fetchProperties } = useProperties();
-  const { results: searchResults, searchByLocation, clearFilters, hasSearched } = usePropertySearch();
+  const {
+    results: searchResults,
+    filters,
+    search,
+    updateFilters,
+    clearFilters,
+    hasSearched,
+  } = usePropertySearch();
   const {
     isDetailModalOpen,
     selectedProperty,
@@ -28,13 +35,25 @@ export default function PropertyListPage() {
 
   // Load properties on component mount
   useEffect(() => {
-    const locationQuery = searchParams.get('location');
-    if (locationQuery) {
-      searchByLocation(locationQuery);
+    if (!authReady) {
+      return;
+    }
+
+    const searchTerm = searchParams.get('searchTerm') || searchParams.get('location') || '';
+    const searchType = searchParams.get('searchType') || (searchTerm ? 'location' : '');
+
+    if (searchTerm && searchType) {
+      const nextFilters = {
+        name: searchType === 'name' ? searchTerm : '',
+        location: searchType === 'location' ? searchTerm : '',
+        developer: searchType === 'developer' ? searchTerm : '',
+      };
+      updateFilters(nextFilters);
+      search(nextFilters);
     } else {
       fetchProperties();
     }
-  }, [fetchProperties, searchByLocation, searchParams]);
+  }, [authReady, fetchProperties, search, searchParams, updateFilters]);
 
   useEffect(() => {
     if (!canUseFavorites) {
@@ -45,16 +64,30 @@ export default function PropertyListPage() {
     fetchFavorites();
   }, [canUseFavorites, fetchFavorites]);
 
-  const handleSearch = async (location) => {
-    if (!location.trim()) {
+  const handleSearch = async (searchTerm, searchType) => {
+    if (!searchTerm.trim()) {
       clearFilters();
       return;
     }
-    await searchByLocation(location);
+
+    const nextFilters = {
+      ...filters,
+      name: searchType === 'name' ? searchTerm : '',
+      location: searchType === 'location' ? searchTerm : '',
+      developer: searchType === 'developer' ? searchTerm : '',
+    };
+    updateFilters(nextFilters);
+    await search(nextFilters);
   };
 
   const handleClearSearch = () => {
     clearFilters();
+  };
+
+  const handleSortChange = async (sortMode) => {
+    const nextFilters = { ...filters, sortMode };
+    updateFilters(nextFilters);
+    await search(nextFilters);
   };
 
   const handlePropertyClick = (propertyId) => {
@@ -86,7 +119,6 @@ export default function PropertyListPage() {
   return (
     <div className="bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">All Properties</h1>
           <p className="text-gray-600 text-lg">
@@ -95,36 +127,14 @@ export default function PropertyListPage() {
         </div>
 
         {/* Search Section */}
-        <div className="mb-8 bg-white rounded-lg shadow p-6">
-          <div className="flex gap-4">
-            <input
-              type="text"
-              placeholder="Search by location..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch(e.target.value);
-                }
-              }}
-            />
-            <button
-              onClick={() => {
-                const input = document.querySelector('input[placeholder="Search by location..."]');
-                handleSearch(input?.value || '');
-              }}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Search
-            </button>
-            {hasSearched && (
-              <button
-                onClick={handleClearSearch}
-                className="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+        <div className="mb-8">
+          <PropertySearchFilter
+            onSearch={handleSearch}
+            onSortChange={handleSortChange}
+            onClearFilters={handleClearSearch}
+            sortMode={filters.sortMode}
+            isLoading={loading}
+          />
         </div>
 
         {/* Properties Grid */}
@@ -159,7 +169,6 @@ export default function PropertyListPage() {
           </div>
         ) : (
           <div>
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">Featured Properties</h2>
             {displayProperties && displayProperties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayProperties.map((property) => (
