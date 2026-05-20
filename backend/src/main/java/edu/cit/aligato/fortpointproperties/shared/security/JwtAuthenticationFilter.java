@@ -38,10 +38,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (jwtUtil.isTokenValid(token)) {
                     String email = jwtUtil.extractEmail(token);
-                    String role = jwtUtil.extractRole(token);
+                    String role = normalizeRole(jwtUtil.extractRole(token));
 
                     List<GrantedAuthority> authorities = Arrays.asList(
-                            new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
+                            new SimpleGrantedAuthority("ROLE_" + role));
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             email, null, authorities);
 
@@ -60,5 +60,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String normalizeRole(String role) {
+        if (role == null || role.isBlank()) {
+            return "ANONYMOUS";
+        }
+
+        String normalized = role.trim().toUpperCase();
+        if (normalized.startsWith("ROLE_")) {
+            normalized = normalized.substring("ROLE_".length());
+        }
+        if ("USER".equals(normalized) || "REGISTERED_USER".equals(normalized) || "REGISTERED_USEER".equals(normalized)) {
+            return "REGISTERED_USER";
+        }
+        return normalized;
     }
 }
