@@ -9,6 +9,21 @@ export const ROLES = {
   PUBLIC: 'PUBLIC',
 };
 
+export const LISTING_TYPES = [
+  { value: 'PRE_SELLING', label: 'Pre-Selling' },
+  { value: 'RFO', label: 'RFO' },
+  { value: 'RENT_TO_OWN', label: 'Rent-to-Own' },
+  { value: 'RESALE', label: 'Resale' },
+];
+
+export const FINANCING_TYPES = [
+  { value: 'BANK_FINANCING', label: 'Bank Financing' },
+  { value: 'PAG_IBIG_HDMF', label: 'Pag-IBIG HDMF' },
+  { value: 'IN_HOUSE_FINANCING', label: 'In-House Financing' },
+  { value: 'DEFERRED_CASH', label: 'Deferred Cash' },
+  { value: 'SPOT_CASH', label: 'Spot Cash' },
+];
+
 export const HTTP_STATUS = {
   OK: 200,
   CREATED: 201,
@@ -66,6 +81,8 @@ export const API_ENDPOINTS = {
     SEARCH_LOCATION: '/admin/properties/search/location',
     SEARCH_DEVELOPER: '/admin/properties/search/developer',
     SEARCH: '/admin/properties/search',
+    AMENITIES: '/admin/properties/amenities',
+    PHOTO_UPLOAD: '/admin/properties/photos/upload',
     UNITS: {
       ALL: (propertyId) => `/admin/properties/${propertyId}/units`,
       CREATE: (propertyId) => `/admin/properties/${propertyId}/units`,

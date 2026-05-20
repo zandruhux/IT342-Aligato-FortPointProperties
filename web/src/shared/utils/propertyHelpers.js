@@ -18,6 +18,36 @@ export const formatPrice = (price) => {
   }).format(price);
 };
 
+export const enumLabel = (options, value) => {
+  return options.find((option) => option.value === value)?.label || value || 'N/A';
+};
+
+export const listingTypeLabel = (value) => enumLabel(LISTING_TYPES, value);
+
+export const financingTypeLabel = (value) => enumLabel(FINANCING_TYPES, value);
+
+export const asArray = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return String(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+export const normalizeListingTypes = (property) => {
+  return asArray(property?.listingTypes ?? property?.listingType);
+};
+
+export const normalizeAmenities = (property) => {
+  const raw = property?.amenities;
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return raw.map((amenity) => (typeof amenity === 'string' ? { name: amenity } : amenity)).filter(Boolean);
+  }
+  return asArray(raw).map((name) => ({ name }));
+};
+
 /**
  * Format price range
  * @param {number} min - Minimum price
@@ -76,7 +106,7 @@ export const filterByListingType = (properties, listingTypes) => {
   if (!listingTypes || listingTypes.length === 0) return properties;
 
   return properties.filter((prop) => {
-    const propTypes = prop.listingType ? prop.listingType.split(',').map((t) => t.trim()) : [];
+    const propTypes = normalizeListingTypes(prop);
     return listingTypes.some((type) => propTypes.includes(type));
   });
 };
@@ -113,10 +143,13 @@ export const getDetailViewPermissions = (userRole) => {
     priceRangeMin: true,
     priceRangeMax: true,
     listingType: true,
+    listingTypes: true,
     petFriendly: true,
     parkingAvailable: true,
     turnoverDate: true,
     amenities: true,
+    financingTypes: true,
+    hasPromo: true,
     createdAt: false,
     updatedAt: false,
     units: true,
@@ -164,3 +197,4 @@ export const filterPropertyByRole = (property, userRole) => {
 
   return filtered;
 };
+import { LISTING_TYPES, FINANCING_TYPES } from './constants';

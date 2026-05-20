@@ -3,19 +3,61 @@ import { hasDetailAccess, canEditProperty, canDeleteProperty, canCreateProperty 
 import { getRolePermissions, isAdmin, isAgent, isRegisteredUser } from '../utils/roleRules';
 import { AuthContext } from './AuthContextBase';
 
+const normalizeStoredUser = (userData = {}) => ({
+  id: userData.id,
+  email: userData.email,
+  firstname: userData.firstname,
+  lastname: userData.lastname,
+  role: userData.role || userData.roles?.[0] || localStorage.getItem('role') || 'USER',
+});
+
+const getInitialAuthState = () => {
+  const token = localStorage.getItem('accessToken');
+  const refreshToken = localStorage.getItem('refreshToken');
+  const userStr = localStorage.getItem('user');
+
+  if (!token || !userStr) {
+    return {
+      isLoggedIn: false,
+      user: null,
+      tokens: {
+        accessToken: null,
+        refreshToken: null,
+      },
+      authReady: true,
+    };
+  }
+
+  try {
+    return {
+      isLoggedIn: true,
+      user: normalizeStoredUser(JSON.parse(userStr)),
+      tokens: {
+        accessToken: token,
+        refreshToken,
+      },
+      authReady: true,
+    };
+  } catch (error) {
+    console.error('Failed to initialize auth from storage:', error);
+    return {
+      isLoggedIn: false,
+      user: null,
+      tokens: {
+        accessToken: null,
+        refreshToken: null,
+      },
+      authReady: true,
+    };
+  }
+};
+
 /**
  * AuthProvider - Global authentication provider
  * Wraps the app to provide authentication state and methods
  */
 export function AuthProvider({ children }) {
-  const [authState, setAuthState] = useState({
-    isLoggedIn: false,
-    user: null,
-    tokens: {
-      accessToken: null,
-      refreshToken: null,
-    },
-  });
+  const [authState, setAuthState] = useState(getInitialAuthState);
 
   /**
    * Login - Sets auth state from login/register response
@@ -28,23 +70,18 @@ export function AuthProvider({ children }) {
 
     setAuthState({
       isLoggedIn: true,
-      user: {
-        id: normalizedUser.id,
-        email: normalizedUser.email,
-        firstname: normalizedUser.firstname,
-        lastname: normalizedUser.lastname,
-        role: normalizedUser.role || normalizedUser.roles?.[0] || 'USER',
-      },
+      user: normalizeStoredUser(normalizedUser),
       tokens: {
         accessToken: normalizedTokens.accessToken,
         refreshToken: normalizedTokens.refreshToken,
       },
+      authReady: true,
     });
 
     // Persist to localStorage
     localStorage.setItem('accessToken', normalizedTokens.accessToken);
     localStorage.setItem('refreshToken', normalizedTokens.refreshToken);
-    localStorage.setItem('user', JSON.stringify(normalizedUser));
+    localStorage.setItem('user', JSON.stringify(normalizeStoredUser(normalizedUser)));
     localStorage.setItem('role', normalizedUser.role || normalizedUser.roles?.[0] || 'USER');
   }, []);
 
@@ -59,6 +96,7 @@ export function AuthProvider({ children }) {
         accessToken: null,
         refreshToken: null,
       },
+      authReady: true,
     });
 
     // Clear localStorage
@@ -81,30 +119,8 @@ export function AuthProvider({ children }) {
    * Call this in useEffect after provider wraps app
    */
   const initializeFromStorage = useCallback(() => {
-    const token = localStorage.getItem('accessToken');
-    const userStr = localStorage.getItem('user');
-
-    if (token && userStr) {
-      try {
-        const userData = JSON.parse(userStr);
-        setAuthState({
-          isLoggedIn: true,
-          user: {
-            id: userData.id,
-            email: userData.email,
-            firstname: userData.firstname,
-            lastname: userData.lastname,
-            role: userData.role || userData.roles?.[0] || 'USER',
-          },
-          tokens: {
-            accessToken: token,
-            refreshToken: localStorage.getItem('refreshToken'),
-          },
-        });
-      } catch (error) {
-        console.error('Failed to initialize auth from storage:', error);
-      }
-    }
+    // Auth is now hydrated synchronously in the initial state to prevent
+    // role-gated pages from making a public request first.
   }, []);
 
   const value = {

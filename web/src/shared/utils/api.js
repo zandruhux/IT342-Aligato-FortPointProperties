@@ -3,9 +3,8 @@ import { API_BASE_URL, HTTP_STATUS } from './constants';
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Note: Don't set default Content-Type - let axios and browser auto-detect
+  // This allows FormData to properly set multipart/form-data with boundary
 });
 
 // Request interceptor: Add auth token to headers
