@@ -1,5 +1,10 @@
+import axios from 'axios';
 import axiosInstance from '../../../shared/utils/api';
-import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { API_BASE_URL, API_ENDPOINTS } from '../../../shared/utils/constants';
+
+const publicArticleApi = axios.create({
+  baseURL: API_BASE_URL,
+});
 
 const extractData = (response) => response.data?.data || response.data || [];
 
@@ -7,18 +12,9 @@ const extractError = (error, fallback) => {
   return error.response?.data?.error?.message || error.response?.data?.message || fallback;
 };
 
-export const getPublicArticleCards = async () => {
-  try {
-    const response = await axiosInstance.get(API_ENDPOINTS.ARTICLES.PUBLIC);
-    return extractData(response);
-  } catch (error) {
-    throw new Error(extractError(error, 'Failed to fetch blog previews'));
-  }
-};
-
 export const getArticleCards = async () => {
   try {
-    const response = await axiosInstance.get(API_ENDPOINTS.ARTICLES.ALL);
+    const response = await publicArticleApi.get(API_ENDPOINTS.ARTICLES.ALL);
     return extractData(response);
   } catch (error) {
     throw new Error(extractError(error, 'Failed to fetch blogs'));
@@ -36,9 +32,7 @@ export const getArticleById = async (id) => {
 
 export const createArticle = async (formData) => {
   try {
-    const response = await axiosInstance.post(API_ENDPOINTS.ARTICLES.CREATE, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.post(API_ENDPOINTS.ARTICLES.CREATE, formData);
     return extractData(response);
   } catch (error) {
     throw new Error(extractError(error, 'Failed to create blog'));
@@ -47,9 +41,7 @@ export const createArticle = async (formData) => {
 
 export const updateArticle = async (id, formData) => {
   try {
-    const response = await axiosInstance.put(API_ENDPOINTS.ARTICLES.UPDATE(id), formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.put(API_ENDPOINTS.ARTICLES.UPDATE(id), formData);
     return extractData(response);
   } catch (error) {
     throw new Error(extractError(error, 'Failed to update blog'));

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -21,6 +22,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private static final String ADMIN = "ADMIN";
+    private static final String AGENT = "AGENT";
+    private static final String REGISTERED_USER = "REGISTERED_USER";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -63,7 +68,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 // --- CORS PREFLIGHT ---
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 
                 // --- PUBLIC ENDPOINTS ---
                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
@@ -72,14 +77,13 @@ public class SecurityConfig {
                 .requestMatchers("/properties/{id}").permitAll()
                 .requestMatchers("/properties/search/location").permitAll()
                 .requestMatchers("/properties/search").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/articles/public").permitAll()
+                .requestMatchers("/api/articles").permitAll()
 
                 // --- AUTHENTICATED USER ENDPOINTS ---
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/articles").hasAnyRole("ADMIN", "AGENT", "REGISTERED_USER")
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/articles/{id}").hasAnyRole("ADMIN", "AGENT", "REGISTERED_USER")
-                .requestMatchers("/api/messaging/**").hasAnyRole("REGISTERED_USER", "AGENT")
-                .requestMatchers("/api/career-applications").hasRole("REGISTERED_USER")
-                .requestMatchers("/api/career-applications/me").hasAnyRole("REGISTERED_USER", "AGENT")
+                .requestMatchers("/api/articles/**").hasAnyRole(ADMIN, AGENT, REGISTERED_USER)
+                .requestMatchers("/api/messaging/**").hasAnyRole(REGISTERED_USER, AGENT)
+                .requestMatchers("/api/career-applications").hasRole(REGISTERED_USER)
+                .requestMatchers("/api/career-applications/me").hasAnyRole(REGISTERED_USER, AGENT)
                 .requestMatchers("/api/v1/auth/profile").authenticated()
                 .requestMatchers("/user/properties").authenticated()
                 .requestMatchers("/user/properties/{id}/advanced").authenticated()
@@ -92,30 +96,28 @@ public class SecurityConfig {
                 .requestMatchers("/user/favorites/count").authenticated()
 
                 // --- AGENT ENDPOINTS ---
-                .requestMatchers("/agent/properties").hasAnyRole("AGENT", "ADMIN")
-                .requestMatchers("/agent/properties/{id}/advanced").hasAnyRole("AGENT", "ADMIN")
-                .requestMatchers("/agent/properties/search/name").hasAnyRole("AGENT", "ADMIN")
-                .requestMatchers("/agent/properties/search/location").hasAnyRole("AGENT", "ADMIN")
-                .requestMatchers("/agent/properties/search/developer").hasAnyRole("AGENT", "ADMIN")
-                .requestMatchers("/agent/properties/search").hasAnyRole("AGENT", "ADMIN")
+                .requestMatchers("/agent/properties").hasAnyRole(AGENT, ADMIN)
+                .requestMatchers("/agent/properties/{id}/advanced").hasAnyRole(AGENT, ADMIN)
+                .requestMatchers("/agent/properties/search/name").hasAnyRole(AGENT, ADMIN)
+                .requestMatchers("/agent/properties/search/location").hasAnyRole(AGENT, ADMIN)
+                .requestMatchers("/agent/properties/search/developer").hasAnyRole(AGENT, ADMIN)
+                .requestMatchers("/agent/properties/search").hasAnyRole(AGENT, ADMIN)
 
                 // --- ADMIN ENDPOINTS ---
-                .requestMatchers("/admin/properties").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/photos/upload").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/{id}").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/amenities").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/{propertyId}/units").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/{propertyId}/units/{unitId}").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/search/name").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/search/location").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/search/developer").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers("/admin/properties/search").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/articles").hasRole("ADMIN")
-                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/articles/{id}").hasRole("ADMIN")
-                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/articles/{id}").hasRole("ADMIN")
-                .requestMatchers("/api/v1/auth/users").hasRole("ADMIN")
-                .requestMatchers("/api/admin/career-applications").hasRole("ADMIN")
-                .requestMatchers("/api/admin/career-applications/**").hasRole("ADMIN")
+                .requestMatchers("/admin/properties").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/photos/upload").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/{id}").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/amenities").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/{propertyId}/units").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/{propertyId}/units/{unitId}").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/search/name").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/search/location").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/search/developer").hasRole(ADMIN)
+                .requestMatchers("/admin/properties/search").hasRole(ADMIN)
+                .requestMatchers("/api/admin/articles", "/api/admin/articles/**").hasRole(ADMIN)
+                .requestMatchers("/api/v1/auth/users").hasRole(ADMIN)
+                .requestMatchers("/api/admin/career-applications").hasRole(ADMIN)
+                .requestMatchers("/api/admin/career-applications/**").hasRole(ADMIN)
 
                 // fallback
                 .anyRequest().authenticated()

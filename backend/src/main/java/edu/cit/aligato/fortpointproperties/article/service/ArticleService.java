@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,7 +33,10 @@ public class ArticleService {
         this.articleStorageService = articleStorageService;
     }
 
-    public ArticleDTO createArticle(ArticleCreateRequestDTO request, MultipartFile coverPhoto, String authorEmail) {
+    public ArticleDTO createArticle(ArticleCreateRequestDTO request) {
+        MultipartFile coverPhoto = request.getCoverPhoto();
+        String authorEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
         validateRequiredText(request.getTitle(), "Title is required");
         validateRequiredText(request.getDescription(), "Description is required");
         validateRequiredCoverPhoto(coverPhoto);
@@ -53,7 +57,9 @@ public class ArticleService {
         return convertArticleToDTO(articleRepository.save(article));
     }
 
-    public ArticleDTO updateArticle(String id, ArticleUpdateRequestDTO request, MultipartFile coverPhoto) {
+    public ArticleDTO updateArticle(String id, ArticleUpdateRequestDTO request) {
+        MultipartFile coverPhoto = request.getCoverPhoto();
+
         validateRequiredText(request.getTitle(), "Title is required");
         validateRequiredText(request.getDescription(), "Description is required");
 
@@ -89,7 +95,7 @@ public class ArticleService {
         return convertArticleToDTO(getArticleEntity(id));
     }
 
-    public ArticleDTO convertArticleToDTO(Article article) {
+    private ArticleDTO convertArticleToDTO(Article article) {
         return new ArticleDTO(
                 article.getId(),
                 article.getTitle(),
@@ -101,7 +107,7 @@ public class ArticleService {
                 getLatestDate(article));
     }
 
-    public ArticleCardDTO convertArticleToCardDTO(Article article) {
+    private ArticleCardDTO convertArticleToCardDTO(Article article) {
         return new ArticleCardDTO(
                 article.getId(),
                 article.getTitle(),

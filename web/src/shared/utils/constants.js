@@ -116,11 +116,10 @@ export const API_ENDPOINTS = {
   },
 
   ARTICLES: {
-    PUBLIC: '/api/articles/public',
     ALL: '/api/articles',
     BY_ID: (id) => `/api/articles/${id}`,
-    CREATE: '/api/articles',
-    UPDATE: (id) => `/api/articles/${id}`,
-    DELETE: (id) => `/api/articles/${id}`,
+    CREATE: '/api/admin/articles',
+    UPDATE: (id) => `/api/admin/articles/${id}`,
+    DELETE: (id) => `/api/admin/articles/${id}`,
   },
 };

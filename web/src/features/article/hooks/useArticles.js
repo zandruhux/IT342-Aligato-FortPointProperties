@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getArticleCards, getPublicArticleCards } from '../api/articleApi';
+import { getArticleCards } from '../api/articleApi';
 
-export const useArticles = (isLoggedIn = false) => {
+export const useArticles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -10,14 +10,14 @@ export const useArticles = (isLoggedIn = false) => {
     setLoading(true);
     setError('');
     try {
-      const data = isLoggedIn ? await getArticleCards() : await getPublicArticleCards();
+      const data = await getArticleCards();
       setArticles(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch blogs');
     } finally {
       setLoading(false);
     }
-  }, [isLoggedIn]);
+  }, []);
 
   useEffect(() => {
     fetchArticles();
