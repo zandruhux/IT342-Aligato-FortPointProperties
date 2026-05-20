@@ -261,3 +261,137 @@ CREATE TRIGGER trigger_conversations_updated_at
 BEFORE UPDATE ON conversations
 FOR EACH ROW
 EXECUTE FUNCTION update_conversations_updated_at();
+
+-- ============================================
+-- PHASE 4: PROPERTY MODULE FINAL REFACTOR
+-- Date: 2026-05-19
+-- ============================================
+
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS has_promo BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS featured BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS visible BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS key_selling_points TEXT;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS brochure_pdf_url TEXT;
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS inventory_link TEXT;
+
+CREATE TABLE IF NOT EXISTS property_listing_types (
+    property_id VARCHAR(36) NOT NULL,
+    listing_type VARCHAR(40) NOT NULL,
+    PRIMARY KEY (property_id, listing_type),
+    CONSTRAINT fk_property_listing_types_property FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+    CONSTRAINT chk_property_listing_type CHECK (listing_type IN ('PRE_SELLING', 'RFO', 'RENT_TO_OWN', 'RESALE'))
+);
+
+CREATE TABLE IF NOT EXISTS property_financing_types (
+    property_id VARCHAR(36) NOT NULL,
+    financing_type VARCHAR(40) NOT NULL,
+    PRIMARY KEY (property_id, financing_type),
+    CONSTRAINT fk_property_financing_types_property FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+    CONSTRAINT chk_property_financing_type CHECK (financing_type IN ('BANK_FINANCING', 'PAG_IBIG_HDMF', 'IN_HOUSE_FINANCING', 'DEFERRED_CASH', 'SPOT_CASH'))
+);
+
+CREATE TABLE IF NOT EXISTS amenities (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    default_amenity BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS property_amenities (
+    property_id VARCHAR(36) NOT NULL,
+    amenity_id VARCHAR(36) NOT NULL,
+    PRIMARY KEY (property_id, amenity_id),
+    CONSTRAINT fk_property_amenities_property FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+    CONSTRAINT fk_property_amenities_amenity FOREIGN KEY (amenity_id) REFERENCES amenities(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS property_photos (
+    id VARCHAR(36) PRIMARY KEY,
+    photo_url TEXT NOT NULL,
+    display_order INT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    property_id VARCHAR(36) NOT NULL,
+    CONSTRAINT fk_property_photos_property FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+);
+
+ALTER TABLE property_photos ADD COLUMN IF NOT EXISTS id VARCHAR(36);
+ALTER TABLE property_photos ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+UPDATE property_photos SET id = gen_random_uuid()::text WHERE id IS NULL OR id = '';
+ALTER TABLE property_photos ALTER COLUMN id SET NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_property_listing_types_property_id ON property_listing_types(property_id);
+CREATE INDEX IF NOT EXISTS idx_property_financing_types_property_id ON property_financing_types(property_id);
+CREATE INDEX IF NOT EXISTS idx_property_amenities_property_id ON property_amenities(property_id);
+CREATE INDEX IF NOT EXISTS idx_property_photos_property_id ON property_photos(property_id);
+CREATE INDEX IF NOT EXISTS idx_properties_visible ON properties(visible);
+CREATE INDEX IF NOT EXISTS idx_properties_featured ON properties(featured);
+CREATE INDEX IF NOT EXISTS idx_properties_name_lower ON properties(LOWER(name));
+CREATE INDEX IF NOT EXISTS idx_properties_location_lower ON properties(LOWER(location));
+CREATE INDEX IF NOT EXISTS idx_properties_developer_lower ON properties(LOWER(developer));
+CREATE INDEX IF NOT EXISTS idx_property_units_total_selling_price ON property_units(total_selling_price);
+CREATE INDEX IF NOT EXISTS idx_property_photos_property_display_order ON property_photos(property_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_property_listing_types_listing_type ON property_listing_types(listing_type);
+CREATE INDEX IF NOT EXISTS idx_property_financing_types_financing_type ON property_financing_types(financing_type);
+
+-- Migrate old comma-separated/display listing values into enum collection rows.
+INSERT INTO property_listing_types (property_id, listing_type)
+SELECT id, 'PRE_SELLING' FROM properties WHERE listing_type ILIKE '%Pre-Selling%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO property_listing_types (property_id, listing_type)
+SELECT id, 'RFO' FROM properties WHERE listing_type ILIKE '%RFO%' OR listing_type ILIKE '%Ready%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO property_listing_types (property_id, listing_type)
+SELECT id, 'RENT_TO_OWN' FROM properties WHERE listing_type ILIKE '%Rent%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO property_listing_types (property_id, listing_type)
+SELECT id, 'RESALE' FROM properties WHERE listing_type ILIKE '%Resale%'
+ON CONFLICT DO NOTHING;
+
+-- Migrate unit financing to property-level financing with conservative string matching.
+INSERT INTO property_financing_types (property_id, financing_type)
+SELECT DISTINCT pu.property_id, 'BANK_FINANCING'
+FROM property_units pu
+JOIN property_unit_financing puf ON puf.unit_id = pu.id
+WHERE puf.financing_type ILIKE '%bank%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO property_financing_types (property_id, financing_type)
+SELECT DISTINCT pu.property_id, 'IN_HOUSE_FINANCING'
+FROM property_units pu
+JOIN property_unit_financing puf ON puf.unit_id = pu.id
+WHERE puf.financing_type ILIKE '%house%' OR puf.financing_type ILIKE '%in-house%'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO property_financing_types (property_id, financing_type)
+SELECT DISTINCT pu.property_id, 'SPOT_CASH'
+FROM property_units pu
+JOIN property_unit_financing puf ON puf.unit_id = pu.id
+WHERE puf.financing_type ILIKE '%cash%'
+ON CONFLICT DO NOTHING;
+
+-- Convert old comma-separated amenities text to normalized amenities and join rows.
+INSERT INTO amenities (id, name, default_amenity)
+SELECT gen_random_uuid()::text, trim(value), FALSE
+FROM properties p
+CROSS JOIN LATERAL regexp_split_to_table(COALESCE(p.amenities, ''), ',') value
+WHERE trim(value) <> ''
+ON CONFLICT (name) DO NOTHING;
+
+INSERT INTO property_amenities (property_id, amenity_id)
+SELECT p.id, a.id
+FROM properties p
+CROSS JOIN LATERAL regexp_split_to_table(COALESCE(p.amenities, ''), ',') value
+JOIN amenities a ON LOWER(a.name) = LOWER(trim(value))
+WHERE trim(value) <> ''
+ON CONFLICT DO NOTHING;
+
+-- These old columns/tables are no longer used by the application after migration:
+-- ALTER TABLE properties DROP COLUMN IF EXISTS listing_type;
+-- ALTER TABLE properties DROP COLUMN IF EXISTS amenities;
+-- ALTER TABLE properties DROP COLUMN IF EXISTS price_range_min;
+-- ALTER TABLE properties DROP COLUMN IF EXISTS price_range_max;
+-- DROP TABLE IF EXISTS property_unit_financing;
