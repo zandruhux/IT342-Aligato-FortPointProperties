@@ -7,21 +7,24 @@ import java.time.LocalDateTime;
  * Includes property details with createdAt timestamp for sorting
  */
 public class FavoriteDTO {
-    private String id;
-    private String propertyId;
-    private String propertyName;
-    private String description;
-    private String location;
-    private Double priceRangeMin;
-    private Double priceRangeMax;
-    private LocalDateTime createdAt;
+    public String id;
+    public String propertyId;
+    public String propertyName;
+    public String description;
+    public String location;
+    public Double priceRangeMin;
+    public Double priceRangeMax;
+    public Boolean hasPromo;
+    public String coverPhotoUrl;
+    public LocalDateTime createdAt;
 
     // --- Constructors ---
     public FavoriteDTO() {
     }
 
     public FavoriteDTO(String id, String propertyId, String propertyName, String description,
-            String location, Double priceRangeMin, Double priceRangeMax, LocalDateTime createdAt) {
+            String location, Double priceRangeMin, Double priceRangeMax, Boolean hasPromo,
+            String coverPhotoUrl, LocalDateTime createdAt) {
         this.id = id;
         this.propertyId = propertyId;
         this.propertyName = propertyName;
@@ -29,6 +32,8 @@ public class FavoriteDTO {
         this.location = location;
         this.priceRangeMin = priceRangeMin;
         this.priceRangeMax = priceRangeMax;
+        this.hasPromo = hasPromo;
+        this.coverPhotoUrl = coverPhotoUrl;
         this.createdAt = createdAt;
     }
 
