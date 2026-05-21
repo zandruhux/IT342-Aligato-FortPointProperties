@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -17,6 +18,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import edu.cit.aligato.fortpointproperties.auth.service.GoogleOAuthSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -28,9 +32,15 @@ public class SecurityConfig {
     private static final String REGISTERED_USER = "REGISTERED_USER";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final GoogleOAuthSuccessHandler googleOAuthSuccessHandler;
+    private final String frontendLoginUrl;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+            GoogleOAuthSuccessHandler googleOAuthSuccessHandler,
+            @Value("${app.oauth2.frontend-login-url}") String frontendLoginUrl) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.googleOAuthSuccessHandler = googleOAuthSuccessHandler;
+        this.frontendLoginUrl = frontendLoginUrl;
     }
 
     @Bean
@@ -73,6 +83,7 @@ public class SecurityConfig {
                 // --- PUBLIC ENDPOINTS ---
                 .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login",
                         "/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/properties").permitAll()
                 .requestMatchers("/properties/{id}").permitAll()
@@ -129,6 +140,17 @@ public class SecurityConfig {
                 // fallback
                 .anyRequest().authenticated()
             )
+            .oauth2Login(oauth2 -> oauth2
+                .successHandler(googleOAuthSuccessHandler)
+                .failureHandler((request, response, exception) -> {
+                    String redirectUrl = UriComponentsBuilder.fromUriString(frontendLoginUrl)
+                            .queryParam("error", "Google login failed. Please try again.")
+                            .encode()
+                            .build()
+                            .toUriString();
+                    response.sendRedirect(redirectUrl);
+                })
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -136,7 +158,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
+    public static BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 }
