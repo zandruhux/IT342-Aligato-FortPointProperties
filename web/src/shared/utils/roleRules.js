@@ -14,11 +14,13 @@ export const USER_ROLES = {
 };
 
 export const normalizeRole = (userRole) => {
-  if (userRole === 'registered_user' || userRole === 'USER' || userRole === USER_ROLES.USER) {
+  const normalized = String(userRole || '').trim().toUpperCase().replace(/[-\s]+/g, '_');
+
+  if (normalized === 'REGISTERED_USER' || normalized === 'REGISTERED_USEER' || normalized === 'USER') {
     return USER_ROLES.USER;
   }
 
-  return userRole || USER_ROLES.PUBLIC;
+  return normalized || USER_ROLES.PUBLIC;
 };
 
 /**
