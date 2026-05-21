@@ -9,6 +9,7 @@ export default function ArticleList({
   onEdit,
   onDelete,
   deletingId,
+  emptyMessage = 'No blogs have been posted yet.',
 }) {
   if (loading) {
     return (
@@ -29,7 +30,7 @@ export default function ArticleList({
   if (!articles.length) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white py-16 text-center text-slate-500">
-        No blogs have been posted yet.
+        {emptyMessage}
       </div>
     );
   }

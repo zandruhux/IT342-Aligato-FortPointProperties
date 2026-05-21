@@ -6,11 +6,11 @@ export const useArticles = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchArticles = useCallback(async () => {
+  const fetchArticles = useCallback(async (title = '') => {
     setLoading(true);
     setError('');
     try {
-      const data = await getArticleCards();
+      const data = await getArticleCards(title);
       setArticles(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch blogs');
