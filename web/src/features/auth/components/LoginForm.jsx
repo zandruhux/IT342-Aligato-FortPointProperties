@@ -38,7 +38,7 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
   };
 
   return (
-    <div className="w-full max-w-md rounded-lg p-8" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.10)', backgroundColor: '#FFFFFF' }}>
+    <div className="w-full max-w-md min-h-[470px] rounded-lg p-10 flex flex-col justify-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.10)', backgroundColor: '#FFFFFF' }}>
       <h2 className="text-2xl font-bold mb-2" style={{ color: '#000000' }}>Welcome Back!</h2>
       <p className="text-sm mb-6" style={{ color: '#747474' }}>
         Sign in to access your account and manage your properties
