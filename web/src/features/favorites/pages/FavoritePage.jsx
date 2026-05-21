@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { useFavorites } from '../hooks/useFavorites';
-import { PropertyCard } from '../../properties/components';
+import { PropertyCard, PropertyDetailModal } from '../../properties/components';
+import { usePropertyDetailAccess } from '../../properties/hooks';
 
 /**
  * FavoritePage Component
@@ -12,6 +13,12 @@ export default function FavoritePage() {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuthContext();
   const { favorites, loading, error, fetchFavorites, removeFavorite } = useFavorites();
+  const {
+    isDetailModalOpen,
+    selectedProperty,
+    openDetailModal,
+    closeDetailModal,
+  } = usePropertyDetailAccess();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -39,9 +46,16 @@ export default function FavoritePage() {
     isFavorite: true // Optional: Force the heart to be filled on this page
   });
 
+  const mappedFavorites = useMemo(
+    () => (favorites || []).map(mapFavoriteToProperty),
+    [favorites]
+  );
+
   const handlePropertyClick = (propertyId) => {
-    console.log('Viewing property:', propertyId);
-    // Can implement navigation to property details
+    const property = mappedFavorites.find((item) => item.id === propertyId);
+    if (property) {
+      openDetailModal(property);
+    }
   };
 
   const handleRemoveFavorite = async (propertyId) => {
@@ -81,14 +95,14 @@ export default function FavoritePage() {
               {favorites.length !== 1 ? ' properties' : ' property'}
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {favorites.map((property) => (
+              {mappedFavorites.map((property) => (
                 <div key={property.id} className="relative">
                   <PropertyCard
-                      property={mapFavoriteToProperty(property)}
-                      onClick={handlePropertyClick}
-                      showFavoriteButton
-                      isFavorited
-                      onFavoriteToggle={() => handleRemoveFavorite(property.propertyId)}
+                    property={property}
+                    onClick={handlePropertyClick}
+                    showFavoriteButton
+                    isFavorited
+                    onFavoriteToggle={() => handleRemoveFavorite(property.id)}
                   />
                 </div>
               ))}
@@ -122,6 +136,12 @@ export default function FavoritePage() {
           </div>
         )}
       </div>
+
+      <PropertyDetailModal
+        property={selectedProperty}
+        isOpen={isDetailModalOpen}
+        onClose={closeDetailModal}
+      />
     </div>
   );
 }

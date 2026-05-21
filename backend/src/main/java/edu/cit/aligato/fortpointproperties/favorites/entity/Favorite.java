@@ -38,7 +38,6 @@ public class Favorite {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // --- Constructors ---
     public Favorite() {
     }
 
@@ -47,7 +46,6 @@ public class Favorite {
         this.property = property;
     }
 
-    // --- Getters and Setters ---
     public String getId() {
         return id;
     }
