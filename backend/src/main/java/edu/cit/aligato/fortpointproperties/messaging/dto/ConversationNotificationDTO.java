@@ -5,8 +5,10 @@ public class ConversationNotificationDTO {
     private Long conversationId;
     private String registeredUserId;
     private String registeredUserName;
+    private String registeredUserProfileImageUrl;
     private String preview;
     private String status;
+    private long unreadCount;
 
     public ConversationNotificationDTO() {
     }
@@ -28,6 +30,12 @@ public class ConversationNotificationDTO {
         this.registeredUserName = registeredUserName;
         this.preview = preview;
         this.status = status;
+    }
+
+    public ConversationNotificationDTO(String type, Long conversationId, String registeredUserId,
+            String registeredUserName, String registeredUserProfileImageUrl, String preview, String status) {
+        this(type, conversationId, registeredUserId, registeredUserName, preview, status);
+        this.registeredUserProfileImageUrl = registeredUserProfileImageUrl;
     }
 
     public String getType() {
@@ -62,6 +70,14 @@ public class ConversationNotificationDTO {
         this.registeredUserName = registeredUserName;
     }
 
+    public String getRegisteredUserProfileImageUrl() {
+        return registeredUserProfileImageUrl;
+    }
+
+    public void setRegisteredUserProfileImageUrl(String registeredUserProfileImageUrl) {
+        this.registeredUserProfileImageUrl = registeredUserProfileImageUrl;
+    }
+
     public String getPreview() {
         return preview;
     }
@@ -76,5 +92,13 @@ public class ConversationNotificationDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public long getUnreadCount() {
+        return unreadCount;
+    }
+
+    public void setUnreadCount(long unreadCount) {
+        this.unreadCount = unreadCount;
     }
 }

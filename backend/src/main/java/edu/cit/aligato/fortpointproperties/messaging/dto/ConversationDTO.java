@@ -8,10 +8,15 @@ public class ConversationDTO {
     private String assignedAgentId;
     private String registeredUserName;
     private String assignedAgentName;
+    private String registeredUserProfileImageUrl;
+    private String assignedAgentProfileImageUrl;
     private String status;
     private String latestMessagePreview;
     private String latestMessageSenderId;
     private String latestMessageSenderName;
+    private String latestMessageSenderProfileImageUrl;
+    private long unreadCount;
+    private boolean unread;
     private LocalDateTime latestMessageAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -103,6 +108,22 @@ public class ConversationDTO {
         this.assignedAgentName = assignedAgentName;
     }
 
+    public String getRegisteredUserProfileImageUrl() {
+        return registeredUserProfileImageUrl;
+    }
+
+    public void setRegisteredUserProfileImageUrl(String registeredUserProfileImageUrl) {
+        this.registeredUserProfileImageUrl = registeredUserProfileImageUrl;
+    }
+
+    public String getAssignedAgentProfileImageUrl() {
+        return assignedAgentProfileImageUrl;
+    }
+
+    public void setAssignedAgentProfileImageUrl(String assignedAgentProfileImageUrl) {
+        this.assignedAgentProfileImageUrl = assignedAgentProfileImageUrl;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -133,6 +154,31 @@ public class ConversationDTO {
 
     public void setLatestMessageSenderName(String latestMessageSenderName) {
         this.latestMessageSenderName = latestMessageSenderName;
+    }
+
+    public String getLatestMessageSenderProfileImageUrl() {
+        return latestMessageSenderProfileImageUrl;
+    }
+
+    public void setLatestMessageSenderProfileImageUrl(String latestMessageSenderProfileImageUrl) {
+        this.latestMessageSenderProfileImageUrl = latestMessageSenderProfileImageUrl;
+    }
+
+    public long getUnreadCount() {
+        return unreadCount;
+    }
+
+    public void setUnreadCount(long unreadCount) {
+        this.unreadCount = unreadCount;
+        this.unread = unreadCount > 0;
+    }
+
+    public boolean isUnread() {
+        return unread;
+    }
+
+    public void setUnread(boolean unread) {
+        this.unread = unread;
     }
 
     public LocalDateTime getLatestMessageAt() {
