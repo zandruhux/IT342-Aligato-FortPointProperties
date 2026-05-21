@@ -24,11 +24,6 @@ public class JwtUtil {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
-    private Key getSigningKey() {
-        byte[] keyBytes = secretKey.getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
     public String generateAccessToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
@@ -84,5 +79,10 @@ public class JwtUtil {
         } catch (JwtException e) {
             return null;
         }
+    }
+
+    private Key getSigningKey() {
+        byte[] keyBytes = secretKey.getBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
