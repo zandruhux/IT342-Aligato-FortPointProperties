@@ -17,14 +17,16 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     Optional<Message> findTopByConversationIdOrderByCreatedAtDesc(Long conversationId);
 
+    long countByConversationIdAndSenderIdNot(Long conversationId, String userId);
+
     @Query("""
             SELECT COUNT(m)
             FROM Message m
             WHERE m.conversationId = :conversationId
             AND m.senderId <> :userId
-            AND (:lastReadAt IS NULL OR m.createdAt > :lastReadAt)
+            AND m.createdAt > :lastReadAt
             """)
-    long countUnreadMessages(@Param("conversationId") Long conversationId,
+    long countUnreadMessagesAfter(@Param("conversationId") Long conversationId,
             @Param("userId") String userId,
             @Param("lastReadAt") LocalDateTime lastReadAt);
 }

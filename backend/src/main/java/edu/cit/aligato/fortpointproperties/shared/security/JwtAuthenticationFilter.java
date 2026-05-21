@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
+import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,9 +24,11 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -38,7 +42,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (jwtUtil.isTokenValid(token)) {
                     String email = jwtUtil.extractEmail(token);
-                    String role = normalizeRole(jwtUtil.extractRole(token));
+                    User user = userRepository.findByEmail(email).orElse(null);
+                    if (user == null) {
+                        logger.warn("JWT Token references a user that no longer exists: " + email);
+                        setAnonymousAuthentication();
+                        filterChain.doFilter(request, response);
+                        return;
+                    }
+
+                    String role = normalizeRole(user.getRole());
 
                     List<GrantedAuthority> authorities = Arrays.asList(
                             new SimpleGrantedAuthority("ROLE_" + role));
@@ -49,17 +61,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     logger.info("JWT Token validated for user: " + email);
                 } else {
                     logger.warn("JWT Token is invalid");
+                    setAnonymousAuthentication();
                 }
             } else {
-                AnonymousAuthenticationToken anonymousToken = new AnonymousAuthenticationToken(
-                        "anonymousUser", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
-                SecurityContextHolder.getContext().setAuthentication(anonymousToken);
+                setAnonymousAuthentication();
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: " + e.getMessage(), e);
+            setAnonymousAuthentication();
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void setAnonymousAuthentication() {
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            AnonymousAuthenticationToken anonymousToken = new AnonymousAuthenticationToken(
+                    "anonymousUser", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+            SecurityContextHolder.getContext().setAuthentication(anonymousToken);
+        }
     }
 
     private String normalizeRole(String role) {
@@ -67,7 +87,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return "ANONYMOUS";
         }
 
-        String normalized = role.trim().toUpperCase();
+        String normalized = role.trim().toUpperCase().replace("-", "_").replace(" ", "_");
         if (normalized.startsWith("ROLE_")) {
             normalized = normalized.substring("ROLE_".length());
         }

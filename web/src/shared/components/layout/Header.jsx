@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../context/useAuthContext';
+import { isRegisteredUser } from '../../utils/roleRules';
 import logo from '../../../assets/FortPointProperties_Logo.jpg';
 
 export default function Header({ isLoggedIn, onLogout }) {
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const canUseMessages = isLoggedIn && (user?.role === 'registered_user' || user?.role === 'USER' || user?.role === 'REGISTERED_USER');
+  const canUseMessages = isLoggedIn && isRegisteredUser(user?.role);
   const canUseCareer = canUseMessages;
 
   return (

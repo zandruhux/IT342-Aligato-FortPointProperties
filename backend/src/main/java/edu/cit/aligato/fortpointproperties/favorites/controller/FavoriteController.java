@@ -20,10 +20,6 @@ import edu.cit.aligato.fortpointproperties.favorites.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.favorites.service.FavoriteService;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 
-/**
- * FavoriteController - Authenticated users can manage their favorite properties
- * Endpoints for adding, removing, and viewing favorite properties
- */
 @RestController
 @RequestMapping("/user/favorites")
 @PreAuthorize("isAuthenticated()")
@@ -37,15 +33,10 @@ public class FavoriteController {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Get all favorites for the authenticated user
-     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<FavoriteDTO>>> getAllFavorites(Authentication authentication) {
         try {
-            User user = userRepository.findByEmail(authentication.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
+            User user = getAuthenticatedUser(authentication);
             List<FavoriteDTO> favorites = favoriteService.getFavoritesByUser(user);
             ApiResponse<List<FavoriteDTO>> response = ApiResponse.success(favorites);
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -56,16 +47,12 @@ public class FavoriteController {
         }
     }
 
-    /**
-     * Add a property to favorites
-     */
     @PostMapping("/{propertyId}")
     public ResponseEntity<ApiResponse<String>> addToFavorites(
             @PathVariable String propertyId,
             Authentication authentication) {
         try {
-            User user = userRepository.findByEmail(authentication.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            User user = getAuthenticatedUser(authentication);
 
             boolean added = favoriteService.addToFavorites(user, propertyId);
 
@@ -88,16 +75,12 @@ public class FavoriteController {
         }
     }
 
-    /**
-     * Remove a property from favorites
-     */
     @DeleteMapping("/{propertyId}")
     public ResponseEntity<ApiResponse<String>> removeFromFavorites(
             @PathVariable String propertyId,
             Authentication authentication) {
         try {
-            User user = userRepository.findByEmail(authentication.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            User user = getAuthenticatedUser(authentication);
 
             boolean removed = favoriteService.removeFromFavorites(user, propertyId);
 
@@ -116,16 +99,12 @@ public class FavoriteController {
         }
     }
 
-    /**
-     * Check if a property is favorited by the authenticated user
-     */
     @GetMapping("/{propertyId}/check")
     public ResponseEntity<ApiResponse<Boolean>> checkIfFavorited(
             @PathVariable String propertyId,
             Authentication authentication) {
         try {
-            User user = userRepository.findByEmail(authentication.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            User user = getAuthenticatedUser(authentication);
 
             boolean isFavorited = favoriteService.isFavorited(user, propertyId);
             ApiResponse<Boolean> response = ApiResponse.success(isFavorited);
@@ -137,14 +116,10 @@ public class FavoriteController {
         }
     }
 
-    /**
-     * Get favorite count for the authenticated user
-     */
     @GetMapping("/count")
     public ResponseEntity<ApiResponse<Long>> getFavoriteCount(Authentication authentication) {
         try {
-            User user = userRepository.findByEmail(authentication.getName())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            User user = getAuthenticatedUser(authentication);
 
             long count = favoriteService.getFavoriteCount(user);
             ApiResponse<Long> response = ApiResponse.success(count);
@@ -154,5 +129,10 @@ public class FavoriteController {
             ApiResponse<Long> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private User getAuthenticatedUser(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }

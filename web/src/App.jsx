@@ -16,11 +16,11 @@ function App() {
   const role = normalizeRole(user?.role)
 
   if (isLoggedIn && location.pathname === '/' && role === 'ADMIN') {
-    return <Navigate to="/admin/dashboard" replace />
+    return <Navigate to="/admin/properties" replace />
   }
 
   if (isLoggedIn && location.pathname === '/' && role === 'AGENT') {
-    return <Navigate to="/agent/dashboard" replace />
+    return <Navigate to="/agent/properties" replace />
   }
 
   const handleLoginSuccess = (loggedInUser) => {
@@ -28,9 +28,9 @@ function App() {
     const nextRole = normalizeRole(loggedInUser?.role || user?.role)
     
     if (nextRole === 'ADMIN') {
-      navigate('/admin/dashboard')
+      navigate('/admin/properties')
     } else if (nextRole === 'AGENT') {
-      navigate('/agent/dashboard')
+      navigate('/agent/properties')
     } else {
       navigate('/')
     }
@@ -53,10 +53,11 @@ function App() {
 }
 
 const normalizeRole = (role) => {
-  if (role === 'registered_user' || role === 'USER' || role === 'REGISTERED_USER') {
+  const normalized = String(role || '').trim().toUpperCase().replace(/[-\s]+/g, '_')
+  if (normalized === 'REGISTERED_USER' || normalized === 'REGISTERED_USEER' || normalized === 'USER') {
     return 'REGISTERED_USER'
   }
-  return role || ''
+  return normalized || ''
 }
 
 export default App

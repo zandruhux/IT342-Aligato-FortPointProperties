@@ -3,29 +3,39 @@ import { API_ENDPOINTS } from '../../../shared/utils/constants';
 
 const unwrap = (response) => response.data?.data || response.data;
 
+const withMessagingError = async (request) => {
+  try {
+    return unwrap(await request());
+  } catch (error) {
+    throw {
+      status: error.response?.status,
+      message: error.response?.data?.error
+        || error.response?.data?.message
+        || (error.response?.status === 403 ? 'Messaging is only available to registered users and agents.' : null)
+        || error.message
+        || 'Messaging request failed',
+    };
+  }
+};
+
 export const createConversation = async (payload) => {
-  const response = await axiosInstance.post(API_ENDPOINTS.MESSAGING.CONVERSATIONS, payload);
-  return unwrap(response);
+  return withMessagingError(() => axiosInstance.post(API_ENDPOINTS.MESSAGING.CONVERSATIONS, payload));
 };
 
 export const getConversations = async () => {
-  const response = await axiosInstance.get(API_ENDPOINTS.MESSAGING.CONVERSATIONS);
-  return unwrap(response);
+  return withMessagingError(() => axiosInstance.get(API_ENDPOINTS.MESSAGING.CONVERSATIONS));
 };
 
 export const getMessages = async (conversationId) => {
-  const response = await axiosInstance.get(API_ENDPOINTS.MESSAGING.MESSAGES(conversationId));
-  return unwrap(response);
+  return withMessagingError(() => axiosInstance.get(API_ENDPOINTS.MESSAGING.MESSAGES(conversationId)));
 };
 
 export const sendMessage = async (conversationId, payload) => {
-  const response = await axiosInstance.post(API_ENDPOINTS.MESSAGING.MESSAGES(conversationId), payload);
-  return unwrap(response);
+  return withMessagingError(() => axiosInstance.post(API_ENDPOINTS.MESSAGING.MESSAGES(conversationId), payload));
 };
 
 export const markConversationRead = async (conversationId) => {
-  const response = await axiosInstance.put(API_ENDPOINTS.MESSAGING.READ(conversationId));
-  return unwrap(response);
+  return withMessagingError(() => axiosInstance.put(API_ENDPOINTS.MESSAGING.READ(conversationId)));
 };
 
 export default {

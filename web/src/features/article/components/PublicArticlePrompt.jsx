@@ -1,20 +1,30 @@
 import { Link } from 'react-router-dom';
-import { FiX } from 'react-icons/fi';
+import { FiAlertCircle, FiX } from 'react-icons/fi';
 
-export default function PublicArticlePrompt({ open, onClose }) {
+export default function PublicArticlePrompt({
+  open,
+  onClose,
+  title = 'Login Required',
+  message = 'Create an account or log in to continue.',
+}) {
   if (!open) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900">Login Required</h2>
+          <div className="flex gap-3">
+            <div className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+              <FiAlertCircle size={22} />
+            </div>
+            <div>
+            <h2 className="text-2xl font-bold text-slate-900">{title}</h2>
             <p className="mt-2 text-slate-600">
-              Full blog articles are available to admins, agents, and registered users.
+              {message}
             </p>
+            </div>
           </div>
           <button
             type="button"
@@ -37,7 +47,7 @@ export default function PublicArticlePrompt({ open, onClose }) {
             to="/register"
             className="flex-1 rounded-md border border-slate-300 px-4 py-2 text-center font-semibold text-slate-800 no-underline hover:bg-slate-50"
           >
-            Register
+            Sign Up
           </Link>
         </div>
       </div>

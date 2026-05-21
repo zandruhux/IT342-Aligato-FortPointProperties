@@ -5,8 +5,6 @@ import HomePage from '../features/public/pages'
 import { PropertyListPage } from '../features/properties/pages'
 import { FavoritePage } from '../features/favorites/pages'
 import { AgentPropertiesListPage as AgentPropertiesPage } from '../features/properties/pages'
-import { AdminDashboardPage, AgentDashboardPage } from '../features/dashboard'
-import { AgentBulletin } from '../features/bulletin'
 import { AgentInboxPage, RegisteredUserMessagesPage } from '../features/messaging'
 import { AgentProfile, RegisteredUserProfile } from '../features/profile/pages'
 import { AdminPropertiesListPage as AdminPropertiesPage } from '../features/properties/pages'
@@ -27,10 +25,11 @@ import {
 import { useAuthContext } from '../shared/context/useAuthContext'
 
 const normalizeRole = (role) => {
-  if (role === 'registered_user' || role === 'USER' || role === 'REGISTERED_USER') {
+  const normalized = String(role || '').trim().toUpperCase().replace(/[-\s]+/g, '_')
+  if (normalized === 'REGISTERED_USER' || normalized === 'REGISTERED_USEER' || normalized === 'USER') {
     return 'REGISTERED_USER'
   }
-  return role || ''
+  return normalized || ''
 }
 
 const RequireRole = ({ isLoggedIn, allowedRoles, children }) => {
@@ -87,7 +86,11 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       />
       <Route
         path="/messages"
-        element={isLoggedIn ? <RegisteredUserMessagesPage /> : <Navigate to="/login" />}
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['REGISTERED_USER']}>
+            <RegisteredUserMessagesPage />
+          </RequireRole>
+        }
       />
       <Route
         path="/profile"
@@ -99,27 +102,12 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       />
 
       {/* Agent Routes - Authentication + Agent role required */}
-      <Route
-        path="/agent/dashboard"
-        element={
-          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
-            <AgentDashboardPage onLogout={onLogout} />
-          </RequireRole>
-        }
-      />
+      <Route path="/agent/dashboard" element={<Navigate to="/agent/properties" replace />} />
       <Route 
         path="/agent/properties" 
         element={
           <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
             <AgentPropertiesPage onLogout={onLogout} />
-          </RequireRole>
-        } 
-      />
-      <Route 
-        path="/agent/bulletin" 
-        element={
-          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['AGENT']}>
-            <AgentBulletin onLogout={onLogout} />
           </RequireRole>
         } 
       />
@@ -141,14 +129,7 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       />
 
       {/* Admin Routes - Authentication + Admin role required */}
-      <Route
-        path="/admin/dashboard"
-        element={
-          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
-            <AdminDashboardPage onLogout={onLogout} />
-          </RequireRole>
-        }
-      />
+      <Route path="/admin/dashboard" element={<Navigate to="/admin/properties" replace />} />
       <Route 
         path="/admin/properties" 
         element={

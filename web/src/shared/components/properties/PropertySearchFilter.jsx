@@ -83,13 +83,14 @@ export default function PropertySearchFilter({
             className="flex-1 bg-transparent outline-none font-medium text-slate-700 placeholder-slate-400 min-w-0"
             disabled={isLoading}
           />
-          {searchTerm && (
+          {hasActiveControls && (
             <button
               type="button"
-              onClick={() => setSearchTerm('')}
-              className="text-slate-400 hover:text-slate-600 transition"
-              aria-label="Clear search term"
+              onClick={handleClear}
+              className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Clear all filters"
               disabled={isLoading}
+              title="Clear all filters"
             >
               <FiX size={18} />
             </button>
@@ -117,17 +118,6 @@ export default function PropertySearchFilter({
           </button>
         )}
       </div>
-
-      {hasActiveControls && (
-        <button
-          type="button"
-          onClick={handleClear}
-          disabled={isLoading}
-          className="w-full px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50 text-slate-700 rounded-lg font-semibold transition-colors border border-slate-300"
-        >
-          Clear All Filters
-        </button>
-      )}
     </div>
   );
 }

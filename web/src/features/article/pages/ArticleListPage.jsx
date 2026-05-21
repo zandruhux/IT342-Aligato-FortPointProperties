@@ -96,7 +96,12 @@ export default function ArticleListPage() {
         />
       </div>
 
-      <PublicArticlePrompt open={showPrompt} onClose={() => setShowPrompt(false)} />
+      <PublicArticlePrompt
+        open={showPrompt}
+        onClose={() => setShowPrompt(false)}
+        title="Log in to read this blog"
+        message="Full blog articles are available after you log in or create an account."
+      />
     </div>
   );
 

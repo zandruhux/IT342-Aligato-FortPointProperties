@@ -20,7 +20,6 @@ public class RegisterRequest {
     @NotBlank(message = "Password confirmation is required")
     private String confirmPassword;
 
-    // --- Constructors ---
     public RegisterRequest() {
     }
 
@@ -32,7 +31,6 @@ public class RegisterRequest {
         this.confirmPassword = confirmPassword;
     }
 
-    // --- Getters and Setters ---
     public String getFirstname() {
         return firstname;
     }

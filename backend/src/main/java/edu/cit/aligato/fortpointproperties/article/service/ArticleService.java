@@ -178,7 +178,6 @@ public class ArticleService {
         try {
             articleStorageService.deleteCoverPhoto(storagePath);
         } catch (IllegalArgumentException ignored) {
-            // Keep article operations successful even if a stale storage object cannot be removed.
         }
     }
 }

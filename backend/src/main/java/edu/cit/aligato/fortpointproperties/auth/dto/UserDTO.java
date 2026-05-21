@@ -6,9 +6,9 @@ public class UserDTO {
     private String firstname;
     private String lastname;
     private String role;
+    private String phoneNumber;
     private String profileImageUrl;
 
-    // --- Constructors ---
     public UserDTO() {
     }
 
@@ -25,7 +25,11 @@ public class UserDTO {
         this.profileImageUrl = profileImageUrl;
     }
 
-    // --- Getters and Setters ---
+    public UserDTO(String id, String email, String firstname, String lastname, String role, String phoneNumber, String profileImageUrl) {
+        this(id, email, firstname, lastname, role, profileImageUrl);
+        this.phoneNumber = phoneNumber;
+    }
+
     public String getId() {
         return id;
     }
@@ -64,6 +68,14 @@ public class UserDTO {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getProfileImageUrl() {

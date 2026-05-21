@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.messaging.dto.ConversationDTO;
 import edu.cit.aligato.fortpointproperties.messaging.dto.CreateConversationDTO;
 import edu.cit.aligato.fortpointproperties.messaging.dto.MessageDTO;
 import edu.cit.aligato.fortpointproperties.messaging.dto.SendMessageDTO;
@@ -88,6 +89,7 @@ public class MessagingServiceTest {
 
         assertEquals("a1", result.getSenderId());
         verify(conversationRepository).lockConversation(1L, "a1");
+        verify(messagingTemplate).convertAndSend(eq("/topic/agents/inbox"), any(Object.class));
         verify(messagingTemplate).convertAndSend(eq("/topic/agents/conversations/1/locked"), any(Object.class));
         verify(messagingTemplate).convertAndSendToUser(eq("u1"), eq("/queue/messages"), any(Object.class));
     }
@@ -153,6 +155,28 @@ public class MessagingServiceTest {
 
         assertEquals(1, results.size());
         assertEquals("Still saved.", results.get(0).getContent());
+    }
+
+    @Test
+    void conversationsUseAllUnreadMessagesWhenViewerHasNoReadState() {
+        Conversation assigned = conversation(1L, "u1", "a1", ConversationStatus.ASSIGNED);
+        Message latest = new Message();
+        latest.setId(10L);
+        latest.setConversationId(1L);
+        latest.setSenderId("a1");
+        latest.setSenderRole(SenderRole.AGENT);
+        latest.setContent("Hello.");
+
+        when(conversationRepository.findByRegisteredUserIdOrderByUpdatedAtDesc("u1")).thenReturn(List.of(assigned));
+        when(messageRepository.findTopByConversationIdOrderByCreatedAtDesc(1L)).thenReturn(Optional.of(latest));
+        when(readStateRepository.findByConversationIdAndUserId(1L, "u1")).thenReturn(Optional.empty());
+        when(messageRepository.countByConversationIdAndSenderIdNot(1L, "u1")).thenReturn(1L);
+
+        List<ConversationDTO> results = messagingService.getRegisteredUserConversations("u1");
+
+        assertEquals(1, results.size());
+        assertEquals(1L, results.get(0).getUnreadCount());
+        verify(messageRepository).countByConversationIdAndSenderIdNot(1L, "u1");
     }
 
     private Conversation conversation(Long id, String registeredUserId, String assignedAgentId,

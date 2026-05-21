@@ -84,10 +84,12 @@ export default function HomePage() {
                 "Fort Point Properties made finding our dream home effortless. Their team was professional and truly understood what we were looking for."
               </p>
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 overflow-hidden flex-shrink-0">
-                  {/* Placeholder for avatar */}
-                  <div className="w-full h-full bg-gray-300"></div>
-                </div>
+                <img
+                  src="https://randomuser.me/api/portraits/women/65.jpg"
+                  alt="Maria Santos"
+                  className="w-10 h-10 rounded-full mr-3 object-cover flex-shrink-0 border-2 border-blue-50"
+                  referrerPolicy="no-referrer"
+                />
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Maria Santos</h4>
                   <p className="text-xs text-gray-500">Homeowner</p>
@@ -101,10 +103,12 @@ export default function HomePage() {
                 "The market insights and expert guidance from Fort Point Properties helped me make informed investment decisions. Highly recommended!"
               </p>
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 overflow-hidden flex-shrink-0">
-                  {/* Placeholder for avatar */}
-                  <div className="w-full h-full bg-gray-300"></div>
-                </div>
+                <img
+                  src="https://randomuser.me/api/portraits/men/36.jpg"
+                  alt="Juan Dela Cruz"
+                  className="w-10 h-10 rounded-full mr-3 object-cover flex-shrink-0 border-2 border-blue-50"
+                  referrerPolicy="no-referrer"
+                />
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Juan Dela Cruz</h4>
                   <p className="text-xs text-gray-500">Property Investor</p>
@@ -118,10 +122,12 @@ export default function HomePage() {
                 "As a first-time client, I was nervous about the process. Fort Point Properties's team made everything smooth and stress-free."
               </p>
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-gray-200 rounded-full mr-3 overflow-hidden flex-shrink-0">
-                  {/* Placeholder for avatar */}
-                  <div className="w-full h-full bg-gray-300"></div>
-                </div>
+                <img
+                  src="https://randomuser.me/api/portraits/women/32.jpg"
+                  alt="Angela Reyes"
+                  className="w-10 h-10 rounded-full mr-3 object-cover flex-shrink-0 border-2 border-blue-50"
+                  referrerPolicy="no-referrer"
+                />
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Angela Reyes</h4>
                   <p className="text-xs text-gray-500">First-time Client</p>
@@ -141,13 +147,13 @@ export default function HomePage() {
           </p>
           
           <div className="flex justify-center">
-            {/* The requested modified link/button */}
-            <div className="bg-white px-6 py-3 rounded-md shadow-sm">
-              <a href="/properties" className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center transition-colors">
-                View All Properties
-                <span className="ml-1 text-lg leading-none">›</span>
-              </a>
-            </div>
+            <a
+              href="/properties"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-8 py-4 text-base font-bold text-[#00699d] shadow-lg ring-1 ring-white/60 transition hover:-translate-y-0.5 hover:bg-slate-50 hover:text-[#004f78] hover:shadow-xl"
+            >
+              View All Properties
+              <span className="text-xl leading-none">&rsaquo;</span>
+            </a>
           </div>
         </div>
       </section>

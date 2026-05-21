@@ -24,48 +24,34 @@ public class FavoriteService {
         this.propertyRepository = propertyRepository;
     }
 
-    /**
-     * Add a property to user's favorites
-     * Returns true if added successfully, false if already exists
-     */
     public boolean addToFavorites(User user, String propertyId) {
-        // Check if property exists
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
         if (!Boolean.TRUE.equals(property.getVisible())) {
             throw new IllegalArgumentException("Property not found");
         }
 
-        // Check if already favorited
         if (favoriteRepository.existsByUserIdAndPropertyId(user.getId(), propertyId)) {
-            return false; // Already favorited
+            return false;
         }
 
-        // Create and save favorite
         Favorite favorite = new Favorite(user, property);
         favoriteRepository.save(favorite);
         return true;
     }
 
-    /**
-     * Remove a property from user's favorites
-     * Returns true if removed successfully, false if not found
-     */
     public boolean removeFromFavorites(User user, String propertyId) {
         Favorite favorite = favoriteRepository.findByUserIdAndPropertyId(user.getId(), propertyId)
                 .orElse(null);
 
         if (favorite == null) {
-            return false; // Not favorited
+            return false;
         }
 
         favoriteRepository.delete(favorite);
         return true;
     }
 
-    /**
-     * Get all favorites for a user
-     */
     public List<FavoriteDTO> getFavoritesByUser(User user) {
         List<Favorite> favorites = favoriteRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
 
@@ -85,23 +71,14 @@ public class FavoriteService {
                 .toList();
     }
 
-    /**
-     * Check if a property is favorited by a user
-     */
     public boolean isFavorited(User user, String propertyId) {
         return favoriteRepository.existsByUserIdAndPropertyId(user.getId(), propertyId);
     }
 
-    /**
-     * Get favorite count for a user
-     */
     public long getFavoriteCount(User user) {
         return favoriteRepository.countByUserId(user.getId());
     }
 
-    /**
-     * Get how many users favorited a specific property
-     */
     public long getPropertyFavoriteCount(String propertyId) {
         return favoriteRepository.countByPropertyId(propertyId);
     }

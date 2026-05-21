@@ -2,10 +2,6 @@ package edu.cit.aligato.fortpointproperties.favorites.dto;
 
 import java.time.LocalDateTime;
 
-/**
- * FavoriteDTO - For returning favorite properties to registered users
- * Includes property details with createdAt timestamp for sorting
- */
 public class FavoriteDTO {
     public String id;
     public String propertyId;
@@ -18,7 +14,6 @@ public class FavoriteDTO {
     public String coverPhotoUrl;
     public LocalDateTime createdAt;
 
-    // --- Constructors ---
     public FavoriteDTO() {
     }
 
@@ -37,7 +32,6 @@ public class FavoriteDTO {
         this.createdAt = createdAt;
     }
 
-    // --- Getters and Setters ---
     public String getId() {
         return id;
     }

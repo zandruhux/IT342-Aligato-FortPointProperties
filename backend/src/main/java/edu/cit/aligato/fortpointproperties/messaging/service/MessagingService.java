@@ -24,12 +24,10 @@ import edu.cit.aligato.fortpointproperties.messaging.entity.Message.SenderRole;
 import edu.cit.aligato.fortpointproperties.messaging.repository.ConversationRepository;
 import edu.cit.aligato.fortpointproperties.messaging.repository.ConversationReadStateRepository;
 import edu.cit.aligato.fortpointproperties.messaging.repository.MessageRepository;
+import edu.cit.aligato.fortpointproperties.messaging.util.MessagingRoles;
 
 @Service
 public class MessagingService {
-    private static final String REGISTERED_USER_ROLE = "REGISTERED_USER";
-    private static final String AGENT_ROLE = "AGENT";
-
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final ConversationReadStateRepository readStateRepository;
@@ -48,7 +46,7 @@ public class MessagingService {
 
     @Transactional
     public ConversationDTO createConversation(CreateConversationDTO dto, String registeredUserId) {
-        validateSupportedRole(REGISTERED_USER_ROLE);
+        validateSupportedRole(MessagingRoles.REGISTERED_USER);
         String content = normalizeContent(dto.getContent());
 
         Conversation conversation = new Conversation();
@@ -75,7 +73,7 @@ public class MessagingService {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
 
-        if (REGISTERED_USER_ROLE.equals(normalizedRole)) {
+        if (MessagingRoles.REGISTERED_USER.equals(normalizedRole)) {
             validateRegisteredUserAccess(conversation, senderId);
         } else {
             validateAgentAccessForSend(conversationId, conversation, senderId);
@@ -89,7 +87,7 @@ public class MessagingService {
                 .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
         MessageDTO messageDTO = toMessageDTO(savedMessage);
 
-        if (REGISTERED_USER_ROLE.equals(normalizedRole)) {
+        if (MessagingRoles.REGISTERED_USER.equals(normalizedRole)) {
             if (currentConversation.getAssignedAgentId() != null) {
                 messagingTemplate.convertAndSendToUser(currentConversation.getAssignedAgentId(), "/queue/messages",
                         withType(messageDTO));
@@ -129,7 +127,7 @@ public class MessagingService {
         String normalizedRole = normalizeRole(role);
         validateSupportedRole(normalizedRole);
 
-        if (REGISTERED_USER_ROLE.equals(normalizedRole)) {
+        if (MessagingRoles.REGISTERED_USER.equals(normalizedRole)) {
             validateRegisteredUserAccess(conversation, userId);
         } else if (!ConversationStatus.OPEN.equals(conversation.getStatus())
                 && !userId.equals(conversation.getAssignedAgentId())) {
@@ -150,7 +148,7 @@ public class MessagingService {
         String normalizedRole = normalizeRole(role);
         validateSupportedRole(normalizedRole);
 
-        if (REGISTERED_USER_ROLE.equals(normalizedRole)) {
+        if (MessagingRoles.REGISTERED_USER.equals(normalizedRole)) {
             validateRegisteredUserAccess(conversation, userId);
         } else if (!ConversationStatus.OPEN.equals(conversation.getStatus())
                 && !userId.equals(conversation.getAssignedAgentId())) {
@@ -169,9 +167,13 @@ public class MessagingService {
                     .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
 
             if (updatedRows == 1) {
+                ConversationLockedDTO lockedEvent = new ConversationLockedDTO("CONVERSATION_LOCKED",
+                        conversationId, agentId, userDisplayName(agentId), userProfileImageUrl(agentId),
+                        ConversationStatus.ASSIGNED.name());
+
+                messagingTemplate.convertAndSend("/topic/agents/inbox", lockedEvent);
                 messagingTemplate.convertAndSend("/topic/agents/conversations/" + conversationId + "/locked",
-                        new ConversationLockedDTO("CONVERSATION_LOCKED", conversationId, agentId,
-                                ConversationStatus.ASSIGNED.name()));
+                        lockedEvent);
                 return;
             }
 
@@ -210,17 +212,11 @@ public class MessagingService {
     }
 
     private String normalizeRole(String role) {
-        if (role == null) {
-            return "";
-        }
-        if ("registered_user".equalsIgnoreCase(role) || "USER".equalsIgnoreCase(role)) {
-            return REGISTERED_USER_ROLE;
-        }
-        return role.toUpperCase();
+        return MessagingRoles.normalize(role);
     }
 
     private void validateSupportedRole(String role) {
-        if (!REGISTERED_USER_ROLE.equals(role) && !AGENT_ROLE.equals(role)) {
+        if (!MessagingRoles.isSupported(role)) {
             throw new SecurityException("Messaging is only available to registered users and agents");
         }
     }
@@ -326,7 +322,10 @@ public class MessagingService {
         LocalDateTime lastReadAt = readStateRepository.findByConversationIdAndUserId(conversationId, userId)
                 .map(ConversationReadState::getLastReadAt)
                 .orElse(null);
-        return messageRepository.countUnreadMessages(conversationId, userId, lastReadAt);
+        if (lastReadAt == null) {
+            return messageRepository.countByConversationIdAndSenderIdNot(conversationId, userId);
+        }
+        return messageRepository.countUnreadMessagesAfter(conversationId, userId, lastReadAt);
     }
 
     private ConversationNotificationDTO buildConversationNotification(String type, Conversation conversation, String content) {

@@ -5,7 +5,6 @@ public class AuthResponse {
     private String accessToken;
     private String refreshToken;
 
-    // --- Constructors ---
     public AuthResponse() {
     }
 
@@ -15,7 +14,6 @@ public class AuthResponse {
         this.refreshToken = refreshToken;
     }
 
-    // --- Getters and Setters ---
     public UserDTO getUser() {
         return user;
     }
