@@ -4,6 +4,7 @@ import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { useFavorites } from '../../favorites/hooks/useFavorites';
 import { useProperties, usePropertySearch, usePropertyDetailAccess } from '../hooks';
 import { PropertyCard, PropertyDetailModal, PropertySearchFilter } from '../components';
+import PublicArticlePrompt from '../../article/components/PublicArticlePrompt';
 
 /**
  * PropertyListPage Component
@@ -15,6 +16,7 @@ export default function PropertyListPage() {
   const { authReady, isLoggedIn, isRegisteredUser } = useAuthContext();
   const { favoriteIds, loading: favoritesLoading, fetchFavorites, toggleFavorite } = useFavorites();
   const [pendingFavoriteIds, setPendingFavoriteIds] = useState(new Set());
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const { properties, loading, fetchProperties } = useProperties();
   const {
     results: searchResults,
@@ -91,6 +93,11 @@ export default function PropertyListPage() {
   };
 
   const handlePropertyClick = (propertyId) => {
+    if (!isLoggedIn) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
     const property = displayProperties.find((p) => p.id === propertyId);
     if (property) {
       openDetailModal(property);
@@ -197,6 +204,12 @@ export default function PropertyListPage() {
         property={selectedProperty}
         isOpen={isDetailModalOpen}
         onClose={closeDetailModal}
+      />
+      <PublicArticlePrompt
+        open={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        title="Log in to view property details"
+        message="Property cards include more photos, pricing, and details after you log in or create an account."
       />
     </div>
   );
