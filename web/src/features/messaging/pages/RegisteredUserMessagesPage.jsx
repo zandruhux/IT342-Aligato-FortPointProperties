@@ -4,16 +4,8 @@ import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { createConversation, getConversations } from '../api/messagingApi';
 import { ConversationList } from '../components';
 import { useMessagingSocket } from '../hooks/useMessagingSocket';
+import { mergeConversationEvent, withDisplayName } from '../utils/messagingHelpers';
 import ConversationPage from './ConversationPage';
-
-const withDisplayName = (conversation) => ({
-  ...conversation,
-  displayName: conversation.assignedAgentName
-    || (conversation.latestMessageSenderId === conversation.assignedAgentId ? conversation.latestMessageSenderName : '')
-    || 'Fort Point Properties',
-  displayProfileImageUrl: conversation.assignedAgentProfileImageUrl
-    || (conversation.latestMessageSenderId === conversation.assignedAgentId ? conversation.latestMessageSenderProfileImageUrl : null),
-});
 
 export default function RegisteredUserMessagesPage() {
   const { user } = useAuthContext();
@@ -28,59 +20,12 @@ export default function RegisteredUserMessagesPage() {
   const updateConversationPreview = useCallback((event, unread) => {
     setConversations((current) => current.map((conversation) => (
       conversation.id === event.conversationId
-        ? {
-            ...conversation,
-            assignedAgentName: event.senderRole === 'AGENT'
-              ? event.senderName || conversation.assignedAgentName
-              : conversation.assignedAgentName,
-            assignedAgentProfileImageUrl: event.senderRole === 'AGENT'
-              ? event.senderProfileImageUrl || conversation.assignedAgentProfileImageUrl
-              : conversation.assignedAgentProfileImageUrl,
-            registeredUserName: event.senderRole === 'REGISTERED_USER'
-              ? event.senderName || conversation.registeredUserName
-              : conversation.registeredUserName,
-            registeredUserProfileImageUrl: event.senderRole === 'REGISTERED_USER'
-              ? event.senderProfileImageUrl || conversation.registeredUserProfileImageUrl
-              : conversation.registeredUserProfileImageUrl,
-            displayName: event.senderRole === 'AGENT'
-              ? event.senderName || conversation.displayName
-              : conversation.displayName,
-            displayProfileImageUrl: event.senderRole === 'AGENT'
-              ? event.senderProfileImageUrl || conversation.displayProfileImageUrl
-              : conversation.displayProfileImageUrl,
-            latestMessagePreview: event.content,
-            latestMessageSenderId: event.senderId,
-            latestMessageSenderName: event.senderName,
-            latestMessageSenderProfileImageUrl: event.senderProfileImageUrl,
-            latestMessageAt: event.createdAt,
-            unread,
-            unreadCount: unread ? (conversation.unreadCount || 0) + (event.unreadCount || 1) : 0,
-          }
+        ? mergeConversationEvent(conversation, event, unread, false)
         : conversation
     )));
     setSelected((current) => (
       current?.id === event.conversationId
-        ? {
-            ...current,
-            assignedAgentName: event.senderRole === 'AGENT'
-              ? event.senderName || current.assignedAgentName
-              : current.assignedAgentName,
-            assignedAgentProfileImageUrl: event.senderRole === 'AGENT'
-              ? event.senderProfileImageUrl || current.assignedAgentProfileImageUrl
-              : current.assignedAgentProfileImageUrl,
-            registeredUserName: event.senderRole === 'REGISTERED_USER'
-              ? event.senderName || current.registeredUserName
-              : current.registeredUserName,
-            registeredUserProfileImageUrl: event.senderRole === 'REGISTERED_USER'
-              ? event.senderProfileImageUrl || current.registeredUserProfileImageUrl
-              : current.registeredUserProfileImageUrl,
-            displayName: event.senderRole === 'AGENT'
-              ? event.senderName || current.displayName
-              : current.displayName,
-            displayProfileImageUrl: event.senderRole === 'AGENT'
-              ? event.senderProfileImageUrl || current.displayProfileImageUrl
-              : current.displayProfileImageUrl,
-          }
+        ? mergeConversationEvent(current, event, unread, false)
         : current
     ));
   }, []);
@@ -95,8 +40,14 @@ export default function RegisteredUserMessagesPage() {
   const loadConversations = useCallback(async () => {
     try {
       const data = await getConversations();
-      setConversations(data.map(withDisplayName));
-      setSelected((current) => current || (data.length ? withDisplayName(data[0]) : null));
+      const displayData = data.map(withDisplayName);
+      setConversations(displayData);
+      setSelected((current) => {
+        if (!current) {
+          return displayData[0] || null;
+        }
+        return displayData.find((conversation) => conversation.id === current.id) || displayData[0] || null;
+      });
       setError('');
     } catch (err) {
       setError(err?.error || err?.message || 'Unable to load conversations');

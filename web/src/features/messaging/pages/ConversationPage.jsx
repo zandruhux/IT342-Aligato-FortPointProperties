@@ -2,13 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ROLES } from '../../../shared/utils/constants';
 import { getMessages, sendMessage } from '../api/messagingApi';
 import { MessageInput, MessageThread, ConversationStatusBadge, ConversationAvatar } from '../components';
-
-const normalizeRole = (role) => {
-  if (role === 'registered_user' || role === ROLES.USER) {
-    return ROLES.REGISTERED_USER;
-  }
-  return role;
-};
+import { normalizeMessagingRole } from '../utils/messagingHelpers';
 
 const getDisplayName = (conversation, normalizedRole) => {
   if (!conversation) {
@@ -46,7 +40,7 @@ export default function ConversationPage({
 }) {
   const [messages, setMessages] = useState([]);
   const [error, setError] = useState('');
-  const normalizedRole = normalizeRole(role || user?.role);
+  const normalizedRole = normalizeMessagingRole(role || user?.role);
 
   const canSend = useMemo(() => {
     if (!conversation || !user?.id) {
@@ -64,6 +58,7 @@ export default function ConversationPage({
   const loadMessages = useCallback(async () => {
     if (!conversation?.id) {
       setMessages([]);
+      setError('');
       return;
     }
 
@@ -77,6 +72,7 @@ export default function ConversationPage({
   }, [conversation?.id]);
 
   useEffect(() => {
+    setError('');
     loadMessages();
   }, [loadMessages]);
 

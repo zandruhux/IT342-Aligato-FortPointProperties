@@ -20,6 +20,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.messaging.util.MessagingRoles;
 import edu.cit.aligato.fortpointproperties.shared.security.JwtUtil;
 
 @Configuration
@@ -76,16 +77,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             return;
         }
 
-        String role = normalizeRole(user.getRole());
+        String role = MessagingRoles.normalize(user.getRole());
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 (Principal) user::getId, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
         accessor.setUser(authentication);
-    }
-
-    private String normalizeRole(String role) {
-        if ("registered_user".equalsIgnoreCase(role) || "USER".equalsIgnoreCase(role)) {
-            return "REGISTERED_USER";
-        }
-        return role == null ? "" : role.toUpperCase();
     }
 }

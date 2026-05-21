@@ -5,45 +5,7 @@ import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { createConversation, getConversations } from '../api/messagingApi';
 import { useMessagingSocket } from '../hooks/useMessagingSocket';
 import ConversationPage from '../pages/ConversationPage';
-
-const withDisplayName = (conversation, isAgentRole = false) => ({
-  ...conversation,
-  displayName: isAgentRole
-    ? conversation.registeredUserName
-      || (conversation.latestMessageSenderId === conversation.registeredUserId ? conversation.latestMessageSenderName : '')
-      || 'Conversation'
-    : conversation.assignedAgentName
-      || (conversation.latestMessageSenderId === conversation.assignedAgentId ? conversation.latestMessageSenderName : '')
-      || 'Fort Point Properties',
-  displayProfileImageUrl: isAgentRole
-    ? conversation.registeredUserProfileImageUrl
-      || (conversation.latestMessageSenderId === conversation.registeredUserId ? conversation.latestMessageSenderProfileImageUrl : null)
-    : conversation.assignedAgentProfileImageUrl
-      || (conversation.latestMessageSenderId === conversation.assignedAgentId ? conversation.latestMessageSenderProfileImageUrl : null),
-});
-
-const mergeConversationEvent = (conversation, event, unread, isAgentRole) => withDisplayName({
-  ...conversation,
-  assignedAgentName: event.senderRole === 'AGENT'
-    ? event.senderName || conversation.assignedAgentName
-    : conversation.assignedAgentName,
-  assignedAgentProfileImageUrl: event.senderRole === 'AGENT'
-    ? event.senderProfileImageUrl || conversation.assignedAgentProfileImageUrl
-    : conversation.assignedAgentProfileImageUrl,
-  registeredUserName: event.senderRole === 'REGISTERED_USER'
-    ? event.senderName || conversation.registeredUserName
-    : conversation.registeredUserName,
-  registeredUserProfileImageUrl: event.senderRole === 'REGISTERED_USER'
-    ? event.senderProfileImageUrl || conversation.registeredUserProfileImageUrl
-    : conversation.registeredUserProfileImageUrl,
-  latestMessagePreview: event.content,
-  latestMessageSenderId: event.senderId,
-  latestMessageSenderName: event.senderName,
-  latestMessageSenderProfileImageUrl: event.senderProfileImageUrl,
-  latestMessageAt: event.createdAt,
-  unread,
-  unreadCount: unread ? (conversation.unreadCount || 0) + (event.unreadCount || 1) : 0,
-}, isAgentRole);
+import { applyLockEvent, mergeConversationEvent, toInboxConversation, withDisplayName } from '../utils/messagingHelpers';
 
 export default function FloatingChatWidget() {
   const location = useLocation();
@@ -72,7 +34,7 @@ export default function FloatingChatWidget() {
       const data = await getConversations();
       const displayData = data.map((conversation) => withDisplayName(conversation, isAgentRole));
       setConversations(displayData);
-      setSelected((current) => (isAgentRole ? displayData[0] || null : current || displayData[0] || null));
+      setSelected(displayData[0] || null);
       setError('');
     } catch (err) {
       setError(err?.error || err?.message || 'Unable to load messages');
@@ -122,20 +84,7 @@ export default function FloatingChatWidget() {
     enabled: canShow,
     onInboxEvent: isAgentRole ? (event) => {
       // Inbox events can arrive before the agent opens the full messages page.
-      const incomingConversation = withDisplayName({
-        id: event.conversationId,
-        registeredUserId: event.registeredUserId,
-        registeredUserName: event.registeredUserName,
-        registeredUserProfileImageUrl: event.registeredUserProfileImageUrl,
-        assignedAgentId: null,
-        assignedAgentName: null,
-        status: event.status || 'OPEN',
-        latestMessagePreview: event.preview,
-        latestMessageSenderId: event.registeredUserId,
-        latestMessageSenderName: event.registeredUserName,
-        unread: true,
-        unreadCount: event.unreadCount || 1,
-      }, true);
+      const incomingConversation = toInboxConversation(event);
 
       setConversations((current) => {
         if (current.some((conversation) => conversation.id === incomingConversation.id)) {
@@ -158,6 +107,31 @@ export default function FloatingChatWidget() {
       setSelected(incomingConversation);
     } : undefined,
     onMessage: handleSocketMessage,
+    onLockedEvent: isAgentRole ? (event) => {
+      const assignedToCurrentAgent = event.assignedAgentId === user?.id;
+
+      setConversations((current) => {
+        const updated = current.map((conversation) => (
+          conversation.id === event.conversationId
+            ? applyLockEvent(conversation, event, true)
+            : conversation
+        ));
+
+        return assignedToCurrentAgent
+          ? updated
+          : updated.filter((conversation) => conversation.id !== event.conversationId);
+      });
+
+      setSelected((current) => {
+        if (current?.id !== event.conversationId) {
+          return current;
+        }
+        if (!assignedToCurrentAgent) {
+          return null;
+        }
+        return applyLockEvent(current, event, true);
+      });
+    } : undefined,
   });
 
   useEffect(() => {
@@ -165,6 +139,12 @@ export default function FloatingChatWidget() {
       loadConversations();
     }
   }, [canShow, loadConversations]);
+
+  useEffect(() => {
+    if (canShow && !selected && conversations.length) {
+      setSelected(conversations[0]);
+    }
+  }, [canShow, conversations, selected]);
 
   if (!canShow) {
     return null;
@@ -196,9 +176,7 @@ export default function FloatingChatWidget() {
   };
 
   const handleLauncherClick = () => {
-    if (isAgentRole) {
-      setSelected(conversations[0] || null);
-    }
+    setSelected(conversations[0] || null);
     setOpen(true);
   };
 

@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,11 +23,11 @@ import edu.cit.aligato.fortpointproperties.messaging.dto.CreateConversationDTO;
 import edu.cit.aligato.fortpointproperties.messaging.dto.MessageDTO;
 import edu.cit.aligato.fortpointproperties.messaging.dto.SendMessageDTO;
 import edu.cit.aligato.fortpointproperties.messaging.service.MessagingService;
+import edu.cit.aligato.fortpointproperties.messaging.util.MessagingRoles;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/messaging")
-@PreAuthorize("hasAnyRole('REGISTERED_USER', 'AGENT')")
 public class MessagingController {
     private final MessagingService messagingService;
     private final UserRepository userRepository;
@@ -39,10 +38,13 @@ public class MessagingController {
     }
 
     @PostMapping("/conversations")
-    @PreAuthorize("hasRole('REGISTERED_USER')")
     public ResponseEntity<ConversationDTO> createConversation(@Valid @RequestBody CreateConversationDTO dto,
             Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
+        String role = normalizeRole(user.getRole());
+        if (!MessagingRoles.REGISTERED_USER.equals(role)) {
+            throw new SecurityException("Only registered users can start conversations");
+        }
         return new ResponseEntity<>(messagingService.createConversation(dto, user.getId()), HttpStatus.CREATED);
     }
 
@@ -50,8 +52,9 @@ public class MessagingController {
     public ResponseEntity<List<ConversationDTO>> getConversations(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
         String role = normalizeRole(user.getRole());
+        ensureMessagingRole(role);
 
-        if ("AGENT".equals(role)) {
+        if (MessagingRoles.AGENT.equals(role)) {
             return ResponseEntity.ok(messagingService.getAgentInbox(user.getId()));
         }
 
@@ -61,6 +64,7 @@ public class MessagingController {
     @GetMapping("/conversations/{conversationId}/messages")
     public ResponseEntity<List<MessageDTO>> getMessages(@PathVariable Long conversationId, Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
+        ensureMessagingRole(normalizeRole(user.getRole()));
         return ResponseEntity.ok(messagingService.getMessages(conversationId, user.getId(), user.getRole()));
     }
 
@@ -68,6 +72,7 @@ public class MessagingController {
     public ResponseEntity<ConversationDTO> markConversationRead(@PathVariable Long conversationId,
             Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
+        ensureMessagingRole(normalizeRole(user.getRole()));
         return ResponseEntity.ok(messagingService.markConversationRead(conversationId, user.getId(), user.getRole()));
     }
 
@@ -75,6 +80,7 @@ public class MessagingController {
     public ResponseEntity<MessageDTO> sendMessage(@PathVariable Long conversationId,
             @Valid @RequestBody SendMessageDTO dto, Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
+        ensureMessagingRole(normalizeRole(user.getRole()));
         return new ResponseEntity<>(messagingService.sendMessage(conversationId, dto, user.getId(), user.getRole()),
                 HttpStatus.CREATED);
     }
@@ -109,9 +115,12 @@ public class MessagingController {
     }
 
     private String normalizeRole(String role) {
-        if ("registered_user".equalsIgnoreCase(role) || "USER".equalsIgnoreCase(role)) {
-            return "REGISTERED_USER";
+        return MessagingRoles.normalize(role);
+    }
+
+    private void ensureMessagingRole(String role) {
+        if (!MessagingRoles.isSupported(role)) {
+            throw new SecurityException("Messaging is only available to registered users and agents");
         }
-        return role == null ? "" : role.toUpperCase();
     }
 }

@@ -2,19 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { WS_BASE_URL, ROLES } from '../../../shared/utils/constants';
-
-const normalizeRole = (role) => {
-  if (role === 'registered_user' || role === ROLES.USER) {
-    return ROLES.REGISTERED_USER;
-  }
-  return role?.toUpperCase?.() || role;
-};
+import { normalizeMessagingRole } from '../utils/messagingHelpers';
 
 export function useMessagingSocket({ user, role, conversationId, onInboxEvent, onLockedEvent, onMessage, enabled = true }) {
   const clientRef = useRef(null);
   const handlersRef = useRef({ onInboxEvent, onLockedEvent, onMessage });
   const [connected, setConnected] = useState(false);
-  const normalizedRole = normalizeRole(role || user?.role || localStorage.getItem('role'));
+  const normalizedRole = normalizeMessagingRole(role || user?.role || localStorage.getItem('role'));
 
   useEffect(() => {
     // Keep callbacks fresh without forcing a WebSocket reconnect on every render.
@@ -37,7 +31,12 @@ export function useMessagingSocket({ user, role, conversationId, onInboxEvent, o
 
         if (normalizedRole === ROLES.AGENT) {
           client.subscribe('/topic/agents/inbox', (message) => {
-            handlersRef.current.onInboxEvent?.(JSON.parse(message.body));
+            const event = JSON.parse(message.body);
+            if (event.type === 'CONVERSATION_LOCKED') {
+              handlersRef.current.onLockedEvent?.(event);
+              return;
+            }
+            handlersRef.current.onInboxEvent?.(event);
           });
 
           if (conversationId) {

@@ -38,10 +38,11 @@ const AppLayout = ({ children, isLoggedIn, onLogout }) => {
 }
 
 const normalizeRole = (role) => {
-  if (role === 'registered_user' || role === 'USER' || role === 'REGISTERED_USER') {
+  const normalized = String(role || '').trim().toUpperCase().replace(/[-\s]+/g, '_')
+  if (normalized === 'REGISTERED_USER' || normalized === 'REGISTERED_USEER' || normalized === 'USER') {
     return 'REGISTERED_USER'
   }
-  return role || ''
+  return normalized || ''
 }
 
 export default AppLayout

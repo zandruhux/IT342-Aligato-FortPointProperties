@@ -4,6 +4,8 @@ public class ConversationLockedDTO {
     private String type;
     private Long conversationId;
     private String assignedAgentId;
+    private String assignedAgentName;
+    private String assignedAgentProfileImageUrl;
     private String status;
 
     public ConversationLockedDTO() {
@@ -14,6 +16,13 @@ public class ConversationLockedDTO {
         this.conversationId = conversationId;
         this.assignedAgentId = assignedAgentId;
         this.status = status;
+    }
+
+    public ConversationLockedDTO(String type, Long conversationId, String assignedAgentId,
+            String assignedAgentName, String assignedAgentProfileImageUrl, String status) {
+        this(type, conversationId, assignedAgentId, status);
+        this.assignedAgentName = assignedAgentName;
+        this.assignedAgentProfileImageUrl = assignedAgentProfileImageUrl;
     }
 
     public String getType() {
@@ -38,6 +47,22 @@ public class ConversationLockedDTO {
 
     public void setAssignedAgentId(String assignedAgentId) {
         this.assignedAgentId = assignedAgentId;
+    }
+
+    public String getAssignedAgentName() {
+        return assignedAgentName;
+    }
+
+    public void setAssignedAgentName(String assignedAgentName) {
+        this.assignedAgentName = assignedAgentName;
+    }
+
+    public String getAssignedAgentProfileImageUrl() {
+        return assignedAgentProfileImageUrl;
+    }
+
+    public void setAssignedAgentProfileImageUrl(String assignedAgentProfileImageUrl) {
+        this.assignedAgentProfileImageUrl = assignedAgentProfileImageUrl;
     }
 
     public String getStatus() {

@@ -4,16 +4,8 @@ import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { getConversations } from '../api/messagingApi';
 import { ConversationList } from '../components';
 import { useMessagingSocket } from '../hooks/useMessagingSocket';
+import { applyLockEvent, mergeConversationEvent, toInboxConversation, withDisplayName } from '../utils/messagingHelpers';
 import ConversationPage from './ConversationPage';
-
-const withDisplayName = (conversation) => ({
-  ...conversation,
-  displayName: conversation.registeredUserName
-    || (conversation.latestMessageSenderId === conversation.registeredUserId ? conversation.latestMessageSenderName : '')
-    || 'Conversation',
-  displayProfileImageUrl: conversation.registeredUserProfileImageUrl
-    || (conversation.latestMessageSenderId === conversation.registeredUserId ? conversation.latestMessageSenderProfileImageUrl : null),
-});
 
 export default function AgentInboxPage() {
   const { user } = useAuthContext();
@@ -32,7 +24,7 @@ export default function AgentInboxPage() {
         if (!current) {
           return displayData[0] || null;
         }
-        return displayData.find((conversation) => conversation.id === current.id) || current;
+        return displayData.find((conversation) => conversation.id === current.id) || displayData[0] || null;
       });
       setError('');
     } catch (err) {
@@ -40,22 +32,14 @@ export default function AgentInboxPage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!selected && conversations.length) {
+      setSelected(conversations[0]);
+    }
+  }, [conversations, selected]);
+
   const handleInboxEvent = useCallback((event) => {
-    const incomingConversation = withDisplayName({
-      id: event.conversationId,
-      registeredUserId: event.registeredUserId,
-      registeredUserName: event.registeredUserName,
-      registeredUserProfileImageUrl: event.registeredUserProfileImageUrl,
-      assignedAgentId: null,
-      assignedAgentName: null,
-      status: event.status || 'OPEN',
-      latestMessagePreview: event.preview,
-      latestMessageSenderId: event.registeredUserId,
-      latestMessageSenderName: event.registeredUserName,
-      latestMessageAt: event.createdAt || new Date().toISOString(),
-      unread: true,
-      unreadCount: event.unreadCount || 1,
-    });
+    const incomingConversation = toInboxConversation(event);
 
     setConversations((current) => {
       const exists = current.some((conversation) => conversation.id === incomingConversation.id);
@@ -73,63 +57,32 @@ export default function AgentInboxPage() {
   }, []);
 
   const handleLocked = useCallback((event) => {
-    setConversations((current) => current.map((conversation) => (
-      conversation.id === event.conversationId
-        ? {
-            ...conversation,
-            assignedAgentId: event.assignedAgentId,
-            assignedAgentName: event.assignedAgentName || conversation.assignedAgentName,
-            assignedAgentProfileImageUrl: event.assignedAgentProfileImageUrl || conversation.assignedAgentProfileImageUrl,
-            status: event.status,
-          }
-        : conversation
-    )));
+    const assignedToCurrentAgent = event.assignedAgentId === user?.id;
+
+    setConversations((current) => {
+      const updated = current.map((conversation) => (
+        conversation.id === event.conversationId
+          ? applyLockEvent(conversation, event, true)
+          : conversation
+      ));
+
+      return assignedToCurrentAgent
+        ? updated
+        : updated.filter((conversation) => conversation.id !== event.conversationId);
+    });
     setSelected((current) => (
-      current?.id === event.conversationId
-        ? {
-            ...current,
-            assignedAgentId: event.assignedAgentId,
-            assignedAgentName: event.assignedAgentName || current.assignedAgentName,
-            assignedAgentProfileImageUrl: event.assignedAgentProfileImageUrl || current.assignedAgentProfileImageUrl,
-            status: event.status,
-          }
-        : current
+      current?.id === event.conversationId && assignedToCurrentAgent
+        ? applyLockEvent(current, event, true)
+        : current?.id === event.conversationId
+          ? null
+          : current
     ));
-  }, []);
+  }, [user?.id]);
 
   const handleMessage = useCallback((event) => {
     setConversations((current) => current.map((conversation) => (
       conversation.id === event.conversationId
-        ? {
-            ...conversation,
-            registeredUserName: event.senderRole === 'REGISTERED_USER'
-              ? event.senderName || conversation.registeredUserName
-              : conversation.registeredUserName,
-            registeredUserProfileImageUrl: event.senderRole === 'REGISTERED_USER'
-              ? event.senderProfileImageUrl || conversation.registeredUserProfileImageUrl
-              : conversation.registeredUserProfileImageUrl,
-            assignedAgentName: event.senderRole === 'AGENT'
-              ? event.senderName || conversation.assignedAgentName
-              : conversation.assignedAgentName,
-            assignedAgentProfileImageUrl: event.senderRole === 'AGENT'
-              ? event.senderProfileImageUrl || conversation.assignedAgentProfileImageUrl
-              : conversation.assignedAgentProfileImageUrl,
-            displayName: event.senderRole === 'REGISTERED_USER'
-              ? event.senderName || conversation.displayName
-              : conversation.displayName,
-            displayProfileImageUrl: event.senderRole === 'REGISTERED_USER'
-              ? event.senderProfileImageUrl || conversation.displayProfileImageUrl
-              : conversation.displayProfileImageUrl,
-            latestMessagePreview: event.content,
-            latestMessageSenderId: event.senderId,
-            latestMessageSenderName: event.senderName,
-            latestMessageSenderProfileImageUrl: event.senderProfileImageUrl,
-            latestMessageAt: event.createdAt,
-            unread: selected?.id !== event.conversationId,
-            unreadCount: selected?.id === event.conversationId
-              ? 0
-              : (conversation.unreadCount || 0) + (event.unreadCount || 1),
-          }
+        ? mergeConversationEvent(conversation, event, selected?.id !== event.conversationId, true)
         : conversation
     )));
 
@@ -139,21 +92,7 @@ export default function AgentInboxPage() {
 
     setSelected((current) => (
       current?.id === event.conversationId
-        ? {
-            ...current,
-            registeredUserName: event.senderRole === 'REGISTERED_USER'
-              ? event.senderName || current.registeredUserName
-              : current.registeredUserName,
-            registeredUserProfileImageUrl: event.senderRole === 'REGISTERED_USER'
-              ? event.senderProfileImageUrl || current.registeredUserProfileImageUrl
-              : current.registeredUserProfileImageUrl,
-            assignedAgentName: event.senderRole === 'AGENT'
-              ? event.senderName || current.assignedAgentName
-              : current.assignedAgentName,
-            assignedAgentProfileImageUrl: event.senderRole === 'AGENT'
-              ? event.senderProfileImageUrl || current.assignedAgentProfileImageUrl
-              : current.assignedAgentProfileImageUrl,
-          }
+        ? mergeConversationEvent(current, event, false, true)
         : current
     ));
   }, [selected?.id]);
