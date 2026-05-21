@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { AdminSidebar, AgentSidebar } from '../../../shared/components/layout';
 import ArticleList from '../components/ArticleList';
@@ -20,7 +20,9 @@ export default function ArticleListPage() {
   const { isLoggedIn, user } = useAuthContext();
   const [showPrompt, setShowPrompt] = useState(false);
   const [deletingId, setDeletingId] = useState('');
-  const { articles, setArticles, loading, error } = useArticles();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearchTerm, setActiveSearchTerm] = useState('');
+  const { articles, setArticles, loading, error, fetchArticles } = useArticles();
   const articleActions = useArticleActions();
 
   const role = normalizeRole(user?.role);
@@ -33,6 +35,19 @@ export default function ArticleListPage() {
       return;
     }
     navigate(`/blogs/${article.id}`);
+  };
+
+  const handleSearch = async (event) => {
+    event.preventDefault();
+    const nextSearchTerm = searchTerm.trim();
+    setActiveSearchTerm(nextSearchTerm);
+    await fetchArticles(nextSearchTerm);
+  };
+
+  const handleClearSearch = async () => {
+    setSearchTerm('');
+    setActiveSearchTerm('');
+    await fetchArticles();
   };
 
   const handleDelete = async (article) => {
@@ -73,6 +88,48 @@ export default function ArticleListPage() {
           )}
         </div>
 
+        <form
+          onSubmit={handleSearch}
+          className="mb-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+        >
+          <label htmlFor="article-search" className="sr-only">
+            Search blogs by title
+          </label>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-1 items-center gap-2 rounded-md border border-slate-300 px-4 py-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500">
+              <FiSearch className="text-slate-500" size={20} />
+              <input
+                id="article-search"
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search blogs by title..."
+                className="min-w-0 flex-1 bg-transparent font-medium text-slate-700 outline-none placeholder-slate-400"
+                disabled={loading}
+              />
+              {(searchTerm || activeSearchTerm) && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Clear search"
+                  title="Clear search"
+                  disabled={loading}
+                >
+                  <FiX size={18} />
+                </button>
+              )}
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-md bg-blue-600 px-5 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:bg-slate-300"
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </div>
+        </form>
+
         {articleActions.error && (
           <div className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {articleActions.error}
@@ -93,6 +150,7 @@ export default function ArticleListPage() {
           onEdit={(article) => navigate(`/admin/blogs/${article.id}/edit`)}
           onDelete={handleDelete}
           deletingId={deletingId}
+          emptyMessage={activeSearchTerm ? 'No articles found.' : 'No blogs have been posted yet.'}
         />
       </div>
 

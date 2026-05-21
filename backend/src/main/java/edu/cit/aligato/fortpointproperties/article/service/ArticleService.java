@@ -91,6 +91,16 @@ public class ArticleService {
                 .toList();
     }
 
+    public List<ArticleCardDTO> getArticleCards(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return getAllArticleCards();
+        }
+
+        return articleRepository.findByTitleContainingIgnoreCaseOrderByLatestDateDesc(title.trim()).stream()
+                .map(this::convertArticleToCardDTO)
+                .toList();
+    }
+
     public ArticleDTO getArticleById(String id) {
         return convertArticleToDTO(getArticleEntity(id));
     }

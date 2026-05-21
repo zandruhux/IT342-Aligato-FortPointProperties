@@ -12,9 +12,12 @@ const extractError = (error, fallback) => {
   return error.response?.data?.error?.message || error.response?.data?.message || fallback;
 };
 
-export const getArticleCards = async () => {
+export const getArticleCards = async (title = '') => {
   try {
-    const response = await publicArticleApi.get(API_ENDPOINTS.ARTICLES.ALL);
+    const searchTitle = String(title).trim();
+    const response = await publicArticleApi.get(API_ENDPOINTS.ARTICLES.ALL, {
+      params: searchTitle ? { title: searchTitle } : {},
+    });
     return extractData(response);
   } catch (error) {
     throw new Error(extractError(error, 'Failed to fetch blogs'));
