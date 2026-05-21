@@ -1,11 +1,13 @@
 import axiosInstance from '../../../shared/utils/api';
-import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { API_BASE_URL, API_ENDPOINTS } from '../../../shared/utils/constants';
 
 /**
  * Auth API - Centralized authentication endpoints
  */
 
 export const authApi = {
+  getGoogleAuthUrl: () => `${API_BASE_URL}/oauth2/authorization/google`,
+
   /**
    * Register a new user
    * @param {Object} userData - Registration data (firstname, lastname, email, password, confirmPassword)
