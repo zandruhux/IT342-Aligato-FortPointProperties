@@ -72,6 +72,15 @@ export default function Header({ isLoggedIn, onLogout }) {
               Messages
             </Link>
           )}
+          {isLoggedIn && (
+            <Link
+              to="/profile"
+              className="hover:opacity-80 transition no-underline"
+              style={{ color: '#747474' }}
+            >
+              Profile
+            </Link>
+          )}
         </div>
 
         {isLoggedIn ? (

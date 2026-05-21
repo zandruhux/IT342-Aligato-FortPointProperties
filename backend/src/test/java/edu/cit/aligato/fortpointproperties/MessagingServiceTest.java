@@ -27,6 +27,7 @@ import edu.cit.aligato.fortpointproperties.messaging.entity.Conversation.Convers
 import edu.cit.aligato.fortpointproperties.messaging.entity.Message;
 import edu.cit.aligato.fortpointproperties.messaging.entity.Message.SenderRole;
 import edu.cit.aligato.fortpointproperties.messaging.repository.ConversationRepository;
+import edu.cit.aligato.fortpointproperties.messaging.repository.ConversationReadStateRepository;
 import edu.cit.aligato.fortpointproperties.messaging.repository.MessageRepository;
 import edu.cit.aligato.fortpointproperties.messaging.service.MessagingService;
 
@@ -38,6 +39,9 @@ public class MessagingServiceTest {
 
     @Mock
     private MessageRepository messageRepository;
+
+    @Mock
+    private ConversationReadStateRepository readStateRepository;
 
     @Mock
     private UserRepository userRepository;

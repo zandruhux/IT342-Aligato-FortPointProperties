@@ -23,9 +23,15 @@ export const sendMessage = async (conversationId, payload) => {
   return unwrap(response);
 };
 
+export const markConversationRead = async (conversationId) => {
+  const response = await axiosInstance.put(API_ENDPOINTS.MESSAGING.READ(conversationId));
+  return unwrap(response);
+};
+
 export default {
   createConversation,
   getConversations,
   getMessages,
   sendMessage,
+  markConversationRead,
 };

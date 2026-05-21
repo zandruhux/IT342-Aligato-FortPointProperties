@@ -7,6 +7,7 @@ public class MessageDTO {
     private Long conversationId;
     private String senderId;
     private String senderName;
+    private String senderProfileImageUrl;
     private String senderRole;
     private String content;
     private LocalDateTime createdAt;
@@ -33,6 +34,12 @@ public class MessageDTO {
         this.senderRole = senderRole;
         this.content = content;
         this.createdAt = createdAt;
+    }
+
+    public MessageDTO(Long id, Long conversationId, String senderId, String senderName, String senderProfileImageUrl,
+            String senderRole, String content, LocalDateTime createdAt) {
+        this(id, conversationId, senderId, senderName, senderRole, content, createdAt);
+        this.senderProfileImageUrl = senderProfileImageUrl;
     }
 
     public Long getId() {
@@ -65,6 +72,14 @@ public class MessageDTO {
 
     public void setSenderName(String senderName) {
         this.senderName = senderName;
+    }
+
+    public String getSenderProfileImageUrl() {
+        return senderProfileImageUrl;
+    }
+
+    public void setSenderProfileImageUrl(String senderProfileImageUrl) {
+        this.senderProfileImageUrl = senderProfileImageUrl;
     }
 
     public String getSenderRole() {

@@ -71,7 +71,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 
                 // --- PUBLIC ENDPOINTS ---
-                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login",
+                        "/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/properties").permitAll()
                 .requestMatchers("/properties/{id}").permitAll()
@@ -84,7 +85,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/messaging/**").hasAnyRole(REGISTERED_USER, AGENT)
                 .requestMatchers("/api/career-applications").hasRole(REGISTERED_USER)
                 .requestMatchers("/api/career-applications/me").hasAnyRole(REGISTERED_USER, AGENT)
-                .requestMatchers("/api/v1/auth/profile").authenticated()
+                .requestMatchers("/api/v1/auth/profile", "/api/v1/auth/me",
+                        "/api/v1/auth/profile-image", "/api/v1/auth/me/profile-image",
+                        "/api/auth/profile", "/api/auth/me",
+                        "/api/auth/profile-image", "/api/auth/me/profile-image").authenticated()
                 .requestMatchers("/user/properties").authenticated()
                 .requestMatchers("/user/properties/{id}/advanced").authenticated()
                 .requestMatchers("/user/properties/search/name").authenticated()
@@ -115,7 +119,8 @@ public class SecurityConfig {
                 .requestMatchers("/admin/properties/search/developer").hasRole(ADMIN)
                 .requestMatchers("/admin/properties/search").hasRole(ADMIN)
                 .requestMatchers("/api/admin/articles", "/api/admin/articles/**").hasRole(ADMIN)
-                .requestMatchers("/api/v1/auth/users").hasRole(ADMIN)
+                .requestMatchers("/api/admin/users", "/api/admin/users/**").hasRole(ADMIN)
+                .requestMatchers("/api/v1/auth/users", "/api/auth/users").hasRole(ADMIN)
                 .requestMatchers("/api/admin/career-applications").hasRole(ADMIN)
                 .requestMatchers("/api/admin/career-applications/**").hasRole(ADMIN)
 

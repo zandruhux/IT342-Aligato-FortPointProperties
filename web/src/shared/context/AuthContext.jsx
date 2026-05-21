@@ -9,7 +9,17 @@ const normalizeStoredUser = (userData = {}) => ({
   firstname: userData.firstname,
   lastname: userData.lastname,
   role: userData.role || userData.roles?.[0] || localStorage.getItem('role') || 'USER',
+  profileImageUrl: userData.profileImageUrl,
 });
+
+const usersAreEqual = (a, b) => (
+  (a?.id || '') === (b?.id || '')
+  && (a?.email || '') === (b?.email || '')
+  && (a?.firstname || '') === (b?.firstname || '')
+  && (a?.lastname || '') === (b?.lastname || '')
+  && (a?.role || '') === (b?.role || '')
+  && (a?.profileImageUrl || '') === (b?.profileImageUrl || '')
+);
 
 const getInitialAuthState = () => {
   const token = localStorage.getItem('accessToken');
@@ -106,6 +116,27 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('role');
   }, []);
 
+  const updateUser = useCallback((userData) => {
+    setAuthState((current) => {
+      const normalizedUser = normalizeStoredUser({
+        ...current.user,
+        ...userData,
+      });
+
+      if (usersAreEqual(current.user, normalizedUser)) {
+        return current;
+      }
+
+      localStorage.setItem('user', JSON.stringify(normalizedUser));
+      localStorage.setItem('role', normalizedUser.role || 'USER');
+
+      return {
+        ...current,
+        user: normalizedUser,
+      };
+    });
+  }, []);
+
   /**
    * Get current access token
    * @returns {string|null} The access token or null
@@ -127,6 +158,7 @@ export function AuthProvider({ children }) {
     ...authState,
     login,
     logout,
+    updateUser,
     getToken,
     initializeFromStorage,
     // Role-based helper methods

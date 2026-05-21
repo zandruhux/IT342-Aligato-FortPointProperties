@@ -6,10 +6,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 import edu.cit.aligato.fortpointproperties.auth.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.auth.dto.AuthResponse;
@@ -25,7 +30,7 @@ import jakarta.validation.Valid;
 
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping({"/api/v1/auth", "/api/auth"})
 public class AuthController {
 
     private final AuthService authService;
@@ -48,12 +53,7 @@ public class AuthController {
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
             // Create user DTO
-            UserDTO userDTO = new UserDTO(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstname(),
-                    user.getLastname(),
-                    user.getRole());
+            UserDTO userDTO = toUserDTO(user);
 
             // Create auth response
             AuthResponse authResponse = new AuthResponse(userDTO, accessToken, refreshToken);
@@ -82,12 +82,7 @@ public class AuthController {
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
             // Create user DTO
-            UserDTO userDTO = new UserDTO(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstname(),
-                    user.getLastname(),
-                    user.getRole());
+            UserDTO userDTO = toUserDTO(user);
 
             // Create auth response
             AuthResponse authResponse = new AuthResponse(userDTO, accessToken, refreshToken);
@@ -110,17 +105,10 @@ public class AuthController {
             // Get email from JWT token (from security context)
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-            // Find user by email
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            // Create user DTO
-            UserDTO userDTO = new UserDTO(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getFirstname(),
-                    user.getLastname(),
-                    user.getRole());
+            UserDTO userDTO = toUserDTO(user);
 
             // Wrap in standardized API response
             ApiResponse<UserDTO> response = ApiResponse.success(userDTO);
@@ -134,20 +122,56 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserDTO>> getCurrentUser() {
+        return getProfile();
+    }
+
+    @PutMapping(value = {"/profile-image", "/me/profile-image"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UserDTO>> updateProfileImage(@RequestParam("image") MultipartFile image) {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            UserDTO userDTO = authService.updateProfileImage(email, image);
+            return new ResponseEntity<>(ApiResponse.success(userDTO), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("AUTH-005", e.getMessage(), null);
+            ApiResponse<UserDTO> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @DeleteMapping({"/profile-image", "/me/profile-image"})
+    public ResponseEntity<ApiResponse<UserDTO>> removeProfileImage() {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            UserDTO userDTO = authService.removeProfileImage(email);
+            return new ResponseEntity<>(ApiResponse.success(userDTO), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("AUTH-006", e.getMessage(), null);
+            ApiResponse<UserDTO> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+    }
+
     //THIS IS ONLY A TEST. KINDLY DELETE AFTER
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<List<UserDTO>>> getAllUsers() {
         List<User> users = userRepository.findAll();
         List<UserDTO> userDTOs = users.stream()
-                .map(user -> new UserDTO(
-                        user.getId(),
-                        user.getEmail(),
-                        user.getFirstname(),
-                        user.getLastname(),
-                        user.getRole()))
+                .map(this::toUserDTO)
                 .toList();
 
         ApiResponse<List<UserDTO>> response = ApiResponse.success(userDTOs);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    private UserDTO toUserDTO(User user) {
+        return new UserDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstname(),
+                user.getLastname(),
+                user.getRole(),
+                user.getProfileImageUrl());
     }
 }

@@ -2,6 +2,7 @@ package edu.cit.aligato.fortpointproperties.messaging.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -17,9 +18,11 @@ import edu.cit.aligato.fortpointproperties.messaging.dto.MessageDTO;
 import edu.cit.aligato.fortpointproperties.messaging.dto.SendMessageDTO;
 import edu.cit.aligato.fortpointproperties.messaging.entity.Conversation;
 import edu.cit.aligato.fortpointproperties.messaging.entity.Conversation.ConversationStatus;
+import edu.cit.aligato.fortpointproperties.messaging.entity.ConversationReadState;
 import edu.cit.aligato.fortpointproperties.messaging.entity.Message;
 import edu.cit.aligato.fortpointproperties.messaging.entity.Message.SenderRole;
 import edu.cit.aligato.fortpointproperties.messaging.repository.ConversationRepository;
+import edu.cit.aligato.fortpointproperties.messaging.repository.ConversationReadStateRepository;
 import edu.cit.aligato.fortpointproperties.messaging.repository.MessageRepository;
 
 @Service
@@ -29,13 +32,16 @@ public class MessagingService {
 
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
+    private final ConversationReadStateRepository readStateRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     public MessagingService(ConversationRepository conversationRepository, MessageRepository messageRepository,
-            UserRepository userRepository, SimpMessagingTemplate messagingTemplate) {
+            ConversationReadStateRepository readStateRepository, UserRepository userRepository,
+            SimpMessagingTemplate messagingTemplate) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
+        this.readStateRepository = readStateRepository;
         this.userRepository = userRepository;
         this.messagingTemplate = messagingTemplate;
     }
@@ -52,10 +58,10 @@ public class MessagingService {
 
         Message message = buildMessage(savedConversation.getId(), registeredUserId, SenderRole.REGISTERED_USER, content);
         messageRepository.save(message);
+        markConversationRead(savedConversation.getId(), registeredUserId);
 
         messagingTemplate.convertAndSend("/topic/agents/inbox",
-                new ConversationNotificationDTO("NEW_CONVERSATION", savedConversation.getId(), registeredUserId,
-                        userDisplayName(registeredUserId), preview(content), savedConversation.getStatus().name()));
+                buildConversationNotification("NEW_CONVERSATION", savedConversation, content));
 
         return toConversationDTO(savedConversation);
     }
@@ -87,6 +93,12 @@ public class MessagingService {
             if (currentConversation.getAssignedAgentId() != null) {
                 messagingTemplate.convertAndSendToUser(currentConversation.getAssignedAgentId(), "/queue/messages",
                         withType(messageDTO));
+            } else {
+                // Open conversations are broadcast so every online agent can preview them before assignment.
+                messagingTemplate.convertAndSend("/topic/agents/inbox",
+                        buildConversationNotification("CONVERSATION_UPDATED", currentConversation, content));
+                messagingTemplate.convertAndSend("/topic/agents/conversations/" + currentConversation.getId()
+                        + "/messages", withType(messageDTO));
             }
         } else {
             messagingTemplate.convertAndSendToUser(currentConversation.getRegisteredUserId(), "/queue/messages",
@@ -99,18 +111,18 @@ public class MessagingService {
     @Transactional(readOnly = true)
     public List<ConversationDTO> getRegisteredUserConversations(String registeredUserId) {
         return conversationRepository.findByRegisteredUserIdOrderByUpdatedAtDesc(registeredUserId).stream()
-                .map(this::toConversationDTO)
+                .map(conversation -> toConversationDTO(conversation, registeredUserId))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<ConversationDTO> getAgentInbox(String agentId) {
         return conversationRepository.findByStatusOrAssignedAgentIdOrderByUpdatedAtDesc(ConversationStatus.OPEN, agentId).stream()
-                .map(this::toConversationDTO)
+                .map(conversation -> toConversationDTO(conversation, agentId))
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<MessageDTO> getMessages(Long conversationId, String userId, String role) {
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
@@ -119,17 +131,39 @@ public class MessagingService {
 
         if (REGISTERED_USER_ROLE.equals(normalizedRole)) {
             validateRegisteredUserAccess(conversation, userId);
-        } else if (!userId.equals(conversation.getAssignedAgentId())) {
+        } else if (!ConversationStatus.OPEN.equals(conversation.getStatus())
+                && !userId.equals(conversation.getAssignedAgentId())) {
             throw new SecurityException("Only the assigned agent can view this conversation");
         }
 
-        return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId).stream()
+        List<MessageDTO> messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId).stream()
                 .map(this::toMessageDTO)
                 .toList();
+        markConversationRead(conversationId, userId);
+        return messages;
+    }
+
+    @Transactional
+    public ConversationDTO markConversationRead(Long conversationId, String userId, String role) {
+        Conversation conversation = conversationRepository.findById(conversationId)
+                .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
+        String normalizedRole = normalizeRole(role);
+        validateSupportedRole(normalizedRole);
+
+        if (REGISTERED_USER_ROLE.equals(normalizedRole)) {
+            validateRegisteredUserAccess(conversation, userId);
+        } else if (!ConversationStatus.OPEN.equals(conversation.getStatus())
+                && !userId.equals(conversation.getAssignedAgentId())) {
+            throw new SecurityException("Only the assigned agent can mark this conversation as read");
+        }
+
+        markConversationRead(conversationId, userId);
+        return toConversationDTO(conversation, userId);
     }
 
     private void validateAgentAccessForSend(Long conversationId, Conversation conversation, String agentId) {
         if (conversation.getAssignedAgentId() == null) {
+            // The first replying agent atomically claims the open conversation.
             int updatedRows = conversationRepository.lockConversation(conversationId, agentId);
             Conversation reloadedConversation = conversationRepository.findById(conversationId)
                     .orElseThrow(() -> new IllegalArgumentException("Conversation not found"));
@@ -196,8 +230,12 @@ public class MessagingService {
     }
 
     private ConversationDTO toConversationDTO(Conversation conversation) {
+        return toConversationDTO(conversation, null);
+    }
+
+    private ConversationDTO toConversationDTO(Conversation conversation, String viewerId) {
         Optional<Message> latestMessage = messageRepository.findTopByConversationIdOrderByCreatedAtDesc(conversation.getId());
-        return new ConversationDTO(conversation.getId(), conversation.getRegisteredUserId(),
+        ConversationDTO dto = new ConversationDTO(conversation.getId(), conversation.getRegisteredUserId(),
                 conversation.getAssignedAgentId(), userDisplayName(conversation.getRegisteredUserId()),
                 userDisplayName(conversation.getAssignedAgentId()), conversation.getStatus().name(),
                 latestMessage.map(message -> preview(message.getContent())).orElse(""),
@@ -205,11 +243,21 @@ public class MessagingService {
                 latestMessage.map(message -> userDisplayName(message.getSenderId())).orElse(null),
                 latestMessage.map(Message::getCreatedAt).orElse(null),
                 conversation.getCreatedAt(), conversation.getUpdatedAt());
+        dto.setRegisteredUserProfileImageUrl(userProfileImageUrl(conversation.getRegisteredUserId()));
+        dto.setAssignedAgentProfileImageUrl(userProfileImageUrl(conversation.getAssignedAgentId()));
+        dto.setLatestMessageSenderProfileImageUrl(latestMessage
+                .map(message -> userProfileImageUrl(message.getSenderId()))
+                .orElse(null));
+        if (viewerId != null) {
+            // Unread counts are viewer-specific because agents and users read at different times.
+            dto.setUnreadCount(countUnreadMessages(conversation.getId(), viewerId));
+        }
+        return dto;
     }
 
     private MessageDTO toMessageDTO(Message message) {
         return new MessageDTO(message.getId(), message.getConversationId(), message.getSenderId(),
-                userDisplayName(message.getSenderId()),
+                userDisplayName(message.getSenderId()), userProfileImageUrl(message.getSenderId()),
                 message.getSenderRole().name(), message.getContent(), message.getCreatedAt());
     }
 
@@ -238,15 +286,71 @@ public class MessagingService {
         return fullName.isEmpty() ? user.getEmail() : fullName;
     }
 
+    private String userProfileImageUrl(String userId) {
+        return findUser(userId)
+                .map(User::getProfileImageUrl)
+                .orElse(null);
+    }
+
+    private Optional<User> findUser(String userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+
+        Optional<User> userById = userRepository.findById(userId);
+        if (userById != null && userById.isPresent()) {
+            return userById;
+        }
+
+        Optional<User> userByEmail = userRepository.findByEmail(userId);
+        if (userByEmail != null && userByEmail.isPresent()) {
+            return userByEmail;
+        }
+
+        return Optional.empty();
+    }
+
+    private void markConversationRead(Long conversationId, String userId) {
+        ConversationReadState readState = readStateRepository.findByConversationIdAndUserId(conversationId, userId)
+                .orElseGet(() -> {
+                    ConversationReadState state = new ConversationReadState();
+                    state.setConversationId(conversationId);
+                    state.setUserId(userId);
+                    return state;
+                });
+        readState.setLastReadAt(LocalDateTime.now());
+        readStateRepository.save(readState);
+    }
+
+    private long countUnreadMessages(Long conversationId, String userId) {
+        LocalDateTime lastReadAt = readStateRepository.findByConversationIdAndUserId(conversationId, userId)
+                .map(ConversationReadState::getLastReadAt)
+                .orElse(null);
+        return messageRepository.countUnreadMessages(conversationId, userId, lastReadAt);
+    }
+
+    private ConversationNotificationDTO buildConversationNotification(String type, Conversation conversation, String content) {
+        ConversationNotificationDTO notification = new ConversationNotificationDTO(type, conversation.getId(),
+                conversation.getRegisteredUserId(),
+                userDisplayName(conversation.getRegisteredUserId()),
+                userProfileImageUrl(conversation.getRegisteredUserId()),
+                preview(content), conversation.getStatus().name());
+        notification.setUnreadCount(1);
+        return notification;
+    }
+
     private Object withType(MessageDTO messageDTO) {
         return new Object() {
             public final String type = "NEW_MESSAGE";
+            public final Long id = messageDTO.getId();
             public final Long conversationId = messageDTO.getConversationId();
             public final String senderId = messageDTO.getSenderId();
             public final String senderName = messageDTO.getSenderName();
+            public final String senderProfileImageUrl = messageDTO.getSenderProfileImageUrl();
             public final String senderRole = messageDTO.getSenderRole();
             public final String content = messageDTO.getContent();
             public final java.time.LocalDateTime createdAt = messageDTO.getCreatedAt();
+            public final long unreadCount = 1;
         };
     }
 }

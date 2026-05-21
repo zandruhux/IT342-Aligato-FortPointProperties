@@ -8,10 +8,11 @@ import { AgentPropertiesListPage as AgentPropertiesPage } from '../features/prop
 import { AdminDashboardPage, AgentDashboardPage } from '../features/dashboard'
 import { AgentBulletin } from '../features/bulletin'
 import { AgentInboxPage, RegisteredUserMessagesPage } from '../features/messaging'
-import { AgentProfile } from '../features/profile/pages'
+import { AgentProfile, RegisteredUserProfile } from '../features/profile/pages'
 import { AdminPropertiesListPage as AdminPropertiesPage } from '../features/properties/pages'
 import { AdminSettings } from '../features/settings'
 import { AdminProfile } from '../features/profile/pages'
+import { UserManagementPage } from '../features/usermanagement'
 import {
   ArticleCreatePage,
   ArticleDetailsPage,
@@ -87,6 +88,14 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       <Route
         path="/messages"
         element={isLoggedIn ? <RegisteredUserMessagesPage /> : <Navigate to="/login" />}
+      />
+      <Route
+        path="/profile"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['REGISTERED_USER']}>
+            <RegisteredUserProfile />
+          </RequireRole>
+        }
       />
 
       {/* Agent Routes - Authentication + Agent role required */}
@@ -171,6 +180,14 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
             <AdminSettings onLogout={onLogout} />
           </RequireRole>
         } 
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
+            <UserManagementPage />
+          </RequireRole>
+        }
       />
       <Route 
         path="/admin/profile" 
