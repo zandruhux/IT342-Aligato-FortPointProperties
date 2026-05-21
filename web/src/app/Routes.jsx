@@ -8,7 +8,6 @@ import { AgentPropertiesListPage as AgentPropertiesPage } from '../features/prop
 import { AgentInboxPage, RegisteredUserMessagesPage } from '../features/messaging'
 import { AgentProfile, RegisteredUserProfile } from '../features/profile/pages'
 import { AdminPropertiesListPage as AdminPropertiesPage } from '../features/properties/pages'
-import { AdminSettings } from '../features/settings'
 import { AdminProfile } from '../features/profile/pages'
 import { UserManagementPage } from '../features/usermanagement'
 import {
@@ -153,14 +152,6 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
             <AdminCareerApplicationDetailsPage />
           </RequireRole>
         }
-      />
-      <Route 
-        path="/admin/settings" 
-        element={
-          <RequireRole isLoggedIn={isLoggedIn} allowedRoles={['ADMIN']}>
-            <AdminSettings onLogout={onLogout} />
-          </RequireRole>
-        } 
       />
       <Route
         path="/admin/users"

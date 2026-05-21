@@ -96,7 +96,7 @@ export default function Header({ isLoggedIn, onLogout }) {
           <button
             onClick={() => navigate('/login')}
             className="text-white px-6 py-2 rounded hover:opacity-90 transition"
-            style={{ backgroundColor: '#007EB7' }}
+            style={{ backgroundColor: '#1D4ED8' }}
           >
             Sign In
           </button>
