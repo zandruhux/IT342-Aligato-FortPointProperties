@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { FcGoogle } from 'react-icons/fc';
 import useAuth from '../hooks/useAuth';
+import authApi from '../api/authApi';
 
-export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
+export default function LoginForm({ onSwitchToRegister, onLoginSuccess, initialError = '' }) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
 
   const [success, setSuccess] = useState('');
+  const [oauthError, setOauthError] = useState(initialError);
   const { login, loading, error, setError } = useAuth();
+
+  useEffect(() => {
+    setOauthError(initialError);
+  }, [initialError]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -17,11 +24,13 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
       [name]: value,
     }));
     setError('');
+    setOauthError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccess('');
+    setOauthError('');
 
     try {
       const userData = await login(formData);
@@ -37,6 +46,12 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    window.location.href = authApi.getGoogleAuthUrl();
+  };
+
+  const displayError = error || oauthError;
+
   return (
     <div className="w-full max-w-md min-h-[470px] rounded-lg p-10 flex flex-col justify-center" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.10)', backgroundColor: '#FFFFFF' }}>
       <h2 className="text-2xl font-bold mb-2" style={{ color: '#000000' }}>Welcome Back!</h2>
@@ -44,9 +59,9 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
         Sign in to access your account and manage your properties
       </p>
 
-      {error && (
+      {displayError && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
+          {displayError}
         </div>
       )}
 
@@ -100,6 +115,22 @@ export default function LoginForm({ onSwitchToRegister, onLoginSuccess }) {
           {loading ? 'Signing In...' : 'Sign In'}
         </button>
       </form>
+
+      <div className="flex items-center gap-3 my-5">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span className="text-xs font-medium uppercase" style={{ color: '#747474' }}>or</span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleGoogleSignIn}
+        className="w-full flex items-center justify-center gap-3 border font-semibold py-2 rounded-lg hover:bg-gray-50 transition"
+        style={{ borderColor: '#DADCE0', color: '#1F1F1F', backgroundColor: '#FFFFFF' }}
+      >
+        <FcGoogle className="h-5 w-5" aria-hidden="true" />
+        Sign in with Google
+      </button>
 
       <p className="text-center text-sm mt-6" style={{ color: '#747474' }}>
         Don't have an account?{' '}

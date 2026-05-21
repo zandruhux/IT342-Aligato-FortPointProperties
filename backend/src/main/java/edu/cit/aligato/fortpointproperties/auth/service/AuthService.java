@@ -1,5 +1,8 @@
 package edu.cit.aligato.fortpointproperties.auth.service;
 
+import java.security.SecureRandom;
+import java.util.Base64;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +20,9 @@ import edu.cit.aligato.fortpointproperties.shared.utils.PasswordValidator;
 public class AuthService {
 
     private static final long MAX_PROFILE_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+    private static final String GOOGLE_PROVIDER = "GOOGLE";
+    private static final String DEFAULT_GOOGLE_ROLE = "REGISTERED_USER";
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -60,6 +66,17 @@ public class AuthService {
         }
 
         return user;
+    }
+
+    public User authenticateGoogleUser(String email, String firstname, String lastname, String profileImageUrl,
+            String providerId) {
+        String normalizedEmail = normalizeRequired(email, "Google account email is required").toLowerCase();
+        String normalizedProviderId = normalizeRequired(providerId, "Google account provider ID is required");
+
+        return userRepository.findByEmailIgnoreCase(normalizedEmail)
+                .map(existingUser -> loginExistingGoogleUser(existingUser, normalizedProviderId, profileImageUrl))
+                .orElseGet(() -> createGoogleUser(normalizedEmail, firstname, lastname, profileImageUrl,
+                        normalizedProviderId));
     }
 
     public User getUserByEmail(String email) {
@@ -126,6 +143,65 @@ public class AuthService {
                 user.getRole(),
                 user.getPhoneNumber(),
                 user.getProfileImageUrl());
+    }
+
+    private User loginExistingGoogleUser(User user, String providerId, String profileImageUrl) {
+        if (!GOOGLE_PROVIDER.equalsIgnoreCase(user.getProvider())) {
+            throw new IllegalArgumentException(
+                    "An account with this email already exists. Please log in using email and password.");
+        }
+
+        if (user.getProviderId() != null && !user.getProviderId().isBlank()
+                && !user.getProviderId().equals(providerId)) {
+            throw new IllegalArgumentException("This Google account cannot be used for this email address.");
+        }
+
+        boolean changed = false;
+        if (user.getProviderId() == null || user.getProviderId().isBlank()) {
+            user.setProviderId(providerId);
+            changed = true;
+        }
+        if ((user.getProfileImageUrl() == null || user.getProfileImageUrl().isBlank())
+                && profileImageUrl != null && !profileImageUrl.isBlank()) {
+            user.setProfileImageUrl(profileImageUrl.trim());
+            changed = true;
+        }
+
+        return changed ? userRepository.save(user) : user;
+    }
+
+    private User createGoogleUser(String email, String firstname, String lastname, String profileImageUrl,
+            String providerId) {
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setFirstname(defaultIfBlank(firstname, "Google"));
+        newUser.setLastname(defaultIfBlank(lastname, "User"));
+        newUser.setPasswordHash(passwordEncoder.encode(generatePlaceholderPassword()));
+        newUser.setRole(DEFAULT_GOOGLE_ROLE);
+        newUser.setProvider(GOOGLE_PROVIDER);
+        newUser.setProviderId(providerId);
+        if (profileImageUrl != null && !profileImageUrl.isBlank()) {
+            newUser.setProfileImageUrl(profileImageUrl.trim());
+        }
+
+        return userRepository.save(newUser);
+    }
+
+    private String normalizeRequired(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+        return value.trim();
+    }
+
+    private String defaultIfBlank(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.trim();
+    }
+
+    private String generatePlaceholderPassword() {
+        byte[] randomBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
     private void validateProfileImage(MultipartFile file) {

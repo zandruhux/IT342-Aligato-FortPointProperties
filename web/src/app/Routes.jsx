@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { RegisterPage, LoginPage } from '../features/auth/pages'
+import { RegisterPage, LoginPage, GoogleOAuthCallbackPage } from '../features/auth/pages'
 import HomePage from '../features/public/pages'
 import { PropertyListPage } from '../features/properties/pages'
 import { FavoritePage } from '../features/favorites/pages'
@@ -187,6 +187,11 @@ const AppRoutes = ({ isLoggedIn, onLogout, onLoginSuccess }) => {
       />
 
       {/* Auth Routes - Only accessible when not logged in */}
+      <Route
+        path="/auth/google/callback"
+        element={<GoogleOAuthCallbackPage onLoginSuccess={onLoginSuccess} />}
+      />
+
       <Route
         path="/login"
         element={isLoggedIn ? <Navigate to="/" /> : <LoginPage onLoginSuccess={onLoginSuccess} />}

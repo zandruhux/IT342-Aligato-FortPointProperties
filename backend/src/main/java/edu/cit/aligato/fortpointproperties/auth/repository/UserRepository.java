@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByEmailIgnoreCase(String email);
+
     @Query("""
             SELECT u FROM User u
             ORDER BY LOWER(u.firstname), LOWER(u.lastname)
