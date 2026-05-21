@@ -6,6 +6,7 @@ public class UserDTO {
     private String firstname;
     private String lastname;
     private String role;
+    private String profileImageUrl;
 
     // --- Constructors ---
     public UserDTO() {
@@ -17,6 +18,11 @@ public class UserDTO {
         this.firstname = firstname;
         this.lastname = lastname;
         this.role = role;
+    }
+
+    public UserDTO(String id, String email, String firstname, String lastname, String role, String profileImageUrl) {
+        this(id, email, firstname, lastname, role);
+        this.profileImageUrl = profileImageUrl;
     }
 
     // --- Getters and Setters ---
@@ -58,5 +64,13 @@ public class UserDTO {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
