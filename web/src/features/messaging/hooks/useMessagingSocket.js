@@ -7,23 +7,29 @@ const normalizeRole = (role) => {
   if (role === 'registered_user' || role === ROLES.USER) {
     return ROLES.REGISTERED_USER;
   }
-  return role;
+  return role?.toUpperCase?.() || role;
 };
 
-export function useMessagingSocket({ user, role, conversationId, onInboxEvent, onLockedEvent, onMessage }) {
+export function useMessagingSocket({ user, role, conversationId, onInboxEvent, onLockedEvent, onMessage, enabled = true }) {
   const clientRef = useRef(null);
+  const handlersRef = useRef({ onInboxEvent, onLockedEvent, onMessage });
   const [connected, setConnected] = useState(false);
-  const normalizedRole = normalizeRole(role || user?.role);
+  const normalizedRole = normalizeRole(role || user?.role || localStorage.getItem('role'));
 
   useEffect(() => {
-    if (!user?.id || !normalizedRole) {
+    // Keep callbacks fresh without forcing a WebSocket reconnect on every render.
+    handlersRef.current = { onInboxEvent, onLockedEvent, onMessage };
+  }, [onInboxEvent, onLockedEvent, onMessage]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (!enabled || !token || !normalizedRole) {
       return undefined;
     }
 
-    const token = localStorage.getItem('accessToken');
     const client = new Client({
       webSocketFactory: () => new SockJS(WS_BASE_URL),
-      connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
+      connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       debug: () => {},
       onConnect: () => {
@@ -31,18 +37,22 @@ export function useMessagingSocket({ user, role, conversationId, onInboxEvent, o
 
         if (normalizedRole === ROLES.AGENT) {
           client.subscribe('/topic/agents/inbox', (message) => {
-            onInboxEvent?.(JSON.parse(message.body));
+            handlersRef.current.onInboxEvent?.(JSON.parse(message.body));
           });
 
           if (conversationId) {
             client.subscribe(`/topic/agents/conversations/${conversationId}/locked`, (message) => {
-              onLockedEvent?.(JSON.parse(message.body));
+              handlersRef.current.onLockedEvent?.(JSON.parse(message.body));
+            });
+            client.subscribe(`/topic/agents/conversations/${conversationId}/messages`, (message) => {
+              handlersRef.current.onMessage?.(JSON.parse(message.body));
             });
           }
         }
 
+        // User destinations deliver private replies for assigned conversations.
         client.subscribe('/user/queue/messages', (message) => {
-          onMessage?.(JSON.parse(message.body));
+          handlersRef.current.onMessage?.(JSON.parse(message.body));
         });
       },
       onDisconnect: () => setConnected(false),
@@ -58,7 +68,7 @@ export function useMessagingSocket({ user, role, conversationId, onInboxEvent, o
       clientRef.current = null;
       setConnected(false);
     };
-  }, [conversationId, normalizedRole, onInboxEvent, onLockedEvent, onMessage, user?.id]);
+  }, [conversationId, enabled, normalizedRole]);
 
   return { connected };
 }
