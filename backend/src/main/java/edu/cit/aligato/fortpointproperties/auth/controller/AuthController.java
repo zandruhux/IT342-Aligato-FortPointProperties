@@ -3,24 +3,25 @@ package edu.cit.aligato.fortpointproperties.auth.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.http.MediaType;
 
 import edu.cit.aligato.fortpointproperties.auth.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.auth.dto.AuthResponse;
 import edu.cit.aligato.fortpointproperties.auth.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
+import edu.cit.aligato.fortpointproperties.auth.dto.UpdateProfileRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
@@ -48,17 +49,13 @@ public class AuthController {
         try {
             User user = authService.registerUser(request);
 
-            // Generate tokens
             String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole());
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
-            // Create user DTO
             UserDTO userDTO = toUserDTO(user);
 
-            // Create auth response
             AuthResponse authResponse = new AuthResponse(userDTO, accessToken, refreshToken);
 
-            // Wrap in standardized API response
             ApiResponse<AuthResponse> response = ApiResponse.success(authResponse);
 
             return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -77,17 +74,13 @@ public class AuthController {
         try {
             User user = authService.authenticateUser(request);
 
-            // Generate tokens
             String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole());
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
-            // Create user DTO
             UserDTO userDTO = toUserDTO(user);
 
-            // Create auth response
             AuthResponse authResponse = new AuthResponse(userDTO, accessToken, refreshToken);
 
-            // Wrap in standardized API response
             ApiResponse<AuthResponse> response = ApiResponse.success(authResponse);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -102,7 +95,6 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<UserDTO>> getProfile() {
         try {
-            // Get email from JWT token (from security context)
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
             User user = userRepository.findByEmail(email)
@@ -110,7 +102,6 @@ public class AuthController {
 
             UserDTO userDTO = toUserDTO(user);
 
-            // Wrap in standardized API response
             ApiResponse<UserDTO> response = ApiResponse.success(userDTO);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -125,6 +116,19 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserDTO>> getCurrentUser() {
         return getProfile();
+    }
+
+    @PutMapping({"/profile", "/me"})
+    public ResponseEntity<ApiResponse<UserDTO>> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        try {
+            String email = SecurityContextHolder.getContext().getAuthentication().getName();
+            UserDTO userDTO = authService.updateProfile(email, request);
+            return new ResponseEntity<>(ApiResponse.success(userDTO), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("AUTH-007", e.getMessage(), null);
+            ApiResponse<UserDTO> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping(value = {"/profile-image", "/me/profile-image"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -153,7 +157,7 @@ public class AuthController {
         }
     }
 
-    //THIS IS ONLY A TEST. KINDLY DELETE AFTER
+    // TODO: remove test endpoint after QA
     @GetMapping("/users")
     public ResponseEntity<ApiResponse<List<UserDTO>>> getAllUsers() {
         List<User> users = userRepository.findAll();
@@ -172,6 +176,7 @@ public class AuthController {
                 user.getFirstname(),
                 user.getLastname(),
                 user.getRole(),
+                user.getPhoneNumber(),
                 user.getProfileImageUrl());
     }
 }

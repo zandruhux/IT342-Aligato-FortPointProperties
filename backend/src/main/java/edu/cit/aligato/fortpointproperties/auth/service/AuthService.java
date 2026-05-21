@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
+import edu.cit.aligato.fortpointproperties.auth.dto.UpdateProfileRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
@@ -21,10 +22,6 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final ProfileImageStorageService profileImageStorageService;
 
-    /**
-     * Constructor with BCryptPasswordEncoder injected from SecurityConfig
-     * Password encoder is configured with SDD specified salt rounds = 12
-     */
     public AuthService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
             ProfileImageStorageService profileImageStorageService) {
         this.userRepository = userRepository;
@@ -33,12 +30,10 @@ public class AuthService {
     }
 
     public User registerUser(RegisterRequest request) {
-        // Prevent duplicate email registration
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
         }
 
-        // Validate password strength
         PasswordValidator.ValidationResult validationResult = PasswordValidator.validate(request.getPassword());
         if (!validationResult.isValid()) {
             throw new IllegalArgumentException(validationResult.getErrorMessage());
@@ -49,26 +44,21 @@ public class AuthService {
         newUser.setFirstname(request.getFirstname());
         newUser.setLastname(request.getLastname());
 
-        // Securely hash the password before saving
         newUser.setPasswordHash(passwordEncoder.encode(request.getPassword()));
 
-        // Default role for a newly registered public user per the SDD
         newUser.setRole("registered_user");
 
         return userRepository.save(newUser);
     }
 
     public User authenticateUser(LoginRequest request) {
-        // 1. Find the user by email
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
 
-        // 2. Verify the password matches the hashed password in the database
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        // 3. If everything is good, return the user
         return user;
     }
 
@@ -99,6 +89,21 @@ public class AuthService {
         return toUserDTO(savedUser);
     }
 
+    public UserDTO updateProfile(String currentEmail, UpdateProfileRequest request) {
+        User user = getUserByEmail(currentEmail);
+        String nextEmail = request.getEmail().trim();
+
+        if (!user.getEmail().equalsIgnoreCase(nextEmail)) {
+            throw new IllegalArgumentException("Email cannot be changed from this profile page");
+        }
+
+        user.setFirstname(request.getFirstname().trim());
+        user.setLastname(request.getLastname().trim());
+        user.setPhoneNumber(request.getPhoneNumber() == null ? null : request.getPhoneNumber().trim());
+
+        return toUserDTO(userRepository.save(user));
+    }
+
     public UserDTO removeProfileImage(String email) {
         User user = getUserByEmail(email);
         String oldProfileImagePath = user.getProfileImagePath();
@@ -119,6 +124,7 @@ public class AuthService {
                 user.getFirstname(),
                 user.getLastname(),
                 user.getRole(),
+                user.getPhoneNumber(),
                 user.getProfileImageUrl());
     }
 

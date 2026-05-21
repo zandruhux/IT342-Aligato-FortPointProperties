@@ -4,9 +4,9 @@ import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -82,9 +82,11 @@ public class SecurityConfig {
 
                 // --- AUTHENTICATED USER ENDPOINTS ---
                 .requestMatchers("/api/articles/**").hasAnyRole(ADMIN, AGENT, REGISTERED_USER)
-                .requestMatchers("/api/messaging/**").hasAnyRole(REGISTERED_USER, AGENT)
+                .requestMatchers("/api/messaging/**").authenticated()
                 .requestMatchers("/api/career-applications").hasRole(REGISTERED_USER)
                 .requestMatchers("/api/career-applications/me").hasAnyRole(REGISTERED_USER, AGENT)
+                .requestMatchers(HttpMethod.PUT, "/api/v1/auth/profile", "/api/v1/auth/me",
+                        "/api/auth/profile", "/api/auth/me").authenticated()
                 .requestMatchers("/api/v1/auth/profile", "/api/v1/auth/me",
                         "/api/v1/auth/profile-image", "/api/v1/auth/me/profile-image",
                         "/api/auth/profile", "/api/auth/me",

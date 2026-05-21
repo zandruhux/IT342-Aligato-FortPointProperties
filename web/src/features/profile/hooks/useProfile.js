@@ -13,6 +13,28 @@ export const useProfile = () => {
   const [error, setError] = useState(null);
   const userRef = useRef(user);
 
+  const areProfilesEqual = (a, b) => (
+    (a?.id || '') === (b?.id || '')
+    && (a?.email || '') === (b?.email || '')
+    && (a?.firstname || '') === (b?.firstname || '')
+    && (a?.lastname || '') === (b?.lastname || '')
+    && (a?.phoneNumber || '') === (b?.phoneNumber || '')
+    && (a?.role || '') === (b?.role || '')
+    && (a?.profileImageUrl || '') === (b?.profileImageUrl || '')
+  );
+
+  const commitProfile = useCallback((nextProfile) => {
+    if (!nextProfile) {
+      return;
+    }
+
+    setProfile((current) => (areProfilesEqual(current, nextProfile) ? current : nextProfile));
+
+    if (!areProfilesEqual(userRef.current, nextProfile)) {
+      updateUser?.(nextProfile);
+    }
+  }, [updateUser]);
+
   useEffect(() => {
     // Avoid making fetchProfile depend on the whole user object and refetching in a loop.
     userRef.current = user;
@@ -24,8 +46,7 @@ export const useProfile = () => {
     setError(null);
     try {
       const data = await profileApi.getProfile();
-      setProfile(data);
-      updateUser?.(data);
+      commitProfile(data);
     } catch (err) {
       setError(err?.message || 'Failed to fetch profile');
       // Fall back to context user
@@ -33,14 +54,14 @@ export const useProfile = () => {
     } finally {
       setLoading(false);
     }
-  }, [updateUser]);
+  }, [commitProfile]);
 
   // Initialize profile from context
   useEffect(() => {
     if (user && !profile) {
-      setProfile(user);
+      commitProfile(user);
     }
-  }, [user, profile]);
+  }, [user, profile, commitProfile]);
 
   // Update profile
   const updateProfile = useCallback(
@@ -49,8 +70,7 @@ export const useProfile = () => {
       setError(null);
       try {
         const updated = await profileApi.updateProfile(profileData);
-        setProfile(updated);
-        updateUser?.(updated);
+        commitProfile(updated);
         return updated;
       } catch (err) {
         setError(err?.message || 'Failed to update profile');
@@ -59,7 +79,7 @@ export const useProfile = () => {
         setLoading(false);
       }
     },
-    [updateUser]
+    [commitProfile]
   );
 
   const uploadProfileImage = useCallback(
@@ -68,8 +88,7 @@ export const useProfile = () => {
       setError(null);
       try {
         const updated = await profileApi.uploadProfileImage(file);
-        setProfile(updated);
-        updateUser?.(updated);
+        commitProfile(updated);
         return updated;
       } catch (err) {
         setError(err?.message || 'Failed to upload profile image');
@@ -78,7 +97,7 @@ export const useProfile = () => {
         setLoading(false);
       }
     },
-    [updateUser]
+    [commitProfile]
   );
 
   const removeProfileImage = useCallback(
@@ -87,8 +106,7 @@ export const useProfile = () => {
       setError(null);
       try {
         const updated = await profileApi.removeProfileImage();
-        setProfile(updated);
-        updateUser?.(updated);
+        commitProfile(updated);
         return updated;
       } catch (err) {
         setError(err?.message || 'Failed to remove profile image');
@@ -97,7 +115,7 @@ export const useProfile = () => {
         setLoading(false);
       }
     },
-    [updateUser]
+    [commitProfile]
   );
 
   return {

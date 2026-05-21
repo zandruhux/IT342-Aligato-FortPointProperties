@@ -8,6 +8,7 @@ const normalizeStoredUser = (userData = {}) => ({
   email: userData.email,
   firstname: userData.firstname,
   lastname: userData.lastname,
+  phoneNumber: userData.phoneNumber,
   role: userData.role || userData.roles?.[0] || localStorage.getItem('role') || 'USER',
   profileImageUrl: userData.profileImageUrl,
 });
@@ -17,6 +18,7 @@ const usersAreEqual = (a, b) => (
   && (a?.email || '') === (b?.email || '')
   && (a?.firstname || '') === (b?.firstname || '')
   && (a?.lastname || '') === (b?.lastname || '')
+  && (a?.phoneNumber || '') === (b?.phoneNumber || '')
   && (a?.role || '') === (b?.role || '')
   && (a?.profileImageUrl || '') === (b?.profileImageUrl || '')
 );
