@@ -12,21 +12,27 @@ const toError = (error, fallback) => {
   return error.response?.data?.error || { message: fallback };
 };
 
-export const getAllUsers = async () => {
+export const getUsers = async ({ role = '', search = '' } = {}) => {
+  const params = {};
+  const keyword = search.trim();
+
+  if (role) {
+    params.role = role;
+  }
+  if (keyword) {
+    params.search = keyword;
+  }
+
   try {
-    return unwrap(await axiosInstance.get(API_ENDPOINTS.USER_MANAGEMENT.USERS));
+    return unwrap(await axiosInstance.get(API_ENDPOINTS.USER_MANAGEMENT.USERS, { params }));
   } catch (error) {
     throw toError(error, 'Failed to fetch users');
   }
 };
 
-export const getUsersByRole = async (role) => {
-  try {
-    return unwrap(await axiosInstance.get(API_ENDPOINTS.USER_MANAGEMENT.USERS, { params: { role } }));
-  } catch (error) {
-    throw toError(error, 'Failed to fetch users');
-  }
-};
+export const getAllUsers = async () => getUsers();
+
+export const getUsersByRole = async (role) => getUsers({ role });
 
 export const createUser = async (data) => {
   try {

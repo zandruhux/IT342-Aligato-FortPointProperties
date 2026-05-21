@@ -10,16 +10,15 @@ export const USER_ROLE_OPTIONS = [
 export const useUserManagement = () => {
   const [users, setUsers] = useState([]);
   const [selectedRole, setSelectedRole] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchUsers = useCallback(async (role = '') => {
+  const fetchUsers = useCallback(async (role = '', search = '') => {
     setLoading(true);
     setError('');
     try {
-      const data = role
-        ? await userManagementApi.getUsersByRole(role)
-        : await userManagementApi.getAllUsers();
+      const data = await userManagementApi.getUsers({ role, search });
       setUsers(data || []);
     } catch (err) {
       setError(err?.message || 'Failed to fetch users');
@@ -29,20 +28,27 @@ export const useUserManagement = () => {
   }, []);
 
   useEffect(() => {
-    fetchUsers('');
-  }, [fetchUsers]);
+    fetchUsers(selectedRole, searchKeyword);
+  }, [fetchUsers, searchKeyword, selectedRole]);
 
-  const changeRoleFilter = async (role) => {
+  const changeRoleFilter = (role) => {
     setSelectedRole(role);
-    await fetchUsers(role);
   };
+
+  const changeSearchKeyword = (keyword) => {
+    setSearchKeyword(keyword);
+  };
+
+  const applySearch = useCallback(async () => {
+    await fetchUsers(selectedRole, searchKeyword);
+  }, [fetchUsers, searchKeyword, selectedRole]);
 
   const createUser = async (data) => {
     setLoading(true);
     setError('');
     try {
       await userManagementApi.createUser(data);
-      await fetchUsers(selectedRole);
+      await fetchUsers(selectedRole, searchKeyword);
     } catch (err) {
       setError(err?.message || 'Failed to create user');
       throw err;
@@ -56,7 +62,7 @@ export const useUserManagement = () => {
     setError('');
     try {
       const updated = await userManagementApi.updateUserRole(userId, role);
-      setUsers((current) => current.map((user) => (user.id === userId ? updated : user)));
+      await fetchUsers(selectedRole, searchKeyword);
       return updated;
     } catch (err) {
       setError(err?.message || 'Failed to update user role');
@@ -83,10 +89,13 @@ export const useUserManagement = () => {
   return {
     users,
     selectedRole,
+    searchKeyword,
     loading,
     error,
     fetchUsers,
     changeRoleFilter,
+    changeSearchKeyword,
+    applySearch,
     createUser,
     updateUserRole,
     deleteUser,

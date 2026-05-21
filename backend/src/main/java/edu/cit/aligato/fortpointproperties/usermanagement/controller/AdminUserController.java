@@ -32,9 +32,10 @@ public class AdminUserController {
 
     @GetMapping("/api/admin/users")
     public ResponseEntity<ApiResponse<List<AdminUserResponseDTO>>> getUsers(
-            @RequestParam(value = "role", required = false) String role) {
+            @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "search", required = false) String search) {
         try {
-            return ResponseEntity.ok(ApiResponse.success(adminUserService.getUsers(role)));
+            return ResponseEntity.ok(ApiResponse.success(adminUserService.getUsers(role, search)));
         } catch (IllegalArgumentException e) {
             ErrorDetail error = new ErrorDetail("USER-001", e.getMessage(), null);
             return new ResponseEntity<>(ApiResponse.error(error), HttpStatus.BAD_REQUEST);

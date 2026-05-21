@@ -22,15 +22,22 @@ public class AdminUserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public List<AdminUserResponseDTO> getUsers(String role) {
+    public List<AdminUserResponseDTO> getUsers(String role, String search) {
+        String keyword = normalizeSearchKeyword(search);
+        List<User> users;
+
         if (role == null || role.isBlank()) {
-            return userRepository.findAll().stream()
-                    .map(this::toResponseDTO)
-                    .toList();
+            users = keyword == null
+                    ? userRepository.findAllOrderByNameAsc()
+                    : userRepository.findByNameContainingIgnoreCaseOrderByNameAsc(keyword);
+        } else {
+            String storageRole = toStorageRole(role);
+            users = keyword == null
+                    ? userRepository.findByRoleOrderByNameAsc(storageRole)
+                    : userRepository.findByRoleAndNameContainingIgnoreCaseOrderByNameAsc(storageRole, keyword);
         }
 
-        String storageRole = toStorageRole(role);
-        return userRepository.findByRole(storageRole).stream()
+        return users.stream()
                 .map(this::toResponseDTO)
                 .toList();
     }
@@ -69,6 +76,13 @@ public class AdminUserService {
     private User getUser(String id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    private String normalizeSearchKeyword(String search) {
+        if (search == null || search.isBlank()) {
+            return null;
+        }
+        return search.trim();
     }
 
     private String toStorageRole(String role) {

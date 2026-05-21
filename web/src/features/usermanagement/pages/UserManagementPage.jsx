@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiPlus, FiUsers } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiUsers, FiX } from 'react-icons/fi';
 import { AdminSidebar } from '../../../shared/components/layout';
 import Button from '../../../shared/components/ui/Button';
 import { useUserManagement } from '../hooks/useUserManagement';
@@ -14,9 +14,12 @@ export default function UserManagementPage() {
   const {
     users,
     selectedRole,
+    searchKeyword,
     loading,
     error,
     changeRoleFilter,
+    changeSearchKeyword,
+    applySearch,
     createUser,
     updateUserRole,
     deleteUser,
@@ -46,7 +49,43 @@ export default function UserManagementPage() {
             </Button>
           </div>
 
-          <div className="mb-5">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <form
+              className="flex w-full flex-col gap-2 sm:max-w-sm sm:flex-row"
+              onSubmit={(event) => {
+                event.preventDefault();
+                applySearch();
+              }}
+            >
+              <div className="relative w-full">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  value={searchKeyword}
+                  onChange={(event) => changeSearchKeyword(event.target.value)}
+                  placeholder="Search by first or last name"
+                  aria-label="Search users by first or last name"
+                  className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-10 pr-10 text-sm font-semibold text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+                {searchKeyword && (
+                  <button
+                    type="button"
+                    onClick={() => changeSearchKeyword('')}
+                    aria-label="Clear user search"
+                    className="absolute right-3 top-1/2 inline-flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                  >
+                    <FiX size={14} />
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex items-center justify-center gap-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg font-semibold transition-colors"
+              >
+                Search
+              </button>
+            </form>
             <UserRoleFilter selectedRole={selectedRole} onChange={changeRoleFilter} disabled={loading} />
           </div>
 
