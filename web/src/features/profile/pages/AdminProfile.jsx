@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useProfile } from '../hooks/useProfile';
+import { ProfileImageUploader } from '../components';
 import { AdminSidebar } from '../../../shared/components/layout';
 
 /**
@@ -8,19 +9,11 @@ import { AdminSidebar } from '../../../shared/components/layout';
  * Displays and allows editing of admin profile
  */
 export default function AdminProfile() {
-  const { profile, loading, fetchProfile } = useProfile();
+  const { profile, loading, fetchProfile, uploadProfileImage, removeProfileImage } = useProfile();
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
-
-  const getInitials = (name) => {
-    return name
-      ?.split(' ')
-      .map((part) => part[0])
-      .join('')
-      .toUpperCase() || 'A';
-  };
 
   if (loading) {
     return (
@@ -49,18 +42,19 @@ export default function AdminProfile() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1">
               <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
-                  {getInitials(profile.name || profile.firstname + ' ' + profile.lastname)}
-                </div>
+                <ProfileImageUploader
+                  profile={profile}
+                  loading={loading}
+                  accentClass="bg-blue-600"
+                  onUpload={uploadProfileImage}
+                  onRemove={removeProfileImage}
+                />
                 <h2 className="text-xl font-bold text-slate-900 mb-1">
                   {profile.name || `${profile.firstname} ${profile.lastname}`}
                 </h2>
                 <p className="text-sm text-blue-600 font-semibold mb-4 uppercase tracking-wide">
                   {profile.roles?.[0] || profile.role || 'ADMIN'}
                 </p>
-                <button className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200">
-                  Edit Profile
-                </button>
               </div>
             </div>
 

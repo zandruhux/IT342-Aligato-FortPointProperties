@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import * as profileApi from '../api/profileApi';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 
@@ -7,10 +7,16 @@ import { useAuthContext } from '../../../shared/context/useAuthContext';
  * Manages user profile state and operations
  */
 export const useProfile = () => {
-  const { user } = useAuthContext();
+  const { user, updateUser } = useAuthContext();
   const [profile, setProfile] = useState(user || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    // Avoid making fetchProfile depend on the whole user object and refetching in a loop.
+    userRef.current = user;
+  }, [user]);
 
   // Fetch profile from backend
   const fetchProfile = useCallback(async () => {
@@ -19,14 +25,15 @@ export const useProfile = () => {
     try {
       const data = await profileApi.getProfile();
       setProfile(data);
+      updateUser?.(data);
     } catch (err) {
       setError(err?.message || 'Failed to fetch profile');
       // Fall back to context user
-      setProfile(user);
+      setProfile(userRef.current);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [updateUser]);
 
   // Initialize profile from context
   useEffect(() => {
@@ -43,6 +50,7 @@ export const useProfile = () => {
       try {
         const updated = await profileApi.updateProfile(profileData);
         setProfile(updated);
+        updateUser?.(updated);
         return updated;
       } catch (err) {
         setError(err?.message || 'Failed to update profile');
@@ -51,7 +59,45 @@ export const useProfile = () => {
         setLoading(false);
       }
     },
-    []
+    [updateUser]
+  );
+
+  const uploadProfileImage = useCallback(
+    async (file) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const updated = await profileApi.uploadProfileImage(file);
+        setProfile(updated);
+        updateUser?.(updated);
+        return updated;
+      } catch (err) {
+        setError(err?.message || 'Failed to upload profile image');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [updateUser]
+  );
+
+  const removeProfileImage = useCallback(
+    async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const updated = await profileApi.removeProfileImage();
+        setProfile(updated);
+        updateUser?.(updated);
+        return updated;
+      } catch (err) {
+        setError(err?.message || 'Failed to remove profile image');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [updateUser]
   );
 
   return {
@@ -60,6 +106,8 @@ export const useProfile = () => {
     error,
     fetchProfile,
     updateProfile,
+    uploadProfileImage,
+    removeProfileImage,
     setProfile,
     setError,
   };
