@@ -118,7 +118,7 @@ function HeroCopy({ tone = 'light' }) {
       <h1 className="mb-5 text-4xl font-bold leading-tight lg:text-5xl">
         Find Your
         <br />
-        <span className="text-[#0099e5]">Perfect</span> Home
+        <span className="font-black text-[#1A8FC2]">Perfect</span> Home
       </h1>
       <p className={`mb-8 text-base leading-relaxed lg:text-lg ${isDark ? 'text-slate-700' : 'text-white/90'}`}>
         Discover exceptional properties across the Philippines. Whether you're buying,

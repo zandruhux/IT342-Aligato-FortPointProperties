@@ -5,13 +5,21 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -31,8 +39,20 @@ public class Conversation {
     @Column(name = "registered_user_id", nullable = false)
     private String registeredUserId;
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "registered_user_id", referencedColumnName = "id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private User registeredUser;
+
     @Column(name = "assigned_agent_id")
     private String assignedAgentId;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_agent_id", referencedColumnName = "id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private User assignedAgent;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -62,12 +82,20 @@ public class Conversation {
         this.registeredUserId = registeredUserId;
     }
 
+    public User getRegisteredUser() {
+        return registeredUser;
+    }
+
     public String getAssignedAgentId() {
         return assignedAgentId;
     }
 
     public void setAssignedAgentId(String assignedAgentId) {
         this.assignedAgentId = assignedAgentId;
+    }
+
+    public User getAssignedAgent() {
+        return assignedAgent;
     }
 
     public ConversationStatus getStatus() {

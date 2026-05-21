@@ -79,7 +79,8 @@ const FeaturedProperties = ({ limit = 4, showViewAll = true, title = 'Featured P
             <button
               onClick={() => navigate('/properties')}
               className="px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition"
-              style={{ backgroundColor: '#007EB7', color: 'white' }}
+              style={{ backgroundColor: '#1D4ED8', color: 'white' }}
+             
             >
               View All
             </button>

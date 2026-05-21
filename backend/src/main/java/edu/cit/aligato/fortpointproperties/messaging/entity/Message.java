@@ -4,13 +4,21 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import jakarta.persistence.Column;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -29,8 +37,20 @@ public class Message {
     @Column(name = "conversation_id", nullable = false)
     private Long conversationId;
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "conversation_id", referencedColumnName = "id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private Conversation conversation;
+
     @Column(name = "sender_id", nullable = false)
     private String senderId;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", referencedColumnName = "id", insertable = false, updatable = false,
+            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
+    private User sender;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "sender_role", nullable = false)
@@ -59,12 +79,20 @@ public class Message {
         this.conversationId = conversationId;
     }
 
+    public Conversation getConversation() {
+        return conversation;
+    }
+
     public String getSenderId() {
         return senderId;
     }
 
     public void setSenderId(String senderId) {
         this.senderId = senderId;
+    }
+
+    public User getSender() {
+        return sender;
     }
 
     public SenderRole getSenderRole() {

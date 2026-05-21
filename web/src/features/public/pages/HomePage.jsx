@@ -149,10 +149,10 @@ export default function HomePage() {
           <div className="flex justify-center">
             <a
               href="/properties"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-8 py-4 text-base font-bold text-[#00699d] shadow-lg ring-1 ring-white/60 transition hover:-translate-y-0.5 hover:bg-slate-50 hover:text-[#004f78] hover:shadow-xl"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-8 py-4 text-base font-bold text-white shadow-lg  ring-white/60 transition hover:-translate-y-0.5 hover:bg-slate-50 hover:text-[#004f78] hover:shadow-xl"
             >
               View All Properties
-              <span className="text-xl leading-none">&rsaquo;</span>
+              <span className="text-xl leading-none text-white">&rsaquo;</span>
             </a>
           </div>
         </div>
