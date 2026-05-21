@@ -2,6 +2,10 @@ import React from 'react';
 import UserAvatar from './UserAvatar';
 
 export default function UserListItem({ user, onClick }) {
+  const displayRole = user.role === 'registered_user' || user.role === 'REGISTERED_USER'
+    ? 'USER'
+    : user.role;
+
   return (
     <button
       type="button"
@@ -16,7 +20,7 @@ export default function UserListItem({ user, onClick }) {
         </div>
         <div className="text-right flex-shrink-0">
           <span className="inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold">
-            {user.role}
+            {displayRole}
           </span>
           {user.status && <p className="text-xs text-green-700 font-semibold mt-2">{user.status}</p>}
         </div>

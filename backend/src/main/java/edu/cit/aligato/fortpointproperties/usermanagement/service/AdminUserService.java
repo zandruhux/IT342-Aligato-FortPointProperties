@@ -87,10 +87,9 @@ public class AdminUserService {
         if ("AGENT".equals(normalized)) {
             return "AGENT";
         }
-        if ("USER".equals(normalized) || "REGISTERED_USER".equals(normalized) || "REGISTERED_USER".equals(role)) {
-            return "registered_user";
-        }
-        if ("REGISTERED_USER".equals(normalized) || "REGISTERED_USEER".equals(normalized)) {
+        if ("USER".equals(normalized)
+                || "REGISTERED_USER".equals(normalized)
+                || "REGISTERED_USEER".equals(normalized)) {
             return "registered_user";
         }
 

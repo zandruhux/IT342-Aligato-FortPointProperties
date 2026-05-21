@@ -3,9 +3,11 @@ import Modal from '../../../shared/components/ui/Modal';
 import Button from '../../../shared/components/ui/Button';
 import UserAvatar from './UserAvatar';
 
-const formatDate = (value) => {
-  if (!value) return '-';
-  return new Date(value).toLocaleString();
+const getDisplayRole = (role) => {
+  if (role === 'registered_user' || role === 'REGISTERED_USER') {
+    return 'USER';
+  }
+  return role || 'USER';
 };
 
 export default function UserDetailsModal({ isOpen, user, onClose, onEditRole, onDelete }) {
@@ -17,25 +19,23 @@ export default function UserDetailsModal({ isOpen, user, onClose, onEditRole, on
         <div className="flex items-center gap-4">
           <UserAvatar user={user} size="lg" />
           <div>
-            <h3 className="text-xl font-bold text-gray-900">{user.fullName || `${user.firstname} ${user.lastname}`}</h3>
+            <h3 className="text-xl font-bold text-gray-900">{user.fullName || `${user.firstname} ${user.lastname}`.trim()}</h3>
             <p className="text-gray-600">{user.email}</p>
             <span className="inline-block mt-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold">
-              {user.role}
+              {getDisplayRole(user.role)}
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <Detail label="Status" value={user.status || 'Active'} />
-          <Detail label="User ID" value={user.id} />
-          <Detail label="Created" value={formatDate(user.createdAt)} />
-          <Detail label="Updated" value={formatDate(user.updatedAt)} />
+          <Detail label="Phone Number" value={user.phoneNumber || 'null'} />
         </div>
 
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={onClose}>Close</Button>
-          <Button type="button" variant="outline" onClick={() => onEditRole(user)}>Change Role</Button>
-          <Button type="button" variant="danger" onClick={() => onDelete(user)}>Remove</Button>
+        <div className="flex flex-col gap-2 border-t border-gray-200 pt-4 sm:flex-row sm:justify-end">
+          <Button type="button" variant="secondary" onClick={onClose} className="sm:min-w-[120px]">Close</Button>
+          <Button type="button" variant="outline" onClick={() => onEditRole(user)} className="sm:min-w-[140px]">Change Role</Button>
+          <Button type="button" variant="danger" onClick={() => onDelete(user)} className="sm:min-w-[120px]">Remove</Button>
         </div>
       </div>
     </Modal>

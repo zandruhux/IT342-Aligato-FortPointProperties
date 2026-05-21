@@ -26,7 +26,7 @@ export default function EditUserRoleModal({ isOpen, user, onClose, onUpdateRole,
     <Modal isOpen={isOpen} onClose={onClose} title="Change Role" size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <select className="w-full border border-gray-300 rounded-lg px-3 py-2" value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="REGISTERED_USER">Registered User</option>
+          <option value="REGISTERED_USER">User</option>
           <option value="AGENT">Agent</option>
           <option value="ADMIN">Admin</option>
         </select>
