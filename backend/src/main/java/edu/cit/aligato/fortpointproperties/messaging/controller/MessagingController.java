@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,6 +62,13 @@ public class MessagingController {
     public ResponseEntity<List<MessageDTO>> getMessages(@PathVariable Long conversationId, Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
         return ResponseEntity.ok(messagingService.getMessages(conversationId, user.getId(), user.getRole()));
+    }
+
+    @PutMapping("/conversations/{conversationId}/read")
+    public ResponseEntity<ConversationDTO> markConversationRead(@PathVariable Long conversationId,
+            Authentication authentication) {
+        User user = getAuthenticatedUser(authentication);
+        return ResponseEntity.ok(messagingService.markConversationRead(conversationId, user.getId(), user.getRole()));
     }
 
     @PostMapping("/conversations/{conversationId}/messages")
