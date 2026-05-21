@@ -14,11 +14,19 @@ export default function MessageInput({ disabled, placeholder = 'Write a message'
     setContent('');
   };
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
+  };
+
   return (
     <form onSubmit={submit} className="flex gap-3 border-t border-gray-200 bg-white p-4">
       <textarea
         value={content}
         onChange={(event) => setContent(event.target.value)}
+        onKeyDown={handleKeyDown}
         disabled={disabled}
         rows={2}
         placeholder={placeholder}
