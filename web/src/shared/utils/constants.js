@@ -41,7 +41,15 @@ export const API_ENDPOINTS = {
     REGISTER: '/api/v1/auth/register',
     LOGIN: '/api/v1/auth/login',
     PROFILE: '/api/v1/auth/profile',
+    CURRENT_USER: '/api/v1/auth/me',
+    PROFILE_IMAGE: '/api/v1/auth/me/profile-image',
     USERS: '/api/v1/auth/users',
+  },
+
+  USER_MANAGEMENT: {
+    USERS: '/api/admin/users',
+    USER_ROLE: (id) => `/api/admin/users/${id}/role`,
+    USER: (id) => `/api/admin/users/${id}`,
   },
 
   // Public Properties (No Auth)
@@ -103,6 +111,7 @@ export const API_ENDPOINTS = {
   MESSAGING: {
     CONVERSATIONS: '/api/messaging/conversations',
     MESSAGES: (conversationId) => `/api/messaging/conversations/${conversationId}/messages`,
+    READ: (conversationId) => `/api/messaging/conversations/${conversationId}/read`,
   },
 
   CAREER_APPLICATIONS: {
