@@ -2,13 +2,8 @@ import React, { useState } from 'react';
 import { FiPlus, FiSearch, FiUsers, FiX } from 'react-icons/fi';
 import { AdminSidebar } from '../../../shared/components/layout';
 import Button from '../../../shared/components/ui/Button';
-import { useUserManagement } from '../hooks/useUserManagement';
-import UserRoleFilter from '../components/UserRoleFilter';
-import UserList from '../components/UserList';
-import UserDetailsModal from '../components/UserDetailsModal';
-import AddUserModal from '../components/AddUserModal';
-import EditUserRoleModal from '../components/EditUserRoleModal';
-import DeleteUserConfirmModal from '../components/DeleteUserConfirmModal';
+import { AddUserModal, DeleteUserConfirmModal, EditUserRoleModal, UserDetailsModal, UserList, UserRoleFilter } from '../components';
+import { useUserManagement } from '../hooks';
 
 export default function UserManagementPage() {
   const {

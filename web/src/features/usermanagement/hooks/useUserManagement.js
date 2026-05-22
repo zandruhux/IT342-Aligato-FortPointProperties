@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import * as userManagementApi from '../api/userManagementApi';
+import * as userManagementApi from '../api';
 
 export const USER_ROLE_OPTIONS = [
   { value: 'REGISTERED_USER', label: 'Registered Users' },
