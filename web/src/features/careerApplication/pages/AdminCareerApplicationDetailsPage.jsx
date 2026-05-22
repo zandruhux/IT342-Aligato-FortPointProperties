@@ -1,9 +1,8 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AdminSidebar } from '../../../shared/components/layout';
-import ApplicationActionButtons from '../components/ApplicationActionButtons';
-import CareerApplicationDetails from '../components/CareerApplicationDetails';
-import useAdminCareerApplications from '../hooks/useAdminCareerApplications';
+import { ApplicationActionButtons, CareerApplicationDetails } from '../components';
+import { useAdminCareerApplications } from '../hooks';
 
 export default function AdminCareerApplicationDetailsPage() {
   const { id } = useParams();
