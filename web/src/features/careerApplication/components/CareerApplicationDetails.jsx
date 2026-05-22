@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import careerApplicationApi from '../api/careerApplicationApi';
+import { careerApplicationApi } from '../api';
 import { StatusBadge } from './CareerApplicationStatusCard';
 
 export default function CareerApplicationDetails({ application }) {

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ROLES } from '../../../shared/utils/constants';
-import { getMessages, sendMessage } from '../api/messagingApi';
+import { getMessages, sendMessage } from '../api';
 import { MessageInput, MessageThread, ConversationStatusBadge, ConversationAvatar } from '../components';
 import { normalizeMessagingRole } from '../utils/messagingHelpers';
 

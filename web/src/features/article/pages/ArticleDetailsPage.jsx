@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiCalendar, FiUser } from 'react-icons/fi';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { AdminSidebar, AgentSidebar } from '../../../shared/components/layout';
-import { useArticleDetails } from '../hooks/useArticleDetails';
+import { useArticleDetails } from '../hooks';
 
 const formatDate = (dateValue) => {
   if (!dateValue) {

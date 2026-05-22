@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AdminSidebar } from '../../../shared/components/layout';
-import CareerApplicationTable from '../components/CareerApplicationTable';
-import useAdminCareerApplications from '../hooks/useAdminCareerApplications';
+import { CareerApplicationTable } from '../components';
+import { useAdminCareerApplications } from '../hooks';
 
 export default function AdminCareerApplicationsPage() {
   const [status, setStatus] = useState('');

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import careerApplicationApi from '../api/careerApplicationApi';
+import { careerApplicationApi } from '../api';
 
 export function useCareerApplication() {
   const [application, setApplication] = useState(null);

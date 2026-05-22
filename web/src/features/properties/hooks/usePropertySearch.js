@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import * as propertyApi from '../api/propertyApi';
+import * as propertyApi from '../api';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 import {
   getDefaultFilters,

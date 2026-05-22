@@ -1,7 +1,6 @@
 import React from 'react';
-import CareerApplicationForm from '../components/CareerApplicationForm';
-import CareerApplicationStatusCard from '../components/CareerApplicationStatusCard';
-import useCareerApplication from '../hooks/useCareerApplication';
+import { CareerApplicationForm, CareerApplicationStatusCard } from '../components';
+import { useCareerApplication } from '../hooks';
 
 export default function CareerApplicationPage() {
   const {

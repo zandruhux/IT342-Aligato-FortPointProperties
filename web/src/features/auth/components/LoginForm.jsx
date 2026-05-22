@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
-import useAuth from '../hooks/useAuth';
-import authApi from '../api/authApi';
+import { useAuth } from '../hooks';
+import { authApi } from '../api';
 
 export default function LoginForm({ onSwitchToRegister, onLoginSuccess, initialError = '' }) {
   const [formData, setFormData] = useState({

@@ -3,7 +3,7 @@ import { FiX, FiPlus, FiEdit2, FiTrash2, FiImage } from 'react-icons/fi';
 import { LISTING_TYPES, FINANCING_TYPES } from '../../../../shared/utils/constants';
 import { formatFieldErrors } from '../../../../shared/utils/errors';
 import { IMAGE_LIMITS, validateImageFile } from '../../../../shared/utils/fileValidation';
-import * as propertyApi from '../../api/propertyApi';
+import * as propertyApi from '../../api';
 
 export default function AdminPropertyCreateModal({ isOpen, onClose, onSubmit, isLoading }) {
   const [formData, setFormData] = useState({

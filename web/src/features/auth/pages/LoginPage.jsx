@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import LoginForm from '../components/LoginForm'
+import { LoginForm } from '../components'
 import HeroSection, { HeroBackdrop } from '../../../shared/components/ui/HeroSection'
 
 export default function LoginPage({ onLoginSuccess }) {

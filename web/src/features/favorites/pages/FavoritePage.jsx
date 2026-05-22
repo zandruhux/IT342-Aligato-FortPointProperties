@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
-import { useFavorites } from '../hooks/useFavorites';
+import { useFavorites } from '../hooks';
 import { PropertyCard, PropertyDetailModal } from '../../properties/components';
 import { usePropertyDetailAccess } from '../../properties/hooks';
 

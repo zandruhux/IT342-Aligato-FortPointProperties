@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getArticleCards } from '../api/articleApi';
+import { getArticleCards } from '../api';
 
 export const useArticles = () => {
   const [articles, setArticles] = useState([]);

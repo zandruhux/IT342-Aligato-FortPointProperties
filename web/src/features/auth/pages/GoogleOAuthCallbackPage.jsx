@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import authApi from '../api/authApi'
+import { authApi } from '../api'
 import { useAuthContext } from '../../../shared/context/useAuthContext'
 
 const normalizeRole = (role) => {

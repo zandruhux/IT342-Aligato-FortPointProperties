@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { AdminSidebar } from '../../../shared/components/layout';
-import ArticleForm from '../components/ArticleForm';
-import { useArticleActions } from '../hooks/useArticleActions';
+import { ArticleForm } from '../components';
+import { useArticleActions } from '../hooks';
 
 export default function ArticleCreatePage() {
   const navigate = useNavigate();
