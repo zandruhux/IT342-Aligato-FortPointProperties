@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import * as favoritesApi from '../api/favoritesApi';
+import * as favoritesApi from '../api';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 
 /**
