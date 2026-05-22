@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FiEdit2, FiMail, FiPhone, FiSave, FiUser, FiX } from 'react-icons/fi';
+import { IMAGE_LIMITS, validateImageFile } from '../../../shared/utils/fileValidation';
 import ProfileImageUploader from './ProfileImageUploader';
 
 const inputClass = 'w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-700';
@@ -89,9 +90,22 @@ export default function ProfilePanel({
   };
 
   const handleSelectImage = (file) => {
+    try {
+      validateImageFile(file, {
+        maxSizeBytes: IMAGE_LIMITS.PROFILE,
+        requiredMessage: 'Profile image is required',
+        sizeMessage: 'Profile image size exceeds maximum limit',
+        typeMessage: 'Invalid profile image type',
+      });
+    } catch (err) {
+      setMessage(err.message || 'Invalid profile image');
+      return;
+    }
+
     if (imagePreviewUrl) {
       URL.revokeObjectURL(imagePreviewUrl);
     }
+    setMessage('');
     setImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
     setRemoveImage(false);
@@ -230,11 +244,13 @@ export default function ProfilePanel({
   );
 }
 
-function Field({ icon: Icon, label, children }) {
+function Field({ icon, label, children }) {
+  const IconComponent = icon;
+
   return (
     <label className="block">
       <span className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
-        <Icon size={15} className="text-blue-600" />
+        <IconComponent size={15} className="text-blue-600" />
         {label}
       </span>
       {children}

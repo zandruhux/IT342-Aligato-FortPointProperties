@@ -13,6 +13,7 @@ import {
   FiX,
 } from 'react-icons/fi';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
+import { IMAGE_LIMITS, validateImageFile } from '../../../shared/utils/fileValidation';
 import { financingTypeLabel, formatPrice, formatPriceRange, getDetailViewPermissions, listingTypeLabel, normalizeAmenities, normalizeListingTypes } from '../../../shared/utils/propertyHelpers';
 import { FINANCING_TYPES, LISTING_TYPES } from '../../../shared/utils/constants';
 import * as propertyApi from '../api/propertyApi';
@@ -528,7 +529,29 @@ export function PropertyDetailModal({
   };
 
   const handlePhotoFileChange = (event) => {
-    setPhotoFiles(Array.from(event.target.files || []));
+    const files = Array.from(event.target.files || []);
+    const validFiles = [];
+
+    for (const file of files) {
+      try {
+        validateImageFile(file, {
+          maxSizeBytes: IMAGE_LIMITS.PROPERTY,
+          requiredMessage: 'Property image is required',
+          sizeMessage: 'Property image size exceeds maximum limit',
+          typeMessage: 'Invalid property image type',
+        });
+        validFiles.push(file);
+      } catch (err) {
+        setError(err.message || 'Invalid property image');
+        setPhotoFiles([]);
+        event.target.value = '';
+        return;
+      }
+    }
+
+    setError(null);
+    setPhotoFiles(validFiles);
+    event.target.value = '';
   };
 
   const removeExistingPhoto = (photoIndex) => {
