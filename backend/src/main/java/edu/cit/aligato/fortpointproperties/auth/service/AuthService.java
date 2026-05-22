@@ -14,6 +14,7 @@ import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.auth.service.ProfileImageStorageService.UploadedProfileImage;
+import edu.cit.aligato.fortpointproperties.shared.validation.ImageUploadValidator;
 import edu.cit.aligato.fortpointproperties.shared.utils.PasswordValidator;
 
 @Service
@@ -205,32 +206,14 @@ public class AuthService {
     }
 
     private void validateProfileImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Profile image is required");
-        }
-
-        if (file.getSize() > MAX_PROFILE_IMAGE_SIZE_BYTES) {
-            throw new IllegalArgumentException("Profile image must be 2MB or smaller");
-        }
-
-        String contentType = file.getContentType();
-        if (!"image/jpeg".equals(contentType)
-                && !"image/png".equals(contentType)
-                && !"image/webp".equals(contentType)) {
-            throw new IllegalArgumentException("Only JPG, JPEG, PNG, and WEBP images are allowed");
-        }
-
-        String filename = file.getOriginalFilename();
-        String extension = "";
-        if (filename != null && filename.lastIndexOf('.') >= 0) {
-            extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-        }
-
-        if (!"jpg".equals(extension)
-                && !"jpeg".equals(extension)
-                && !"png".equals(extension)
-                && !"webp".equals(extension)) {
-            throw new IllegalArgumentException("Only JPG, JPEG, PNG, and WEBP images are allowed");
-        }
+        ImageUploadValidator.validateRequiredImage(
+                file,
+                MAX_PROFILE_IMAGE_SIZE_BYTES,
+                "AUTH-IMG-001",
+                "Profile image size exceeds maximum limit",
+                "AUTH-IMG-002",
+                "Invalid profile image type",
+                "AUTH-IMG-004",
+                "Profile image is required");
     }
 }
