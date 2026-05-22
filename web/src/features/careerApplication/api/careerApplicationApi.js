@@ -1,5 +1,6 @@
 import axiosInstance from '../../../shared/utils/api';
 import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { normalizeApiError } from '../../../shared/utils/errors';
 
 const unwrap = (response) => {
   if (response.data?.success) {
@@ -18,7 +19,7 @@ const careerApplicationApi = {
       });
       return unwrap(response);
     } catch (error) {
-      throw error.response?.data?.error || { message: 'Failed to submit career application' };
+      throw normalizeApiError(error, 'Failed to submit career application');
     }
   },
 
@@ -27,7 +28,7 @@ const careerApplicationApi = {
       const response = await axiosInstance.get(API_ENDPOINTS.CAREER_APPLICATIONS.ME);
       return unwrap(response);
     } catch (error) {
-      throw error.response?.data?.error || { message: 'Failed to fetch your career application' };
+      throw normalizeApiError(error, 'Failed to fetch your career application');
     }
   },
 
@@ -38,7 +39,7 @@ const careerApplicationApi = {
       });
       return unwrap(response) || [];
     } catch (error) {
-      throw error.response?.data?.error || { message: 'Failed to fetch career applications' };
+      throw normalizeApiError(error, 'Failed to fetch career applications');
     }
   },
 
@@ -47,7 +48,7 @@ const careerApplicationApi = {
       const response = await axiosInstance.get(API_ENDPOINTS.CAREER_APPLICATIONS.ADMIN_BY_ID(id));
       return unwrap(response);
     } catch (error) {
-      throw error.response?.data?.error || { message: 'Failed to fetch career application' };
+      throw normalizeApiError(error, 'Failed to fetch career application');
     }
   },
 
@@ -56,7 +57,7 @@ const careerApplicationApi = {
       const response = await axiosInstance.patch(API_ENDPOINTS.CAREER_APPLICATIONS.ACCEPT(id), { remarks });
       return unwrap(response);
     } catch (error) {
-      throw error.response?.data?.error || { message: 'Failed to accept career application' };
+      throw normalizeApiError(error, 'Failed to accept career application');
     }
   },
 
@@ -65,7 +66,7 @@ const careerApplicationApi = {
       const response = await axiosInstance.patch(API_ENDPOINTS.CAREER_APPLICATIONS.REJECT(id), { remarks });
       return unwrap(response);
     } catch (error) {
-      throw error.response?.data?.error || { message: 'Failed to reject career application' };
+      throw normalizeApiError(error, 'Failed to reject career application');
     }
   },
 
@@ -74,7 +75,7 @@ const careerApplicationApi = {
       const response = await axiosInstance.get(API_ENDPOINTS.CAREER_APPLICATIONS.RESUME(id));
       return unwrap(response);
     } catch (error) {
-      throw error.response?.data?.error || { message: 'Failed to open resume' };
+      throw normalizeApiError(error, 'Failed to open resume');
     }
   },
 };
