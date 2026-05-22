@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { useProperties, usePropertySearch, usePropertyDetailAccess } from '../hooks';
-import { PropertyCard, PropertySearchFilter, PropertyDetailModal } from '../components';
-import AdminPropertyCreateModal from '../components/admin/AdminPropertyCreateModal';
-import * as propertyApi from '../api/propertyApi';
+import { PropertyCard, PropertySearchFilter, PropertyDetailModal, AdminPropertyCreateModal } from '../components';
+import * as propertyApi from '../api';
 import { AdminSidebar } from '../../../shared/components/layout';
 
 /**

@@ -16,7 +16,7 @@ import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { IMAGE_LIMITS, validateImageFile } from '../../../shared/utils/fileValidation';
 import { financingTypeLabel, formatPrice, formatPriceRange, getDetailViewPermissions, listingTypeLabel, normalizeAmenities, normalizeListingTypes } from '../../../shared/utils/propertyHelpers';
 import { FINANCING_TYPES, LISTING_TYPES } from '../../../shared/utils/constants';
-import * as propertyApi from '../api/propertyApi';
+import * as propertyApi from '../api';
 
 const isRegisteredUserRole = (role) => role === 'registered_user' || role === 'USER';
 const isAdminOrAgentRole = (role) => role === 'ADMIN' || role === 'AGENT';
