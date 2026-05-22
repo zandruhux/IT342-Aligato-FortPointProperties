@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useProfile } from '../hooks/useProfile';
+import { useProfile } from '../hooks';
 import { ProfilePanel } from '../components';
 import { AgentSidebar } from '../../../shared/components/layout';
 

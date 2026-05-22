@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import * as profileApi from '../api/profileApi';
+import * as profileApi from '../api';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 
 /**
