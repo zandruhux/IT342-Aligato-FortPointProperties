@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FiMessageCircle, FiX } from 'react-icons/fi';
 import { useLocation } from 'react-router-dom';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
-import { createConversation, getConversations } from '../api/messagingApi';
-import { useMessagingSocket } from '../hooks/useMessagingSocket';
-import ConversationPage from '../pages/ConversationPage';
+import { createConversation, getConversations } from '../api';
+import { useMessagingSocket } from '../hooks';
+import { ConversationPage } from '../pages';
 import { applyLockEvent, mergeConversationEvent, toInboxConversation, withDisplayName } from '../utils/messagingHelpers';
 
 export default function FloatingChatWidget() {

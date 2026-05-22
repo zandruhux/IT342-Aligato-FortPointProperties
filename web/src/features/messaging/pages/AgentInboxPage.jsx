@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AgentSidebar } from '../../../shared/components/layout';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
-import { getConversations } from '../api/messagingApi';
+import { getConversations } from '../api';
 import { ConversationList } from '../components';
-import { useMessagingSocket } from '../hooks/useMessagingSocket';
+import { useMessagingSocket } from '../hooks';
 import { applyLockEvent, mergeConversationEvent, toInboxConversation, withDisplayName } from '../utils/messagingHelpers';
-import ConversationPage from './ConversationPage';
+import { ConversationPage } from './';
 
 export default function AgentInboxPage() {
   const { user } = useAuthContext();

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom'
 import Header from '../shared/components/layout/Header'
-import FloatingChatWidget from '../features/messaging/components/FloatingChatWidget'
+import { FloatingChatWidget } from '../features/messaging'
 import { useAuthContext } from '../shared/context/useAuthContext'
 
 /**

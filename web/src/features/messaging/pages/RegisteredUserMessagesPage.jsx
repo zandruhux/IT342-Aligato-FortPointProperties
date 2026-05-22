@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { FiMessageCircle, FiX } from 'react-icons/fi';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
-import { createConversation, getConversations } from '../api/messagingApi';
+import { createConversation, getConversations } from '../api';
 import { ConversationList } from '../components';
-import { useMessagingSocket } from '../hooks/useMessagingSocket';
+import { useMessagingSocket } from '../hooks';
 import { mergeConversationEvent, withDisplayName } from '../utils/messagingHelpers';
-import ConversationPage from './ConversationPage';
+import { ConversationPage } from './';
 
 export default function RegisteredUserMessagesPage() {
   const { user } = useAuthContext();
