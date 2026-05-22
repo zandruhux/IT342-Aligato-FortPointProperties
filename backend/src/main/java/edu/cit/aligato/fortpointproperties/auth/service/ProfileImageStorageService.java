@@ -13,9 +13,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+
+import edu.cit.aligato.fortpointproperties.shared.exception.AppException;
 
 @Service
 public class ProfileImageStorageService {
@@ -58,15 +61,15 @@ public class ProfileImageStorageService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalArgumentException("Failed to upload profile image");
+                throw uploadFailed();
             }
 
             return new UploadedProfileImage(storagePath, getPublicUrl(storagePath));
         } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to read profile image for upload");
+            throw uploadFailed();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalArgumentException("Profile image upload was interrupted");
+            throw uploadFailed();
         }
     }
 
@@ -100,10 +103,14 @@ public class ProfileImageStorageService {
 
     private void ensureConfigured() {
         if (supabaseUrl == null || supabaseUrl.isBlank()
-                || serviceRoleKey == null || serviceRoleKey.isBlank()
+            || serviceRoleKey == null || serviceRoleKey.isBlank()
                 || bucket == null || bucket.isBlank()) {
-            throw new IllegalArgumentException("Supabase Profile Image Storage is not configured");
+            throw uploadFailed();
         }
+    }
+
+    private AppException uploadFailed() {
+        return new AppException("AUTH-IMG-003", "Profile image upload failed", HttpStatus.BAD_REQUEST);
     }
 
     private String getFileExtension(String filename) {

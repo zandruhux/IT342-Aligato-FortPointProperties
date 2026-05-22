@@ -1,5 +1,6 @@
 import axiosInstance from '../../../shared/utils/api';
 import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { normalizeApiError } from '../../../shared/utils/errors';
 
 const extractResponseData = (response) => {
   return Array.isArray(response.data) ? response.data : response.data.data || [];
@@ -11,7 +12,7 @@ export const getAllFavorites = async () => {
     return extractResponseData(response);
     
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to fetch favorites';
+    throw normalizeApiError(error, 'Failed to fetch favorites');
   }
 };
 
@@ -27,7 +28,7 @@ export const addToFavorites = async (propertyId) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to add to favorites';
+    throw normalizeApiError(error, 'Failed to add to favorites');
   }
 };
 
@@ -43,7 +44,7 @@ export const removeFromFavorites = async (propertyId) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to remove from favorites';
+    throw normalizeApiError(error, 'Failed to remove from favorites');
   }
 };
 
@@ -58,7 +59,7 @@ export const checkIfFavorited = async (propertyId) => {
     );
     return response.data.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to check favorite status';
+    throw normalizeApiError(error, 'Failed to check favorite status');
   }
 };
 
@@ -71,6 +72,6 @@ export const getFavoriteCount = async () => {
     const response = await axiosInstance.get(API_ENDPOINTS.FAVORITES.COUNT);
     return response.data.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to fetch favorite count';
+    throw normalizeApiError(error, 'Failed to fetch favorite count');
   }
 };

@@ -1,5 +1,6 @@
 import axiosInstance from '../../../shared/utils/api';
 import { API_BASE_URL, API_ENDPOINTS } from '../../../shared/utils/constants';
+import { normalizeApiError } from '../../../shared/utils/errors';
 
 /**
  * Auth API - Centralized authentication endpoints
@@ -33,14 +34,7 @@ export const authApi = {
       throw new Error('Unexpected response format');
     } catch (error) {
       console.error('Register Error:', JSON.stringify(error.response?.data, null, 2));
-      // Extract error from response
-      if (error.response?.data?.error) {
-        throw error.response.data.error;
-      }
-      throw {
-        code: 'REGISTER_ERROR',
-        message: error.message || 'Registration failed',
-      };
+      throw normalizeApiError(error, 'Registration failed');
     }
   },
 
@@ -66,14 +60,7 @@ export const authApi = {
       throw new Error('Unexpected response format');
     } catch (error) {
       console.error('Login Error:', JSON.stringify(error.response?.data, null, 2));
-      // Extract error from response
-      if (error.response?.data?.error) {
-        throw error.response.data.error;
-      }
-      throw {
-        code: 'LOGIN_ERROR',
-        message: error.message || 'Login failed',
-      };
+      throw normalizeApiError(error, 'Login failed');
     }
   },
 
@@ -90,10 +77,7 @@ export const authApi = {
       throw new Error('Failed to fetch profile');
     } catch (error) {
       console.error('Get Profile Error:', error);
-      throw {
-        code: 'PROFILE_ERROR',
-        message: error.message || 'Failed to fetch profile',
-      };
+      throw normalizeApiError(error, 'Failed to fetch profile');
     }
   },
 };

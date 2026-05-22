@@ -19,7 +19,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import edu.cit.aligato.fortpointproperties.auth.controller.AuthController;
-import edu.cit.aligato.fortpointproperties.auth.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.auth.dto.AuthResponse;
 import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
@@ -27,6 +26,7 @@ import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.auth.service.AuthService;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.shared.security.JwtUtil;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,7 +78,7 @@ public class AuthControllerTest {
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(!response.getBody().isSuccess());
-        assertEquals("DB-002", response.getBody().getError().getCode());
+        assertEquals("AUTH-008", response.getBody().getError().getCode());
     }
 
     @Test
@@ -93,7 +93,7 @@ public class AuthControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(!response.getBody().isSuccess());
-        assertEquals("AUTH-001", response.getBody().getError().getCode());
+        assertEquals("AUTH-009", response.getBody().getError().getCode());
     }
 
     @Test

@@ -1,5 +1,7 @@
 import axiosInstance from '../../../shared/utils/api';
 import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { normalizeApiError } from '../../../shared/utils/errors';
+import { IMAGE_LIMITS, validateImageFile } from '../../../shared/utils/fileValidation';
 
 /**
  * Profile API Module
@@ -14,7 +16,7 @@ export const getProfile = async () => {
     }
     throw new Error('Failed to fetch profile');
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to fetch profile';
+    throw normalizeApiError(error, 'Failed to fetch profile');
   }
 };
 
@@ -22,6 +24,13 @@ export const getCurrentUser = getProfile;
 
 export const uploadProfileImage = async (file) => {
   try {
+    validateImageFile(file, {
+      maxSizeBytes: IMAGE_LIMITS.PROFILE,
+      requiredMessage: 'Profile image is required',
+      sizeMessage: 'Profile image size exceeds maximum limit',
+      typeMessage: 'Invalid profile image type',
+    });
+
     const formData = new FormData();
     formData.append('image', file);
 
@@ -31,7 +40,7 @@ export const uploadProfileImage = async (file) => {
     }
     throw new Error('Failed to upload profile image');
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to upload profile image';
+    throw normalizeApiError(error, 'Failed to upload profile image');
   }
 };
 
@@ -43,7 +52,7 @@ export const removeProfileImage = async () => {
     }
     throw new Error('Failed to remove profile image');
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to remove profile image';
+    throw normalizeApiError(error, 'Failed to remove profile image');
   }
 };
 
@@ -63,6 +72,6 @@ export const updateProfile = async (profileData) => {
     }
     throw new Error('Failed to update profile');
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to update profile';
+    throw normalizeApiError(error, 'Failed to update profile');
   }
 };

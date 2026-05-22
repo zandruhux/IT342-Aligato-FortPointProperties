@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FiX, FiPlus, FiEdit2, FiTrash2, FiImage } from 'react-icons/fi';
 import { LISTING_TYPES, FINANCING_TYPES } from '../../../../shared/utils/constants';
+import { formatFieldErrors } from '../../../../shared/utils/errors';
+import { IMAGE_LIMITS, validateImageFile } from '../../../../shared/utils/fileValidation';
 import * as propertyApi from '../../api/propertyApi';
 
 export default function AdminPropertyCreateModal({ isOpen, onClose, onSubmit, isLoading }) {
@@ -168,11 +170,31 @@ export default function AdminPropertyCreateModal({ isOpen, onClose, onSubmit, is
 
   const handlePhotoFileChange = (e) => {
     const files = Array.from(e.target.files || []);
-    setSelectedPhotoFiles(files);
+    const nextErrors = {};
+    const validFiles = [];
+
+    for (const file of files) {
+      try {
+        validateImageFile(file, {
+          maxSizeBytes: IMAGE_LIMITS.PROPERTY,
+          requiredMessage: 'Property image is required',
+          sizeMessage: 'Property image size exceeds maximum limit',
+          typeMessage: 'Invalid property image type',
+        });
+        validFiles.push(file);
+      } catch (err) {
+        nextErrors.photos = err.message || 'Invalid property image';
+        break;
+      }
+    }
+
+    setErrors((prev) => ({ ...prev, photos: nextErrors.photos }));
+    setSelectedPhotoFiles(nextErrors.photos ? [] : validFiles);
     setFormData(prev => ({
       ...prev,
       photos: []
     }));
+    e.target.value = '';
   };
 
   const removeSelectedPhoto = (indexToRemove) => {
@@ -280,9 +302,11 @@ export default function AdminPropertyCreateModal({ isOpen, onClose, onSubmit, is
           })),
         });
       } catch (err) {
+        const fieldErrors = err?.details && typeof err.details === 'object' ? err.details : null;
         setErrors(prev => ({
           ...prev,
-          submit: err?.message || 'Failed to create property',
+          ...(fieldErrors || {}),
+          submit: formatFieldErrors(fieldErrors) || err?.message || 'Failed to create property',
         }));
       } finally {
         setIsUploadingPhotos(false);
@@ -329,7 +353,7 @@ export default function AdminPropertyCreateModal({ isOpen, onClose, onSubmit, is
                   className="hidden"
                 />
               </label>
-              <p className="text-sm text-slate-500 mt-3">Accepted formats: JPG, PNG, WEBP. The first photo becomes the cover image.</p>
+              <p className="text-sm text-slate-500 mt-3">Accepted formats: JPG, PNG, WEBP. Maximum size: 5MB per photo. The first photo becomes the cover image.</p>
               {errors.photos && <p className="text-sm text-red-600 font-semibold mt-2">{errors.photos}</p>}
 
               {selectedPhotoFiles.length > 0 && (

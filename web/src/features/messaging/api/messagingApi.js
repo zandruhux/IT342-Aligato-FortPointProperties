@@ -1,5 +1,6 @@
 import axiosInstance from '../../../shared/utils/api';
 import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { normalizeApiError } from '../../../shared/utils/errors';
 
 const unwrap = (response) => response.data?.data || response.data;
 
@@ -7,14 +8,12 @@ const withMessagingError = async (request) => {
   try {
     return unwrap(await request());
   } catch (error) {
-    throw {
-      status: error.response?.status,
-      message: error.response?.data?.error
-        || error.response?.data?.message
-        || (error.response?.status === 403 ? 'Messaging is only available to registered users and agents.' : null)
-        || error.message
-        || 'Messaging request failed',
-    };
+    throw normalizeApiError(
+      error,
+      error.response?.status === 403
+        ? 'Messaging is only available to registered users and agents.'
+        : 'Messaging request failed'
+    );
   }
 };
 

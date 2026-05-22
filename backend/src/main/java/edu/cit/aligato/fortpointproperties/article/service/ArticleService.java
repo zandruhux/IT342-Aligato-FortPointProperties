@@ -16,11 +16,13 @@ import edu.cit.aligato.fortpointproperties.article.entity.Article;
 import edu.cit.aligato.fortpointproperties.article.repository.ArticleRepository;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.shared.validation.ImageUploadValidator;
 
 @Service
 public class ArticleService {
 
     private static final int CARD_DESCRIPTION_LIMIT = 110;
+    private static final long MAX_COVER_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
     private final ArticleRepository articleRepository;
     private final UserRepository userRepository;
@@ -165,16 +167,23 @@ public class ArticleService {
     }
 
     private void validateRequiredCoverPhoto(MultipartFile coverPhoto) {
-        if (coverPhoto == null || coverPhoto.isEmpty()) {
-            throw new IllegalArgumentException("Cover photo is required");
-        }
+        validateImageFile(coverPhoto, "ART-IMG-004", "Blog image is required");
     }
 
     private void validateImageFile(MultipartFile file) {
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.toLowerCase().startsWith("image/")) {
-            throw new IllegalArgumentException("Cover photo must be an image file");
-        }
+        validateImageFile(file, "ART-IMG-004", "Blog image is required");
+    }
+
+    private void validateImageFile(MultipartFile file, String emptyCode, String emptyMessage) {
+        ImageUploadValidator.validateRequiredImage(
+                file,
+                MAX_COVER_PHOTO_SIZE_BYTES,
+                "ART-IMG-001",
+                "Blog image size exceeds maximum limit",
+                "ART-IMG-002",
+                "Invalid blog image type",
+                emptyCode,
+                emptyMessage);
     }
 
     private String buildAuthorName(User user) {

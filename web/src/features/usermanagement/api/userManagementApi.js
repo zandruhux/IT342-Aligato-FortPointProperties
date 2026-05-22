@@ -1,5 +1,6 @@
 import axiosInstance from '../../../shared/utils/api';
 import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { normalizeApiError } from '../../../shared/utils/errors';
 
 const unwrap = (response) => {
   if (response.data.success) {
@@ -9,7 +10,7 @@ const unwrap = (response) => {
 };
 
 const toError = (error, fallback) => {
-  return error.response?.data?.error || { message: fallback };
+  return normalizeApiError(error, fallback);
 };
 
 export const getUsers = async ({ role = '', search = '' } = {}) => {

@@ -21,8 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.properties.dto.AmenityDTO;
-import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyAdminDetailDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCardDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCreateRequestDTO;
@@ -33,6 +31,8 @@ import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUpdateRequestD
 import edu.cit.aligato.fortpointproperties.properties.enums.ListingType;
 import edu.cit.aligato.fortpointproperties.properties.service.PropertyPhotoStorageService;
 import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 import jakarta.validation.Valid;
 
 @RestController
@@ -147,7 +147,7 @@ public class PropertyAdminController {
 
     @PostMapping("/photos/upload")
     public ResponseEntity<ApiResponse<PropertyPhotoDTO>> uploadPropertyPhoto(
-            @RequestParam("photo") MultipartFile photo,
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
             @RequestParam(defaultValue = "0") Integer displayOrder) {
         try {
             PropertyPhotoStorageService.UploadedPropertyPhoto uploadedPhoto =

@@ -1,5 +1,7 @@
 import axiosInstance from '../../../shared/utils/api';
 import { API_ENDPOINTS } from '../../../shared/utils/constants';
+import { IMAGE_LIMITS, validateImageFile } from '../../../shared/utils/fileValidation';
+import { normalizeApiError } from '../../../shared/utils/errors';
 
 // ========== HELPERS ==========
 
@@ -8,15 +10,6 @@ import { API_ENDPOINTS } from '../../../shared/utils/constants';
  */
 const extractResponseData = (response) => {
   return Array.isArray(response.data) ? response.data : response.data.data || [];
-};
-
-const extractErrorMessage = (error, fallback) => {
-  const responseError = error.response?.data?.error;
-  if (typeof responseError === 'string') return responseError;
-  if (responseError?.message) return responseError.message;
-  if (error.response?.data?.message) return error.response.data.message;
-  if (error.message) return error.message;
-  return fallback;
 };
 
 const propertyListCache = new Map();
@@ -60,7 +53,7 @@ const searchPropertiesByRole = async (role, params = {}) => {
     const response = await axiosInstance.get(endpoint.SEARCH, { params: searchParams });
     return extractResponseData(response);
   } catch (error) {
-    throw new Error(extractErrorMessage(error, `Failed to search ${normalizedRole.toLowerCase()} properties`));
+    throw normalizeApiError(error, `Failed to search ${normalizedRole.toLowerCase()} properties`);
   }
 };
 
@@ -88,7 +81,7 @@ const getAllPropertiesByRole = async (role) => {
         return data;
       })
       .catch((error) => {
-        throw new Error(extractErrorMessage(error, `Failed to fetch ${normalizedRole.toLowerCase()} properties`));
+        throw normalizeApiError(error, `Failed to fetch ${normalizedRole.toLowerCase()} properties`);
       })
       .finally(() => {
         propertyListRequests.delete(cacheKey);
@@ -97,7 +90,7 @@ const getAllPropertiesByRole = async (role) => {
     propertyListRequests.set(cacheKey, request);
     return request;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, `Failed to fetch ${normalizedRole.toLowerCase()} properties`));
+    throw normalizeApiError(error, `Failed to fetch ${normalizedRole.toLowerCase()} properties`);
   }
 };
 
@@ -121,7 +114,7 @@ const getPropertyDetailsByRole = async (role, id) => {
     const response = await axiosInstance.get(detailsEndpoint);
     return response.data.data || response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, 'Failed to fetch property details'));
+    throw normalizeApiError(error, 'Failed to fetch property details');
   }
 };
 
@@ -219,17 +212,18 @@ export const createProperty = async (propertyData) => {
     invalidatePropertyListCache();
     return response.data.data || response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, 'Failed to create property'));
+    throw normalizeApiError(error, 'Failed to create property');
   }
 };
 
 export const uploadPropertyPhoto = async (file, displayOrder = 0) => {
   try {
-    // Validate file size (max 5MB)
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error(`File size exceeds maximum allowed size of 5MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
-    }
+    validateImageFile(file, {
+      maxSizeBytes: IMAGE_LIMITS.PROPERTY,
+      requiredMessage: 'Property image is required',
+      sizeMessage: 'Property image size exceeds maximum limit',
+      typeMessage: 'Invalid property image type',
+    });
 
     const formData = new FormData();
     formData.append('photo', file);
@@ -242,7 +236,7 @@ export const uploadPropertyPhoto = async (file, displayOrder = 0) => {
 
     return response.data.data || response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, 'Failed to upload property photo'));
+    throw normalizeApiError(error, 'Failed to upload property photo');
   }
 };
 
@@ -259,7 +253,7 @@ export const updateProperty = async (id, propertyData) => {
     invalidatePropertyListCache();
     return response.data.data || response.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, 'Failed to update property'));
+    throw normalizeApiError(error, 'Failed to update property');
   }
 };
 
@@ -275,7 +269,7 @@ export const deleteProperty = async (id) => {
     invalidatePropertyListCache();
     return response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to delete property';
+    throw normalizeApiError(error, 'Failed to delete property');
   }
 };
 
@@ -286,7 +280,7 @@ export const getAmenities = async (defaultsOnly = false) => {
     });
     return extractResponseData(response);
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to fetch amenities';
+    throw normalizeApiError(error, 'Failed to fetch amenities');
   }
 };
 
@@ -304,7 +298,7 @@ export const createPropertyUnit = async (propertyId, unitData) => {
     );
     return response.data.data || response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to create property unit';
+    throw normalizeApiError(error, 'Failed to create property unit');
   }
 };
 
@@ -320,7 +314,7 @@ export const updatePropertyUnit = async (propertyId, unitId, unitData) => {
     );
     return response.data.data || response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to update property unit';
+    throw normalizeApiError(error, 'Failed to update property unit');
   }
 };
 
@@ -335,6 +329,6 @@ export const deletePropertyUnit = async (propertyId, unitId) => {
     );
     return response.data;
   } catch (error) {
-    throw error.response?.data?.error || 'Failed to delete property unit';
+    throw normalizeApiError(error, 'Failed to delete property unit');
   }
 };

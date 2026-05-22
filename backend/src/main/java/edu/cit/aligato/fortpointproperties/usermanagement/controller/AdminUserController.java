@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.aligato.fortpointproperties.auth.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.auth.dto.ErrorDetail;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.usermanagement.dto.AdminCreateUserRequestDTO;
 import edu.cit.aligato.fortpointproperties.usermanagement.dto.AdminUpdateUserRoleRequestDTO;
 import edu.cit.aligato.fortpointproperties.usermanagement.dto.AdminUserResponseDTO;
@@ -64,7 +64,8 @@ public class AdminUserController {
             return ResponseEntity.ok(ApiResponse.success(user));
         } catch (IllegalArgumentException e) {
             ErrorDetail error = new ErrorDetail("USER-003", e.getMessage(), null);
-            return new ResponseEntity<>(ApiResponse.error(error), HttpStatus.BAD_REQUEST);
+            HttpStatus status = e.getMessage().contains("not found") ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return new ResponseEntity<>(ApiResponse.error(error), status);
         }
     }
 
@@ -75,7 +76,8 @@ public class AdminUserController {
             return ResponseEntity.ok(ApiResponse.success(null));
         } catch (IllegalArgumentException e) {
             ErrorDetail error = new ErrorDetail("USER-004", e.getMessage(), null);
-            return new ResponseEntity<>(ApiResponse.error(error), HttpStatus.BAD_REQUEST);
+            HttpStatus status = e.getMessage().contains("not found") ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST;
+            return new ResponseEntity<>(ApiResponse.error(error), status);
         }
     }
 }

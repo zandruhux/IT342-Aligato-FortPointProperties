@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FiImage, FiSave } from 'react-icons/fi';
+import { IMAGE_LIMITS, validateImageFile } from '../../../shared/utils/fileValidation';
 
 export default function ArticleForm({ mode = 'create', initialArticle, loading, error, success, onSubmit }) {
   const [title, setTitle] = useState(initialArticle?.title || '');
@@ -19,9 +20,15 @@ export default function ArticleForm({ mode = 'create', initialArticle, loading, 
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
+    try {
+      validateImageFile(file, {
+        maxSizeBytes: IMAGE_LIMITS.BLOG,
+        sizeMessage: 'Blog image size exceeds maximum limit',
+        typeMessage: 'Invalid blog image type',
+      });
+    } catch (err) {
       setCoverPhoto(null);
-      setValidationError('Cover photo must be an image file.');
+      setValidationError(err.message || 'Invalid blog image');
       return;
     }
 
@@ -45,9 +52,17 @@ export default function ArticleForm({ mode = 'create', initialArticle, loading, 
       setValidationError('Cover photo is required.');
       return;
     }
-    if (coverPhoto && !coverPhoto.type.startsWith('image/')) {
-      setValidationError('Cover photo must be an image file.');
-      return;
+    if (coverPhoto) {
+      try {
+        validateImageFile(coverPhoto, {
+          maxSizeBytes: IMAGE_LIMITS.BLOG,
+          sizeMessage: 'Blog image size exceeds maximum limit',
+          typeMessage: 'Invalid blog image type',
+        });
+      } catch (err) {
+        setValidationError(err.message || 'Invalid blog image');
+        return;
+      }
     }
 
     const formData = new FormData();
@@ -112,7 +127,7 @@ export default function ArticleForm({ mode = 'create', initialArticle, loading, 
             <input
               id="cover-photo"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:font-semibold file:text-blue-700"
             />

@@ -9,22 +9,22 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import edu.cit.aligato.fortpointproperties.shared.exception.AppException;
+import edu.cit.aligato.fortpointproperties.shared.validation.ImageUploadValidator;
+
 @Service
 public class PropertyPhotoStorageService {
 
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg",
-            "image/png",
-            "image/webp");
+    private static final long MAX_PROPERTY_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 
     private final String supabaseUrl;
     private final String serviceRoleKey;
@@ -64,25 +64,28 @@ public class PropertyPhotoStorageService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IllegalArgumentException("Failed to upload property photo (Supabase returned " + response.statusCode() + ")");
+                throw uploadFailed();
             }
 
             return new UploadedPropertyPhoto(storagePath, getPublicUrl(storagePath));
         } catch (IOException e) {
-            throw new IllegalArgumentException("Failed to read property photo for upload");
+            throw uploadFailed();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalArgumentException("Property photo upload was interrupted");
+            throw uploadFailed();
         }
     }
 
     private void validatePhoto(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Property photo is required");
-        }
-        if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
-            throw new IllegalArgumentException("Property photo must be JPG, PNG, or WEBP");
-        }
+        ImageUploadValidator.validateRequiredImage(
+                file,
+                MAX_PROPERTY_PHOTO_SIZE_BYTES,
+                "PROP-IMG-001",
+                "Property image size exceeds maximum limit",
+                "PROP-IMG-002",
+                "Invalid property image type",
+                "PROP-IMG-004",
+                "Property image is required");
     }
 
     private String getPublicUrl(String storagePath) {
@@ -91,10 +94,14 @@ public class PropertyPhotoStorageService {
 
     private void ensureConfigured() {
         if (supabaseUrl == null || supabaseUrl.isBlank()
-                || serviceRoleKey == null || serviceRoleKey.isBlank()
+            || serviceRoleKey == null || serviceRoleKey.isBlank()
                 || bucket == null || bucket.isBlank()) {
-            throw new IllegalArgumentException("Supabase Property Photo Storage is not configured");
+            throw uploadFailed();
         }
+    }
+
+    private AppException uploadFailed() {
+        return new AppException("PROP-IMG-003", "Property image upload failed", HttpStatus.BAD_REQUEST);
     }
 
     private String getFileExtension(String filename) {

@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import edu.cit.aligato.fortpointproperties.article.dto.ArticleCardDTO;
 import edu.cit.aligato.fortpointproperties.article.dto.ArticleDTO;
 import edu.cit.aligato.fortpointproperties.article.service.ArticleService;
-import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 
 @RestController
 @RequestMapping("/api/articles")
@@ -40,7 +40,7 @@ public class ArticleController {
             ApiResponse<ArticleDTO> response = ApiResponse.success(articleService.getArticleById(id));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (NoSuchElementException e) {
-            return articleError("ARTICLE-404", e.getMessage(), HttpStatus.NOT_FOUND);
+            return articleError("ART-001", "Article not found", HttpStatus.NOT_FOUND);
         }
     }
 

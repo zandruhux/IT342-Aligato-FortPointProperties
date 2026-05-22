@@ -17,8 +17,8 @@ import edu.cit.aligato.fortpointproperties.article.dto.ArticleCreateRequestDTO;
 import edu.cit.aligato.fortpointproperties.article.dto.ArticleDTO;
 import edu.cit.aligato.fortpointproperties.article.dto.ArticleUpdateRequestDTO;
 import edu.cit.aligato.fortpointproperties.article.service.ArticleService;
-import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 
 @RestController
 @RequestMapping("/api/admin/articles")
@@ -35,7 +35,7 @@ public class ArticleAdminController {
         try {
             return new ResponseEntity<>(ApiResponse.success(articleService.createArticle(request)), HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return articleError("ARTICLE-400", e.getMessage(), HttpStatus.BAD_REQUEST);
+            return articleError("ART-002", e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -46,9 +46,9 @@ public class ArticleAdminController {
         try {
             return new ResponseEntity<>(ApiResponse.success(articleService.updateArticle(id, request)), HttpStatus.OK);
         } catch (NoSuchElementException e) {
-            return articleError("ARTICLE-404", e.getMessage(), HttpStatus.NOT_FOUND);
+            return articleError("ART-001", "Article not found", HttpStatus.NOT_FOUND);
         } catch (IllegalArgumentException e) {
-            return articleError("ARTICLE-400", e.getMessage(), HttpStatus.BAD_REQUEST);
+            return articleError("ART-002", e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -58,7 +58,7 @@ public class ArticleAdminController {
             articleService.deleteArticle(id);
             return new ResponseEntity<>(ApiResponse.success(null), HttpStatus.OK);
         } catch (NoSuchElementException e) {
-            return articleError("ARTICLE-404", e.getMessage(), HttpStatus.NOT_FOUND);
+            return articleError("ART-001", "Article not found", HttpStatus.NOT_FOUND);
         }
     }
 

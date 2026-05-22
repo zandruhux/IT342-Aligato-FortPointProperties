@@ -1,11 +1,11 @@
-package edu.cit.aligato.fortpointproperties.auth.dto;
+package edu.cit.aligato.fortpointproperties.shared.dto;
 
 public class ErrorDetail {
     private String code;
     private String message;
-    private String details;
+    private Object details;
 
-    public ErrorDetail(String code, String message, String details) {
+    public ErrorDetail(String code, String message, Object details) {
         this.code = code;
         this.message = message;
         this.details = details;
@@ -27,11 +27,11 @@ public class ErrorDetail {
         this.message = message;
     }
 
-    public String getDetails() {
+    public Object getDetails() {
         return details;
     }
 
-    public void setDetails(String details) {
+    public void setDetails(Object details) {
         this.details = details;
     }
 }
