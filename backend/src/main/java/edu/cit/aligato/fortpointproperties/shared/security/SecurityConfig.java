@@ -1,11 +1,13 @@
 package edu.cit.aligato.fortpointproperties.shared.security;
 
+import java.io.IOException;
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,7 +22,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.cit.aligato.fortpointproperties.auth.service.GoogleOAuthSuccessHandler;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -33,13 +40,16 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final GoogleOAuthSuccessHandler googleOAuthSuccessHandler;
+    private final ObjectMapper objectMapper;
     private final String frontendLoginUrl;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
             GoogleOAuthSuccessHandler googleOAuthSuccessHandler,
+            ObjectMapper objectMapper,
             @Value("${app.oauth2.frontend-login-url}") String frontendLoginUrl) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.googleOAuthSuccessHandler = googleOAuthSuccessHandler;
+        this.objectMapper = objectMapper;
         this.frontendLoginUrl = frontendLoginUrl;
     }
 
@@ -151,6 +161,14 @@ public class SecurityConfig {
                     response.sendRedirect(redirectUrl);
                 })
             )
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, exception) ->
+                        writeErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED,
+                                "AUTH-002", "Invalid token"))
+                .accessDeniedHandler((request, response, exception) ->
+                        writeErrorResponse(response, HttpServletResponse.SC_FORBIDDEN,
+                                "AUTH-003", "Unauthorized access"))
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -160,5 +178,12 @@ public class SecurityConfig {
     @Bean
     public static BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+
+    private void writeErrorResponse(HttpServletResponse response, int status, String code, String message)
+            throws IOException {
+        response.setStatus(status);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        objectMapper.writeValue(response.getWriter(), ApiResponse.error(new ErrorDetail(code, message, null)));
     }
 }
