@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
-import authApi from '../api/authApi';
+import { authApi } from '../api';
 
 /**
  * useAuth hook - Manages authentication logic

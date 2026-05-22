@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import RegistrationForm from '../components/RegistrationForm'
+import { RegistrationForm } from '../components'
 import HeroSection, { HeroBackdrop } from '../../../shared/components/ui/HeroSection'
 
 export default function RegisterPage() {
