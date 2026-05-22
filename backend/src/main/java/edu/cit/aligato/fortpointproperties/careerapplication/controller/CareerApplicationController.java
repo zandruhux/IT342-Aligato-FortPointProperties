@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.aligato.fortpointproperties.auth.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.auth.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.careerapplication.dto.CareerApplicationResponseDTO;
 import edu.cit.aligato.fortpointproperties.careerapplication.dto.CreateCareerApplicationDTO;
 import edu.cit.aligato.fortpointproperties.careerapplication.dto.UpdateCareerApplicationStatusDTO;
 import edu.cit.aligato.fortpointproperties.careerapplication.entity.CareerApplicationStatus;
 import edu.cit.aligato.fortpointproperties.careerapplication.service.CareerApplicationService;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 import jakarta.validation.Valid;
 
 @Validated
@@ -117,7 +117,27 @@ public class CareerApplicationController {
     }
 
     private <T> ResponseEntity<ApiResponse<T>> buildErrorResponse(IllegalArgumentException e, HttpStatus status) {
-        ErrorDetail error = new ErrorDetail("CAREER-APPLICATION", e.getMessage(), null);
+        ErrorDetail error = new ErrorDetail(careerApplicationCode(e, status), careerApplicationMessage(e, status), null);
         return new ResponseEntity<>(ApiResponse.error(error), status);
+    }
+
+    private String careerApplicationCode(IllegalArgumentException e, HttpStatus status) {
+        if (status == HttpStatus.NOT_FOUND || e.getMessage().contains("not found")) {
+            return "APP-001";
+        }
+        if (e.getMessage().contains("reviewed")) {
+            return "APP-002";
+        }
+        if (e.getMessage().contains("resume") || e.getMessage().contains("Resume")) {
+            return "APP-003";
+        }
+        return "APP-004";
+    }
+
+    private String careerApplicationMessage(IllegalArgumentException e, HttpStatus status) {
+        if (status == HttpStatus.NOT_FOUND || e.getMessage().contains("not found")) {
+            return "Career application not found";
+        }
+        return e.getMessage();
     }
 }

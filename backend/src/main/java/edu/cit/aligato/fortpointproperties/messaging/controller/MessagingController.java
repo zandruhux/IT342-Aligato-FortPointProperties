@@ -2,6 +2,7 @@ package edu.cit.aligato.fortpointproperties.messaging.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashMap;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,8 @@ import edu.cit.aligato.fortpointproperties.messaging.dto.MessageDTO;
 import edu.cit.aligato.fortpointproperties.messaging.dto.SendMessageDTO;
 import edu.cit.aligato.fortpointproperties.messaging.service.MessagingService;
 import edu.cit.aligato.fortpointproperties.messaging.util.MessagingRoles;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 import jakarta.validation.Valid;
 
 @RestController
@@ -86,27 +89,36 @@ public class MessagingController {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException exception) {
-        String message = exception.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(error -> error.getDefaultMessage())
-                .orElse("Invalid request");
-        return new ResponseEntity<>(Map.of("error", message), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException exception) {
+        Map<String, String> details = new LinkedHashMap<>();
+        exception.getBindingResult().getFieldErrors()
+                .forEach(error -> details.put(error.getField(), error.getDefaultMessage()));
+        return error("VAL-001", "Validation failed", details, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<Map<String, String>> handleConflict(IllegalStateException exception) {
-        return new ResponseEntity<>(Map.of("error", exception.getMessage()), HttpStatus.CONFLICT);
+    public ResponseEntity<ApiResponse<Void>> handleConflict(IllegalStateException exception) {
+        return error("CONV-003", "Cannot send message", null, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<Map<String, String>> handleForbidden(SecurityException exception) {
-        return new ResponseEntity<>(Map.of("error", exception.getMessage()), HttpStatus.FORBIDDEN);
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(SecurityException exception) {
+        return error("AUTH-003", "Unauthorized access", null, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException exception) {
-        return new ResponseEntity<>(Map.of("error", exception.getMessage()), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(IllegalArgumentException exception) {
+        if ("Conversation not found".equals(exception.getMessage())) {
+            return error("CONV-001", "Conversation not found", null, HttpStatus.NOT_FOUND);
+        }
+        if ("User not found".equals(exception.getMessage())) {
+            return error("USER-001", "User not found", null, HttpStatus.NOT_FOUND);
+        }
+        return error("CONV-003", "Cannot send message", null, HttpStatus.BAD_REQUEST);
+    }
+
+    private ResponseEntity<ApiResponse<Void>> error(String code, String message, Object details, HttpStatus status) {
+        return new ResponseEntity<>(ApiResponse.error(new ErrorDetail(code, message, details)), status);
     }
 
     private User getAuthenticatedUser(Authentication authentication) {

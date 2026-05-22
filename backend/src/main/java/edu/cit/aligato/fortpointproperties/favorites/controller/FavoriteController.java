@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.favorites.dto.FavoriteDTO;
-import edu.cit.aligato.fortpointproperties.favorites.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.favorites.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.favorites.service.FavoriteService;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 
 @RestController
 @RequestMapping("/user/favorites")
@@ -40,8 +40,12 @@ public class FavoriteController {
             List<FavoriteDTO> favorites = favoriteService.getFavoritesByUser(user);
             ApiResponse<List<FavoriteDTO>> response = ApiResponse.success(favorites);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("USER-001", "User not found", null);
+            ApiResponse<List<FavoriteDTO>> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("FAV-001", e.getMessage(), null);
+            ErrorDetail error = new ErrorDetail("FAV-001", "Could not load favorites", null);
             ApiResponse<List<FavoriteDTO>> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -65,11 +69,11 @@ public class FavoriteController {
                 return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
             }
         } catch (IllegalArgumentException e) {
-            ErrorDetail error = new ErrorDetail("FAV-003", e.getMessage(), null);
+            ErrorDetail error = new ErrorDetail("FAV-003", favoriteNotFoundMessage(e), null);
             ApiResponse<String> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("FAV-004", e.getMessage(), null);
+            ErrorDetail error = new ErrorDetail("FAV-004", "Could not update favorites", null);
             ApiResponse<String> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -92,8 +96,12 @@ public class FavoriteController {
                 ApiResponse<String> errorResponse = ApiResponse.error(error);
                 return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
             }
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("USER-001", "User not found", null);
+            ApiResponse<String> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("FAV-006", e.getMessage(), null);
+            ErrorDetail error = new ErrorDetail("FAV-006", "Could not update favorites", null);
             ApiResponse<String> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -109,8 +117,12 @@ public class FavoriteController {
             boolean isFavorited = favoriteService.isFavorited(user, propertyId);
             ApiResponse<Boolean> response = ApiResponse.success(isFavorited);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("USER-001", "User not found", null);
+            ApiResponse<Boolean> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("FAV-007", e.getMessage(), null);
+            ErrorDetail error = new ErrorDetail("FAV-007", "Could not check favorite status", null);
             ApiResponse<Boolean> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -124,11 +136,19 @@ public class FavoriteController {
             long count = favoriteService.getFavoriteCount(user);
             ApiResponse<Long> response = ApiResponse.success(count);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("USER-001", "User not found", null);
+            ApiResponse<Long> errorResponse = ApiResponse.error(error);
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            ErrorDetail error = new ErrorDetail("FAV-008", e.getMessage(), null);
+            ErrorDetail error = new ErrorDetail("FAV-008", "Could not load favorite count", null);
             ApiResponse<Long> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private String favoriteNotFoundMessage(IllegalArgumentException e) {
+        return "User not found".equals(e.getMessage()) ? "User not found" : "Property not found";
     }
 
     private User getAuthenticatedUser(Authentication authentication) {

@@ -16,9 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import edu.cit.aligato.fortpointproperties.auth.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.auth.dto.AuthResponse;
-import edu.cit.aligato.fortpointproperties.auth.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.UpdateProfileRequest;
@@ -26,6 +24,8 @@ import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.auth.service.AuthService;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.shared.security.JwtUtil;
 import jakarta.validation.Valid;
 
@@ -61,8 +61,8 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.CREATED);
 
         } catch (IllegalArgumentException e) {
-            String errorCode = e.getMessage().contains("already in use") ? "DB-002" : "AUTH-001";
-            HttpStatus status = errorCode.equals("DB-002") ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
+            String errorCode = e.getMessage().contains("already in use") ? "AUTH-008" : "AUTH-009";
+            HttpStatus status = errorCode.equals("AUTH-008") ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST;
             ErrorDetail error = new ErrorDetail(errorCode, e.getMessage(), null);
             ApiResponse<AuthResponse> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, status);
@@ -132,7 +132,8 @@ public class AuthController {
     }
 
     @PutMapping(value = {"/profile-image", "/me/profile-image"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<UserDTO>> updateProfileImage(@RequestParam("image") MultipartFile image) {
+    public ResponseEntity<ApiResponse<UserDTO>> updateProfileImage(
+            @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
             UserDTO userDTO = authService.updateProfileImage(email, image);

@@ -1,4 +1,4 @@
-package edu.cit.aligato.fortpointproperties.auth.dto;
+package edu.cit.aligato.fortpointproperties.shared.dto;
 
 import java.time.ZonedDateTime;
 

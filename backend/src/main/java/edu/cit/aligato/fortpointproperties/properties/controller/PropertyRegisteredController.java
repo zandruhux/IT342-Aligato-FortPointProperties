@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.aligato.fortpointproperties.properties.dto.ApiResponse;
-import edu.cit.aligato.fortpointproperties.properties.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyCardDTO;
 import edu.cit.aligato.fortpointproperties.properties.dto.PropertyUserDetailDTO;
 import edu.cit.aligato.fortpointproperties.properties.enums.ListingType;
 import edu.cit.aligato.fortpointproperties.properties.service.PropertyService;
+import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
+import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 
 @RestController
 @RequestMapping("/user/properties")
