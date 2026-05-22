@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createArticle, deleteArticle, updateArticle } from '../api/articleApi';
+import { createArticle, deleteArticle, updateArticle } from '../api';
 
 export const useArticleActions = () => {
   const [loading, setLoading] = useState(false);

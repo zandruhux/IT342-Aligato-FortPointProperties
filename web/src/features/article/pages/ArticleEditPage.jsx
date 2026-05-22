@@ -1,9 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import { AdminSidebar } from '../../../shared/components/layout';
-import ArticleForm from '../components/ArticleForm';
-import { useArticleActions } from '../hooks/useArticleActions';
-import { useArticleDetails } from '../hooks/useArticleDetails';
+import { ArticleForm } from '../components';
+import { useArticleActions, useArticleDetails } from '../hooks';
 
 export default function ArticleEditPage() {
   const navigate = useNavigate();

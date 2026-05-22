@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getArticleById } from '../api/articleApi';
+import { getArticleById } from '../api';
 
 export const useArticleDetails = (id) => {
   const [article, setArticle] = useState(null);

@@ -3,10 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import { useAuthContext } from '../../../shared/context/useAuthContext';
 import { AdminSidebar, AgentSidebar } from '../../../shared/components/layout';
-import ArticleList from '../components/ArticleList';
-import PublicArticlePrompt from '../components/PublicArticlePrompt';
-import { useArticleActions } from '../hooks/useArticleActions';
-import { useArticles } from '../hooks/useArticles';
+import { ArticleList, PublicArticlePrompt } from '../components';
+import { useArticleActions, useArticles } from '../hooks';
 
 const normalizeRole = (role) => {
   if (role === 'registered_user' || role === 'USER') {
