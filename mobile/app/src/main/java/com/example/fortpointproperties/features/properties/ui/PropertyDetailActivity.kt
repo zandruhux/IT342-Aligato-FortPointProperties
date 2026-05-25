@@ -28,6 +28,7 @@ import com.example.fortpointproperties.features.properties.data.repository.Prope
 import com.example.fortpointproperties.features.properties.data.repository.PropertyRepository
 import com.example.fortpointproperties.features.properties.data.repository.PropertyRoleException
 import com.example.fortpointproperties.shared.auth.TokenManager
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Currency
@@ -139,6 +140,7 @@ class PropertyDetailActivity : AppCompatActivity() {
                 TokenManager.clear()
                 showUnavailableState(error.message ?: "This mobile module is only for registered users.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load property details.")
             }
         }

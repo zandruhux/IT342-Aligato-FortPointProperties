@@ -22,6 +22,7 @@ import com.example.fortpointproperties.features.auth.ui.LoginActivity
 import com.example.fortpointproperties.shared.auth.SessionManager
 import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -136,6 +137,7 @@ class ArticleDetailActivity : AppCompatActivity() {
                     showErrorState("Unable to verify the current session.")
                 }
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load blog details.")
             }
         }
@@ -153,6 +155,7 @@ class ArticleDetailActivity : AppCompatActivity() {
             } catch (error: ArticleRoleException) {
                 showUnavailableState(error.message ?: "This mobile module is only for registered users.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load blog details.")
             }
         }
