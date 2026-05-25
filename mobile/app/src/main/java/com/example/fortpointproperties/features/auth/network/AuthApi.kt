@@ -1,6 +1,7 @@
 package com.example.fortpointproperties.features.auth.network
 
 import com.example.fortpointproperties.features.auth.data.AuthResponse
+import com.example.fortpointproperties.features.auth.data.GoogleMobileLoginRequest
 import com.example.fortpointproperties.features.auth.data.LoginRequest
 import com.example.fortpointproperties.features.auth.data.LoginResponse
 import com.example.fortpointproperties.features.auth.data.RegisterRequest
@@ -26,6 +27,9 @@ interface AuthApi {
 
     @POST("api/v1/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<ApiResponse<LoginResponse>>
+
+    @POST("api/v1/auth/google/mobile")
+    suspend fun loginWithGoogle(@Body request: GoogleMobileLoginRequest): Response<ApiResponse<LoginResponse>>
 
     @GET("api/v1/auth/profile")
     suspend fun getProfile(): Response<ApiResponse<UserResponse>>

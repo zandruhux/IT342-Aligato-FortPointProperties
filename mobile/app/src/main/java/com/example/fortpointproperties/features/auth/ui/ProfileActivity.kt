@@ -27,6 +27,7 @@ import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
 import com.example.fortpointproperties.shared.network.ApiResponse
 import com.example.fortpointproperties.shared.ui.MobileHeaderBinder
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -234,6 +235,7 @@ class ProfileActivity : AppCompatActivity() {
                     showProfileFormError(extractBackendMessage(response) ?: getString(R.string.profile_update_failed))
                 }
             } catch (e: Exception) {
+                if (e.isHarmlessCancellation()) return@launch
                 showProfileFormError(e.message ?: getString(R.string.profile_update_failed))
             } finally {
                 setLoadingState(false)
@@ -262,6 +264,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun renderProfile(user: UserResponse) {
         currentUser = user
+        TokenManager.saveUserProfile(user.firstname, user.lastname, user.email, user.profileImageUrl)
 
         tvFullName.text = MobileHeaderBinder.buildDisplayName(
             firstName = user.firstname,
@@ -454,6 +457,7 @@ class ProfileActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
+                if (e.isHarmlessCancellation()) return@launch
                 showProfileFormError(e.message ?: getString(R.string.profile_update_failed))
             } finally {
                 setSavingState(false)
@@ -803,6 +807,7 @@ class ProfileActivity : AppCompatActivity() {
                     showFieldMessage(ProfileField.IMAGE, backendMessage ?: getString(R.string.profile_update_failed))
                 }
             } catch (e: Exception) {
+                if (e.isHarmlessCancellation()) return@launch
                 showFieldMessage(ProfileField.IMAGE, e.message ?: getString(R.string.profile_update_failed))
             } finally {
                 setSavingState(false)

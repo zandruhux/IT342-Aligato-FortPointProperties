@@ -18,6 +18,7 @@ import com.example.fortpointproperties.features.properties.ui.PropertyListActivi
 import com.example.fortpointproperties.shared.auth.SessionManager
 import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.launch
 
 class RegisterActivity : AppCompatActivity() {
@@ -108,6 +109,7 @@ class RegisterActivity : AppCompatActivity() {
                         Toast.makeText(this@RegisterActivity, "Registration Failed", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
+                    if (e.isHarmlessCancellation()) return@launch
                     Toast.makeText(this@RegisterActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -129,6 +131,7 @@ class RegisterActivity : AppCompatActivity() {
 
     private fun handleAuthenticatedUser(user: UserResponse, accessToken: String, refreshToken: String) {
         TokenManager.saveTokens(accessToken, refreshToken, user.role)
+        TokenManager.saveUserProfile(user.firstname, user.lastname, user.email, user.profileImageUrl)
 
         when {
             SessionManager.isRegisteredUserRole(user.role) -> openRegisteredHome(user)

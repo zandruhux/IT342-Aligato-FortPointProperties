@@ -1,9 +1,11 @@
 package com.example.fortpointproperties.features.messaging.ui
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.text.InputType
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -14,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.example.fortpointproperties.R
 import com.example.fortpointproperties.features.auth.data.UserResponse
@@ -31,6 +34,7 @@ import com.example.fortpointproperties.features.messaging.ui.adapter.Conversatio
 import com.example.fortpointproperties.shared.auth.SessionManager
 import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.launch
 
 class ConversationsActivity : AppCompatActivity() {
@@ -154,6 +158,7 @@ class ConversationsActivity : AppCompatActivity() {
                     showErrorState("Unable to verify the current session.")
                 }
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_conversations))
             }
         }
@@ -176,6 +181,7 @@ class ConversationsActivity : AppCompatActivity() {
             } catch (error: MessagingLoadException) {
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_conversations))
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_conversations))
             } finally {
                 isLoadingConversations = false
@@ -202,27 +208,33 @@ class ConversationsActivity : AppCompatActivity() {
     }
 
     private fun showNewConversationDialog() {
-        val input = EditText(this).apply {
-            hint = getString(R.string.messages_new_conversation_hint)
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            minLines = 3
-            maxLines = 6
-            setPadding(24, 24, 24, 24)
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_new_conversation, null)
+        val input = dialogView.findViewById<EditText>(R.id.etConversationMessage)
+        val errorText = dialogView.findViewById<TextView>(R.id.tvConversationError)
+        val cancelButton = dialogView.findViewById<Button>(R.id.btnCancelConversation)
+        val createButton = dialogView.findViewById<Button>(R.id.btnCreateConversation)
+
+        input.doAfterTextChanged {
+            if (errorText.visibility == View.VISIBLE && !it.isNullOrBlank()) {
+                errorText.visibility = View.GONE
+            }
         }
 
         val dialog = AlertDialog.Builder(this)
-            .setTitle(R.string.messages_new_conversation_title)
-            .setMessage(R.string.messages_new_conversation_prompt)
-            .setView(input)
-            .setNegativeButton(android.R.string.cancel, null)
-            .setPositiveButton(R.string.messages_new_conversation, null)
+            .setView(dialogView)
             .create()
 
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+            cancelButton.setOnClickListener {
+                dialog.dismiss()
+            }
+
+            createButton.setOnClickListener {
                 val content = input.text?.toString()?.trim().orEmpty()
                 if (content.isBlank()) {
-                    input.error = getString(R.string.messages_message_required)
+                    errorText.visibility = View.VISIBLE
                     return@setOnClickListener
                 }
                 dialog.dismiss()
@@ -252,6 +264,7 @@ class ConversationsActivity : AppCompatActivity() {
             } catch (error: MessagingSendException) {
                 showErrorState(error.message ?: getString(R.string.messages_failed_start))
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: getString(R.string.messages_failed_start))
             }
         }

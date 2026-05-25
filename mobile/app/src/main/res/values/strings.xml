@@ -69,6 +69,13 @@
     <string name="profile_no_phone">No phone number provided</string>
     <string name="password_visibility_show">Show password</string>
     <string name="password_visibility_hide">Hide password</string>
+    <string name="google_web_client_id">186569633364-b44oiove4up93iujeocpq763pul5tmhp.apps.googleusercontent.com</string>
+    <string name="google_sign_in">Sign In with Google</string>
+    <string name="google_sign_in_loading">Signing in with Google...</string>
+    <string name="google_sign_in_not_configured">Google Sign-In is not configured. Please set the Google Web Client ID.</string>
+    <string name="google_sign_in_cancelled">Google Sign-In was cancelled.</string>
+    <string name="google_sign_in_missing_token">Google Sign-In failed. No ID token was returned.</string>
+    <string name="google_sign_in_failed">Google Sign-In failed. Please try again.</string>
     <string name="career_application_title">Career Application</string>
     <string name="career_application_instruction">Submit your career application and track its status.</string>
     <string name="career_application_status_title">Application Status</string>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.FortPointProperties" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@android:color/white</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/fort_point_properties_logo</item>
+        <item name="android:windowBackground">@drawable/bg_splash</item>
+        <item name="android:windowAnimationStyle">@style/Animation_FortPointProperties_None</item>
+        <item name="android:colorAccent">@color/property_blue</item>
+        <item name="colorAccent">@color/property_blue</item>
+    </style>
+</resources>
