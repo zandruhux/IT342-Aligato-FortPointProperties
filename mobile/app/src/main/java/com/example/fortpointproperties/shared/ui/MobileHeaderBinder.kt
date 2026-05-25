@@ -55,8 +55,8 @@ object MobileHeaderBinder {
         return when {
             combined.isNotBlank() -> combined
             !email.isNullOrBlank() -> email.substringBefore("@").replace('.', ' ').replace('_', ' ').trim()
-                .ifBlank { "Registered User" }
-            else -> "Registered User"
+                .ifBlank { "User" }
+            else -> "User"
         }
     }
 
