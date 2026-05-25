@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/property_background"
+    tools:context=".features.careerApplication.ui.CareerApplicationActivity">
+
+    <include
+        android:id="@+id/layoutHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        layout="@layout/view_mobile_header"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomNav"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader" />
+
+    <LinearLayout
+        android:id="@+id/layoutState"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="24dp"
+        android:background="@color/white"
+        android:elevation="2dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader">
+
+        <TextView
+            android:id="@+id/tvStateMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/property_text_primary"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/btnStateAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Open Login"
+            android:textAllCaps="false"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomNav"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="24dp"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp">
+
+            <TextView
+                android:id="@+id/tvPageTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/career_application_title"
+                android:textColor="@color/property_text_primary"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvPageSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/career_application_instruction"
+                android:textColor="@color/property_text_secondary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvFormMessage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card_rounded"
+                android:padding="12dp"
+                android:textColor="@color/property_text_primary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/layoutStatusCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_section_rounded"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvStatusTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/career_application_status_title"
+                        android:textColor="@color/property_text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvStatusBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_status_pending"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="6dp"
+                        android:text="@string/career_application_status_pending"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvStatusMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/career_application_no_application"
+                    android:textColor="@color/property_text_secondary"
+                    android:textSize="14sp" />
+
+                <LinearLayout
+                    android:id="@+id/layoutStatusDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvStatusSubmitted"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/property_text_secondary"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvStatusReviewed"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/property_text_secondary"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvStatusReviewer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/property_text_secondary"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvStatusRemarks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@color/property_text_primary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutFormCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_section_rounded"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:id="@+id/tvPhoneLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/career_application_phone_label"
+                    android:textColor="@color/property_text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etPhoneNumber"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/edit_text_background"
+                    android:hint="@string/career_application_phone_hint"
+                    android:inputType="phone"
+                    android:padding="14dp"
+                    android:textColor="@color/property_text_primary"
+                    android:textColorHint="@color/property_text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvPhoneError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/property_red"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvResumeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/career_application_resume_label"
+                    android:textColor="@color/property_text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Button
+                    android:id="@+id/btnPickResume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:backgroundTint="@color/property_blue"
+                    android:text="@string/career_application_choose_resume"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:id="@+id/tvSelectedResume"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/career_application_no_file_chosen"
+                    android:textColor="@color/property_text_secondary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tvResumeHelp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/career_application_resume_help"
+                    android:textColor="@color/property_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvResumeError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/property_red"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvCoverLetterLabel"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/career_application_cover_letter_label"
+                        android:textColor="@color/property_text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCoverLetterCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0/5000"
+                        android:textColor="@color/property_text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/etCoverLetter"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/edit_text_background"
+                    android:gravity="top"
+                    android:hint="@string/career_application_cover_letter_hint"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:maxLength="5000"
+                    android:padding="14dp"
+                    android:textColor="@color/property_text_primary"
+                    android:textColorHint="@color/property_text_secondary" />
+
+                <TextView
+                    android:id="@+id/tvCoverLetterError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="@color/property_red"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/btnSubmit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:backgroundTint="@color/property_blue"
+                    android:text="@string/career_application_submit"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <LinearLayout
+        android:id="@+id/layoutBottomNav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:elevation="4dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/btnNavProperties"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:drawableTop="@drawable/ic_nav_home"
+            android:drawablePadding="2dp"
+            android:drawableTint="@color/property_text_secondary"
+            android:text="Properties"
+            android:textAllCaps="false"
+            android:textColor="@color/property_text_secondary"
+            android:textSize="11sp"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btnNavFavorites"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:drawableTop="@drawable/ic_nav_heart"
+            android:drawablePadding="2dp"
+            android:drawableTint="@color/property_text_secondary"
+            android:text="Favorites"
+            android:textAllCaps="false"
+            android:textColor="@color/property_text_secondary"
+            android:textSize="11sp"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btnNavArticles"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:drawableTop="@drawable/ic_nav_article"
+            android:drawablePadding="2dp"
+            android:drawableTint="@color/property_text_secondary"
+            android:text="Articles"
+            android:textAllCaps="false"
+            android:textColor="@color/property_text_secondary"
+            android:textSize="11sp"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/btnNavCareer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
+            android:drawableTop="@drawable/ic_nav_people"
+            android:drawablePadding="2dp"
+            android:drawableTint="@color/property_blue"
+            android:text="@string/nav_career_application"
+            android:textAllCaps="false"
+            android:textColor="@color/property_blue"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
