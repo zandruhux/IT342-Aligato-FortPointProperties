@@ -98,7 +98,8 @@ const PropertyCardBase = ({
 
       <div className="p-5 flex-1 flex flex-col">
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-gray-900">{displayPrice}</h3>
+          {/*  change text font color*/}
+          <h3 className="text-xl font-bold text-gray-900">{displayPrice}</h3> 
           {headerRightContent}
         </div>
 
