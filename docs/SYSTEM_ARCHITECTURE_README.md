@@ -4,14 +4,18 @@
 
 This document is the working architecture README for the Fort Point Properties system.
 
-The system is a property-focused web application with a Spring Boot backend. It helps different user roles browse properties, manage accounts, publish articles, submit career applications, exchange messages, and perform admin tasks where allowed.
+The system is a property-focused platform with a web frontend, Android mobile app, and Spring Boot backend. It helps different user roles browse properties, manage accounts, publish articles, submit career applications, exchange messages, and perform admin tasks where allowed.
 
 This README is updated step by step as each feature is reviewed and confirmed in the codebase.
 
-The current project structure shows two main parts:
+The current project structure shows four main parts:
 
 - A web frontend in `web/`
 - A Spring Boot backend in `backend/`
+- An Android mobile app in `mobile/`
+- Documentation and architecture notes in `docs/`
+
+The web and Android mobile clients connect to the same backend API, so both clients share the same business logic, database, authentication flow, security rules, and service layer.
 
 The goal of this README is to keep a clear, presentation-ready record of the system purpose, the problem it addresses, the intended users, the project goals, the architecture, component interactions, and the implementation evidence that has been verified in the code.
 
@@ -134,6 +138,14 @@ Backend proof files:
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/shared/security/JwtAuthenticationFilter.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/shared/utils/PasswordValidator.java`
 
+Mobile proof files:
+
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/auth/ui/LoginActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/auth/ui/RegisterActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/shared/auth/TokenManager.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/shared/auth/SessionManager.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/shared/network/ApiClient.kt`
+
 Implementation status: Implemented.
 <!-- FEATURE:Authentication and Authorization Feature END -->
 <!-- FEATURE:Article Feature START -->
@@ -190,6 +202,14 @@ Backend proof files:
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/article/dto/ArticleDTO.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/article/dto/ArticleCreateRequestDTO.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/article/dto/ArticleUpdateRequestDTO.java`
+
+Mobile proof files:
+
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/article/ui/ArticleListActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/article/ui/ArticleDetailActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/article/ui/adapter/ArticleAdapter.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/article/network/ArticleApi.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/article/data/repository/ArticleRepository.kt`
 
 Implementation status: Implemented.
 <!-- FEATURE:Article Feature END -->
@@ -256,6 +276,16 @@ Backend proof files:
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/properties/dto/PropertyAgentDetailDTO.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/properties/dto/PropertyAdminDetailDTO.java`
 
+Mobile proof files:
+
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/properties/ui/PropertyListActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/properties/ui/PropertyDetailActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/properties/ui/adapter/PropertyAdapter.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/properties/network/PropertyApi.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/properties/data/repository/PropertyRepository.kt`
+- `mobile/app/src/main/res/layout/item_property_card.xml`
+- `mobile/app/src/main/res/layout/activity_property_detail.xml`
+
 Implementation status: Implemented.
 <!-- FEATURE:Property Feature END -->
 <!-- FEATURE:Favorites Feature START -->
@@ -305,6 +335,12 @@ Backend proof files:
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/auth/repository/UserRepository.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/properties/entity/Property.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/properties/repository/PropertyRepository.java`
+
+Mobile proof files:
+
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/favorites/ui/FavoritesActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/favorites/network/FavoriteApi.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/favorites/data/repository/FavoriteRepository.kt`
 
 Implementation status: Implemented.
 <!-- FEATURE:Favorites Feature END -->
@@ -369,6 +405,16 @@ Backend proof files:
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/messaging/util/MessagingRoles.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/auth/repository/UserRepository.java`
 
+Mobile proof files:
+
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/ui/ConversationsActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/ui/ConversationDetailActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/network/MessagingApi.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/network/MessagingSocketClient.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/data/repository/MessagingRepository.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/ui/adapter/ConversationAdapter.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/ui/adapter/MessageAdapter.kt`
+
 Implementation status: Implemented.
 <!-- FEATURE:Messaging Feature END -->
 <!-- FEATURE:Profile Feature START -->
@@ -420,6 +466,12 @@ Backend proof files:
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/auth/entity/User.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/auth/dto/UserDTO.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/auth/dto/UpdateProfileRequest.java`
+
+Mobile proof files:
+
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/auth/ui/ProfileActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/auth/data/UpdateProfileRequest.kt`
+- `mobile/app/src/main/res/layout/activity_profile.xml`
 
 Implementation status: Implemented.
 <!-- FEATURE:Profile Feature END -->
@@ -482,6 +534,12 @@ Backend proof files:
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/auth/entity/User.java`
 - `backend/src/main/java/edu/cit/aligato/fortpointproperties/auth/repository/UserRepository.java`
 
+Mobile proof files:
+
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/careerApplication/ui/CareerApplicationActivity.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/careerApplication/network/CareerApplicationApi.kt`
+- `mobile/app/src/main/java/com/example/fortpointproperties/features/careerApplication/data/repository/CareerApplicationRepository.kt`
+
 Implementation status: Implemented.
 <!-- FEATURE:Career Application Feature END -->
 <!-- FEATURE:Public Pages Feature START -->
@@ -532,18 +590,32 @@ Implementation status: Implemented.
 
 ## 3. System Architecture Overview
 
-The visible project structure suggests a web-based client and server architecture.
+The visible project structure shows a client-server architecture with two clients: a React web frontend and an Android mobile app. Both clients communicate with the Spring Boot backend through REST APIs, and the messaging feature also uses WebSocket/STOMP for real-time updates.
 
-- The frontend entry points are `web/src/main.jsx` and `web/src/App.jsx`.
-- The frontend is organized with shared app logic and feature folders under `web/src/`.
-- Shared frontend code lives in `web/src/shared`, where reusable context, UI components, utilities, and API helpers are exported for use across multiple features.
-- There is no separate `web/src/features/shared` implementation in the current tree, so shared frontend reuse is centralized in `web/src/shared`.
+- The web frontend entry points are `web/src/main.jsx` and `web/src/App.jsx`.
+- The web frontend is organized with shared app logic and feature folders under `web/src/`.
+- Shared web code lives in `web/src/shared`, where reusable context, UI components, utilities, and API helpers are exported for use across multiple features.
+- The Android mobile app lives in `mobile/` and uses a feature-based structure under `mobile/app/src/main/java/com/example/fortpointproperties/features`.
+- The mobile shared authentication and networking code lives under `mobile/app/src/main/java/com/example/fortpointproperties/shared/auth` and `mobile/app/src/main/java/com/example/fortpointproperties/shared/network`.
 - The backend entry point is `backend/src/main/java/edu/cit/aligato/fortpointproperties/FortpointpropertiesApplication.java`.
 - The backend is grouped by domain packages such as `auth`, `article`, `careerapplication`, `favorites`, `messaging`, `properties`, `shared`, and `usermanagement`.
 - Shared backend code lives in `backend/src/main/java/edu/cit/aligato/fortpointproperties/shared`, where reusable response wrappers, exception handling, security helpers, and validation utilities are defined once and reused by multiple domains.
 - Backend configuration is defined in `backend/src/main/resources/application.properties`.
 
-Based on the current structure, the system is organized around a web frontend that communicates with a backend REST API, which then works with the database and supporting services.
+The backend follows a layered structure: controller, service, repository, entity, and DTO. The web and mobile clients both reuse that backend business logic, database, authentication, and external storage services.
+
+The Android mobile app is organized using a vertical-slice structure. Each implemented feature has its own UI layer, Retrofit API interface, data models, and repository layer. Shared mobile infrastructure includes `TokenManager`, `SessionManager`, `ApiClient`, and `AuthInterceptor`.
+
+Mobile technology proof in the codebase includes:
+
+- Retrofit for REST API calls.
+- OkHttp for HTTP and WebSocket transport.
+- Gson converter for JSON mapping.
+- Glide for image loading.
+- TokenManager and SessionManager for mobile session and role handling.
+- ApiClient and AuthInterceptor for shared backend connection and Bearer token handling.
+
+Messaging uses REST for conversation and message loading/sending, while SockJS/STOMP WebSocket is used for server-push updates through `/user/queue/messages`.
 
 ## 4. Component Interaction and Data Flow
 
@@ -895,6 +967,100 @@ Featured property flow:
 
 The public pages do not have their own backend package. The only proven backend dependency here is the public property API.
 <!-- DATA_FLOW:Public Pages Feature END -->
+<!-- DATA_FLOW:Mobile Application START -->
+### Mobile Application Data Flow
+
+General mobile REST flow:
+
+Mobile Activity
+-> Feature Repository
+-> Feature API interface
+-> Shared `ApiClient` / `AuthInterceptor`
+-> Spring Boot Controller
+-> Service
+-> Repository
+-> Entity / Database
+-> DTO or `ApiResponse`
+-> Mobile UI update
+
+Authentication:
+
+`LoginActivity.kt` / `RegisterActivity.kt`
+-> `AuthApi.kt`
+-> `ApiClient.kt`
+-> `AuthController.java`
+-> `AuthService.java`
+-> `UserRepository.java`
+-> JWT response
+-> `TokenManager.kt` / `SessionManager.kt`
+-> role-based mobile access
+
+Properties:
+
+`PropertyListActivity.kt`
+-> `PropertyRepository.kt`
+-> `PropertyApi.kt`
+-> `PropertyRegisteredController.java`
+-> `PropertyService.java`
+-> backend `PropertyRepository.java`
+-> `PropertyCardDTO` / `PropertyUserDetailDTO`
+-> `PropertyAdapter.kt` / `PropertyDetailActivity.kt`
+
+Favorites:
+
+`PropertyAdapter.kt` or `FavoritesActivity.kt`
+-> `FavoriteRepository.kt`
+-> `FavoriteApi.kt`
+-> `FavoriteController.java`
+-> `FavoriteService.java`
+-> backend `FavoriteRepository.java`
+-> `FavoriteDTO`
+-> mobile card state or favorites list update
+
+Articles:
+
+`ArticleListActivity.kt`
+-> `ArticleRepository.kt`
+-> `ArticleApi.kt`
+-> `ArticleController.java`
+-> `ArticleService.java`
+-> backend `ArticleRepository.java`
+-> `ArticleCardDTO` / `ArticleDTO`
+-> `ArticleAdapter.kt` / `ArticleDetailActivity.kt`
+
+Career Application:
+
+`CareerApplicationActivity.kt`
+-> `CareerApplicationRepository.kt`
+-> `CareerApplicationApi.kt`
+-> `CareerApplicationController.java`
+-> `CareerApplicationService.java`
+-> `SupabaseStorageService.java`
+-> backend `CareerApplicationRepository.java`
+-> status or response DTO
+-> mobile status and form update
+
+Messaging:
+
+`ConversationsActivity.kt` / `ConversationDetailActivity.kt`
+-> `MessagingRepository.kt`
+-> `MessagingApi.kt`
+-> `MessagingController.java`
+-> `MessagingService.java`
+-> `ConversationRepository.java` / `MessageRepository.java` / `ConversationReadStateRepository.java`
+-> `ConversationDTO` / `MessageDTO`
+-> mobile conversation list or thread update
+
+Real-time Messaging:
+
+`MessagingSocketClient.kt`
+-> SockJS/STOMP connection to `/ws/{serverId}/{sessionId}/websocket`
+-> Authorization Bearer token in STOMP `CONNECT`
+-> `/user/queue/messages` subscription
+-> socket event received
+-> REST reload of conversation list or active message thread
+-> mobile UI refresh
+<!-- DATA_FLOW:Mobile Application END -->
 <!-- DATA_FLOW_END -->
 
 ## 5. Proof of Implementation
@@ -1136,17 +1302,46 @@ No proven layer appears missing for the capabilities listed above. Resume file u
 
 No separate public backend package exists. The public pages are powered by shared frontend UI and the public property API.
 <!-- PROOF:Public Pages Feature END -->
+<!-- PROOF:Mobile Application START -->
+### Mobile Application Proof of Implementation
+
+| System Part | File / Folder | What It Proves |
+|---|---|---|
+| Mobile App Root | `mobile/app` | Android application module is present in the project. |
+| Mobile Build Config | `mobile/app/build.gradle.kts` | Android build setup and dependencies for the mobile app. |
+| Mobile Manifest | `mobile/app/src/main/AndroidManifest.xml` | Registered Android activities and app configuration. |
+| Mobile Feature Folders | `mobile/app/src/main/java/com/example/fortpointproperties/features` | Vertical-slice mobile feature organization. |
+| Shared Mobile Auth | `mobile/app/src/main/java/com/example/fortpointproperties/shared/auth/TokenManager.kt` | Mobile token persistence for authenticated requests. |
+| Shared Mobile Auth | `mobile/app/src/main/java/com/example/fortpointproperties/shared/auth/SessionManager.kt` | Mobile role normalization and registered-user access checks. |
+| Shared Mobile Network | `mobile/app/src/main/java/com/example/fortpointproperties/shared/network/ApiClient.kt` | Shared Retrofit backend connection. |
+| Shared Mobile Network | `mobile/app/src/main/java/com/example/fortpointproperties/shared/network/AuthInterceptor.kt` | Bearer token attachment for mobile API calls. |
+| Mobile Authentication | `mobile/app/src/main/java/com/example/fortpointproperties/features/auth/ui/LoginActivity.kt` and `mobile/app/src/main/java/com/example/fortpointproperties/features/auth/ui/RegisterActivity.kt` | Login and registration screens for mobile users. |
+| Mobile Profile | `mobile/app/src/main/java/com/example/fortpointproperties/features/auth/ui/ProfileActivity.kt` | Profile view/edit, phone update, profile image upload, and image removal. |
+| Mobile Properties | `mobile/app/src/main/java/com/example/fortpointproperties/features/properties` | Property list, detail, search, image loading, and image preview implementation. |
+| Mobile Favorites | `mobile/app/src/main/java/com/example/fortpointproperties/features/favorites` | Favorite list, add/remove integration, and registered-user favorites API access. |
+| Mobile Articles | `mobile/app/src/main/java/com/example/fortpointproperties/features/article` | Article list, title search, and article detail implementation. |
+| Mobile Career Application | `mobile/app/src/main/java/com/example/fortpointproperties/features/careerApplication` | Career application form, status display, resume upload, and validation. |
+| Mobile Messaging | `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging` | Conversations list, conversation detail, REST sending, and real-time receiving. |
+| Mobile Messaging Socket | `mobile/app/src/main/java/com/example/fortpointproperties/features/messaging/network/MessagingSocketClient.kt` | SockJS/STOMP WebSocket connection and `/user/queue/messages` subscription. |
+| Mobile Layouts | `mobile/app/src/main/res/layout` | XML screens and card layouts for completed mobile modules. |
+| Mobile Drawables | `mobile/app/src/main/res/drawable` | Mobile icons, card backgrounds, avatar backgrounds, navigation icons, and message bubbles. |
+| Mobile Values | `mobile/app/src/main/res/values` | Shared colors and strings used by the Android screens. |
+
+The mobile proof is registered-user focused. Admin and Agent mobile screens are not implemented and should not be claimed.
+<!-- PROOF:Mobile Application END -->
 <!-- PROOF_END -->
 
-## 6. Mobile Application Module — Planned / Under Development
+## 6. Mobile Application Module - Implemented
 
-The mobile application module is not yet implemented.
+The Android mobile application is implemented and connected to the same Spring Boot backend used by the web frontend.
 
-It is planned for future development and should be treated as a separate workstream from the current web application.
+The mobile app focuses on registered-user workflows. It supports authentication, profile view/edit, property browsing, property details, property search, property image preview, favorites, articles, article title search, career application with resume upload, and messaging.
 
-When mobile work begins, it will connect to the same backend REST API so that data and business logic stay consistent across platforms.
+The mobile app uses Retrofit, OkHttp, Gson, and Glide. Shared mobile infrastructure includes `ApiClient`, `AuthInterceptor`, `TokenManager`, and `SessionManager`.
 
-For now, the implementation proof in this project should focus on the web frontend, backend, and database.
+Messaging on mobile uses REST for creating conversations, loading messages, sending messages, and marking read state. Real-time receiving uses SockJS/STOMP WebSocket with the `/user/queue/messages` subscription.
+
+Admin and Agent mobile screens are not implemented. Admin and Agent functions remain available through the web frontend where documented.
 
 ## 7. Suggested System Demonstration Flow
 
@@ -1173,7 +1368,7 @@ Use this section as a presentation guide for the features that have already been
 <!-- DEMO:Article Feature START -->
 ### Article Feature Demo Step
 
-1. Show the article list on `/blogs`.
+1. Show the article list on `/blogs` or the mobile Articles screen.
 2. Perform a title search or open an article card to read more.
 3. Show the matching API proof in `articleApi.js` and the backend proof in `ArticleController.java` or `ArticleAdminController.java`.
 4. If demonstrating admin work, show the create or edit screen and submit an article with a cover photo.
@@ -1182,8 +1377,8 @@ Use this section as a presentation guide for the features that have already been
 <!-- DEMO:Property Feature START -->
 ### Property Feature Demo Step
 
-1. Show the property screen first, either `/properties` for the public list or `/admin/properties` for the management view.
-2. Perform one visible action such as searching by name or location, opening a property detail modal, creating a property, or editing a property as an admin.
+1. Show the property screen first, either `/properties`, `/admin/properties`, or the mobile Properties screen.
+2. Perform one visible action such as searching by name/location/developer, opening a property detail, creating a property, or editing a property as an admin.
 3. Show the matching backend proof file or endpoint, such as `PropertyPublicController.java`, `PropertyAdminController.java`, or `propertyApi.js`.
 4. Show the returned property data or updated response, including property cards, detail data, or the new or updated property payload.
 5. If photo upload is part of the demo, show the property photo upload flow and the resulting photo URL or stored photo record.
@@ -1192,15 +1387,15 @@ Use this section as a presentation guide for the features that have already been
 <!-- DEMO:Favorites Feature START -->
 ### Favorites Feature Demo Step
 
-1. Show the property list or featured property cards where the heart button appears for a logged-in user.
-2. Click the favorite heart to add a property, then open the `/favorites` page to show the saved list.
+1. Show the web property list, featured property cards, or mobile Properties screen where the heart button appears for a logged-in user.
+2. Click the favorite heart to add a property, then open the `/favorites` page or mobile Favorites screen to show the saved list.
 3. Show the matching backend proof in `FavoriteController.java` and `FavoriteService.java`, plus `favoritesApi.js` on the frontend.
 4. The expected result is that the property appears in the saved list, the heart state updates, and removing it updates the UI.
 <!-- DEMO:Favorites Feature END -->
 <!-- DEMO:Messaging Feature START -->
 ### Messaging Feature Demo Step
 
-1. Show the registered user messaging screen or the agent inbox screen.
+1. Show the registered user messaging screen, mobile Conversations screen, or the web agent inbox screen.
 2. Start a new conversation or open an existing thread, then send a message.
 3. Show the matching backend proof in `MessagingController.java`, `MessagingService.java`, and `messagingApi.js` on the frontend.
 4. If demonstrating live updates, show the WebSocket connection in `WebSocketConfig.java` and the socket hook in `useMessagingSocket.js`.
@@ -1209,7 +1404,7 @@ Use this section as a presentation guide for the features that have already been
 <!-- DEMO:Profile Feature START -->
 ### Profile Feature Demo Step
 
-1. Show one of the profile screens, such as the registered user, agent, or admin profile page.
+1. Show one of the web profile screens or the mobile registered-user Profile screen.
 2. Edit the first name, last name, or phone number, then upload or remove a profile image.
 3. Show the matching backend proof in `AuthController.java` and `AuthService.java`, plus `profileApi.js` on the frontend.
 4. The expected result is that the profile panel updates and the new profile data or avatar is reflected in the UI.
@@ -1217,7 +1412,7 @@ Use this section as a presentation guide for the features that have already been
 <!-- DEMO:Career Application Feature START -->
 ### Career Application Feature Demo Step
 
-1. Show the registered user career application screen at `/career`.
+1. Show the registered user career application screen at `/career` or the mobile Career screen.
 2. Submit a resume, phone number, and cover letter, then show the status card update.
 3. Show the matching backend proof in `CareerApplicationController.java` and `CareerApplicationService.java`, plus `careerApplicationApi.js` on the frontend.
 4. For admin review, show `/admin/career-applications` or the detail page, then accept or reject an application.
@@ -1231,6 +1426,20 @@ Use this section as a presentation guide for the features that have already been
 3. Show the matching frontend proof in `HomePage.jsx`, `HeroSection.jsx`, and `FeaturedProperties.jsx`, plus `PropertyPublicController.java` and `propertyApi.js`.
 4. The expected result is that visitors can browse the landing page, navigate to property browsing, and see featured properties load correctly.
 <!-- DEMO:Public Pages Feature END -->
+<!-- DEMO:Mobile Application START -->
+### Mobile Application Demo Step
+
+1. Run the Android mobile app.
+2. Log in as a registered user.
+3. Show the shared mobile header and bottom navigation.
+4. Open Properties, search by project name/location/developer, and open a property detail.
+5. Toggle a property favorite, then open Favorites.
+6. Open Articles, search by title, and open article detail.
+7. Open Career, submit or show application status and resume upload behavior.
+8. Open Profile and show editable profile fields and profile image behavior.
+9. Open Messaging from the header icon, start or open a conversation, send a message, and show a real-time reply from the web agent side.
+10. Briefly show proof files such as `ApiClient.kt`, `TokenManager.kt`, `PropertyApi.kt`, `CareerApplicationApi.kt`, and `MessagingSocketClient.kt`.
+<!-- DEMO:Mobile Application END -->
 <!-- DEMO_FLOW_END -->
 
 ## 8. Rubric Alignment Checklist
@@ -1239,9 +1448,13 @@ Use this section as a presentation guide for the features that have already been
 - Visible system structure documented
 - Frontend and backend separation explained
 - Shared architecture explained as reusable code
-- Data flow reserved for verified feature updates
+- REST API data flow explained
+- Mobile-web-backend interaction explained
+- Mobile proof files included
+- Real-time messaging proof included
+- File upload proof included
+- Mobile module documented as implemented and connected to the backend
 - Proof of implementation reserved for confirmed evidence
-- Mobile module marked as planned or under development
 - Future updates can be added one feature at a time
 
 ## 9. Notes and Limitations
@@ -1258,6 +1471,21 @@ No separate `web/src/features/shared` implementation was found during inspection
 
 The backend shared package is present and actively used by auth, routing, and feature-specific controllers, so it is safe to describe as reusable infrastructure rather than a feature-specific module.
 <!-- LIMITATION:Shared Architecture END -->
+<!-- LIMITATION:Mobile Application START -->
+### Mobile Application Notes
+
+The mobile app currently focuses on registered-user workflows.
+
+Admin and Agent mobile screens are not implemented. Admin and Agent management features remain available in the web app where documented.
+
+The mobile app uses the same backend data, authentication flow, REST endpoints, and service layer as the web app.
+
+Mobile messaging sends and loads messages through REST. It receives live updates through SockJS/STOMP WebSocket and then refreshes the relevant mobile screen from REST.
+
+Mobile file upload is proven for profile images and career application resumes.
+
+The code does not prove mobile push notifications or email notifications, so those should not be claimed.
+<!-- LIMITATION:Mobile Application END -->
 <!-- LIMITATION:User Management Feature START -->
 ### User Management Feature Notes
 
