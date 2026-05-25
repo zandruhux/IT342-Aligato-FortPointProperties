@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import edu.cit.aligato.fortpointproperties.auth.dto.AuthResponse;
+import edu.cit.aligato.fortpointproperties.auth.dto.GoogleMobileLoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.LoginRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.RegisterRequest;
 import edu.cit.aligato.fortpointproperties.auth.dto.UpdateProfileRequest;
@@ -24,6 +25,8 @@ import edu.cit.aligato.fortpointproperties.auth.dto.UserDTO;
 import edu.cit.aligato.fortpointproperties.auth.entity.User;
 import edu.cit.aligato.fortpointproperties.auth.repository.UserRepository;
 import edu.cit.aligato.fortpointproperties.auth.service.AuthService;
+import edu.cit.aligato.fortpointproperties.auth.service.GoogleMobileTokenVerifier;
+import edu.cit.aligato.fortpointproperties.auth.service.GoogleMobileTokenVerifier.GoogleMobileUser;
 import edu.cit.aligato.fortpointproperties.shared.dto.ApiResponse;
 import edu.cit.aligato.fortpointproperties.shared.dto.ErrorDetail;
 import edu.cit.aligato.fortpointproperties.shared.security.JwtUtil;
@@ -35,11 +38,14 @@ import jakarta.validation.Valid;
 public class AuthController {
 
     private final AuthService authService;
+    private final GoogleMobileTokenVerifier googleMobileTokenVerifier;
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil, UserRepository userRepository) {
+    public AuthController(AuthService authService, GoogleMobileTokenVerifier googleMobileTokenVerifier,
+            JwtUtil jwtUtil, UserRepository userRepository) {
         this.authService = authService;
+        this.googleMobileTokenVerifier = googleMobileTokenVerifier;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
     }
@@ -89,6 +95,29 @@ public class AuthController {
             ErrorDetail error = new ErrorDetail("AUTH-001", e.getMessage(), null);
             ApiResponse<AuthResponse> errorResponse = ApiResponse.error(error);
             return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @PostMapping("/google/mobile")
+    public ResponseEntity<ApiResponse<AuthResponse>> loginWithGoogleMobile(
+            @Valid @RequestBody GoogleMobileLoginRequest request) {
+        try {
+            GoogleMobileUser googleUser = googleMobileTokenVerifier.verify(request.getIdToken());
+            User user = authService.authenticateGoogleUser(
+                    googleUser.email(),
+                    googleUser.firstname(),
+                    googleUser.lastname(),
+                    googleUser.profileImageUrl(),
+                    googleUser.providerId());
+
+            String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole());
+            String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+            AuthResponse authResponse = new AuthResponse(toUserDTO(user), accessToken, refreshToken);
+
+            return new ResponseEntity<>(ApiResponse.success(authResponse), HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            ErrorDetail error = new ErrorDetail("AUTH-GOOGLE-001", e.getMessage(), null);
+            return new ResponseEntity<>(ApiResponse.error(error), HttpStatus.UNAUTHORIZED);
         }
     }
 
