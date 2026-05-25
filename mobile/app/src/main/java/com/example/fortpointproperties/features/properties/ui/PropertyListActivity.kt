@@ -40,6 +40,7 @@ import com.example.fortpointproperties.features.properties.ui.adapter.PropertyAd
 import com.example.fortpointproperties.shared.auth.SessionManager
 import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import com.example.fortpointproperties.shared.ui.MobileHeaderBinder
 import kotlinx.coroutines.launch
 
@@ -99,6 +100,7 @@ class PropertyListActivity : AppCompatActivity() {
             showAuthState("Login required to browse properties.")
             return
         }
+        bindCachedHeader()
 
         val providedRole = SessionManager.normalizeRole(intent.getStringExtra(EXTRA_USER_ROLE))
         if (SessionManager.isPrivilegedRole(providedRole)) {
@@ -295,6 +297,7 @@ class PropertyListActivity : AppCompatActivity() {
                     showErrorState("Unable to verify the current session.")
                 }
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load properties.")
             }
         }
@@ -314,6 +317,7 @@ class PropertyListActivity : AppCompatActivity() {
             } catch (error: PropertyRoleException) {
                 showUnavailableState(error.message ?: "This mobile module is only for registered users.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load properties.")
             }
         }
@@ -352,6 +356,7 @@ class PropertyListActivity : AppCompatActivity() {
             } catch (error: PropertyRoleException) {
                 showUnavailableState(error.message ?: "This mobile module is only for registered users.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to search properties.")
             }
         }
@@ -363,6 +368,9 @@ class PropertyListActivity : AppCompatActivity() {
     }
 
     private fun bindHeader(firstName: String?, lastName: String?, email: String?, profileImageUrl: String?) {
+        if (!firstName.isNullOrBlank() || !lastName.isNullOrBlank() || !email.isNullOrBlank()) {
+            TokenManager.saveUserProfile(firstName, lastName, email, profileImageUrl)
+        }
         MobileHeaderBinder.bind(
             context = this,
             profileImageView = ivHeaderAvatar,
@@ -372,6 +380,15 @@ class PropertyListActivity : AppCompatActivity() {
             lastName = lastName,
             email = email,
             profileImageUrl = profileImageUrl
+        )
+    }
+
+    private fun bindCachedHeader() {
+        bindHeader(
+            firstName = TokenManager.getUserFirstName(),
+            lastName = TokenManager.getUserLastName(),
+            email = TokenManager.getUserEmail(),
+            profileImageUrl = TokenManager.getUserProfileImageUrl()
         )
     }
 
@@ -447,6 +464,7 @@ class PropertyListActivity : AppCompatActivity() {
             } catch (error: FavoriteRoleException) {
                 showUnavailableState(error.message ?: "This mobile module is only for registered users.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 Toast.makeText(this@PropertyListActivity, error.message ?: "Unable to update favorite.", Toast.LENGTH_SHORT).show()
             }
         }

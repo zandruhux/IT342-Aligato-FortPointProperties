@@ -38,6 +38,7 @@ import com.example.fortpointproperties.shared.auth.SessionManager
 import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
 import com.example.fortpointproperties.shared.ui.MobileHeaderBinder
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -111,6 +112,7 @@ class CareerApplicationActivity : AppCompatActivity() {
             showAuthState(getString(R.string.career_application_login_required))
             return
         }
+        bindCachedHeader()
 
         val providedRole = SessionManager.normalizeRole(intent.getStringExtra(EXTRA_USER_ROLE))
         if (SessionManager.isPrivilegedRole(providedRole)) {
@@ -256,6 +258,7 @@ class CareerApplicationActivity : AppCompatActivity() {
                     showErrorState("Unable to verify the current session.")
                 }
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load career application.")
             }
         }
@@ -275,6 +278,7 @@ class CareerApplicationActivity : AppCompatActivity() {
             } catch (error: CareerApplicationLoadException) {
                 showErrorState(error.message ?: "Failed to load career application.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load career application.")
             }
         }
@@ -392,6 +396,7 @@ class CareerApplicationActivity : AppCompatActivity() {
             } catch (error: CareerApplicationSubmitException) {
                 handleSubmitError(error.message ?: "Failed to submit career application")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 handleSubmitError(error.message ?: "Failed to submit career application")
             } finally {
                 setSubmittingState(false)
@@ -490,6 +495,9 @@ class CareerApplicationActivity : AppCompatActivity() {
     }
 
     private fun bindHeader(firstName: String?, lastName: String?, email: String?, profileImageUrl: String?) {
+        if (!firstName.isNullOrBlank() || !lastName.isNullOrBlank() || !email.isNullOrBlank()) {
+            TokenManager.saveUserProfile(firstName, lastName, email, profileImageUrl)
+        }
         MobileHeaderBinder.bind(
             context = this,
             profileImageView = ivHeaderAvatar,
@@ -499,6 +507,15 @@ class CareerApplicationActivity : AppCompatActivity() {
             lastName = lastName,
             email = email,
             profileImageUrl = profileImageUrl
+        )
+    }
+
+    private fun bindCachedHeader() {
+        bindHeader(
+            firstName = TokenManager.getUserFirstName(),
+            lastName = TokenManager.getUserLastName(),
+            email = TokenManager.getUserEmail(),
+            profileImageUrl = TokenManager.getUserProfileImageUrl()
         )
     }
 

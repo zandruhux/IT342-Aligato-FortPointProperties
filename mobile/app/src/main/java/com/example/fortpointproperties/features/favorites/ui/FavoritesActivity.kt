@@ -32,6 +32,7 @@ import com.example.fortpointproperties.shared.auth.SessionManager
 import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
 import com.example.fortpointproperties.shared.ui.MobileHeaderBinder
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.launch
 
 class FavoritesActivity : AppCompatActivity() {
@@ -70,6 +71,7 @@ class FavoritesActivity : AppCompatActivity() {
             showAuthState("Login required to view favorites.")
             return
         }
+        bindCachedHeader()
 
         val providedRole = SessionManager.normalizeRole(intent.getStringExtra(EXTRA_USER_ROLE))
         if (SessionManager.isPrivilegedRole(providedRole)) {
@@ -197,6 +199,7 @@ class FavoritesActivity : AppCompatActivity() {
                     showErrorState("Unable to verify the current session.")
                 }
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load favorites.")
             }
         }
@@ -214,6 +217,7 @@ class FavoritesActivity : AppCompatActivity() {
             } catch (error: FavoriteRoleException) {
                 showUnavailableState(error.message ?: "This mobile module is only for registered users.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: "Failed to load favorite properties.")
             }
         }
@@ -334,6 +338,7 @@ class FavoritesActivity : AppCompatActivity() {
             } catch (error: FavoriteRoleException) {
                 showUnavailableState(error.message ?: "This mobile module is only for registered users.")
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 Toast.makeText(this@FavoritesActivity, error.message ?: "Unable to update favorite.", Toast.LENGTH_SHORT).show()
             }
         }
@@ -345,6 +350,9 @@ class FavoritesActivity : AppCompatActivity() {
     }
 
     private fun bindHeader(firstName: String?, lastName: String?, email: String?, profileImageUrl: String?) {
+        if (!firstName.isNullOrBlank() || !lastName.isNullOrBlank() || !email.isNullOrBlank()) {
+            TokenManager.saveUserProfile(firstName, lastName, email, profileImageUrl)
+        }
         MobileHeaderBinder.bind(
             context = this,
             profileImageView = ivHeaderAvatar,
@@ -354,6 +362,15 @@ class FavoritesActivity : AppCompatActivity() {
             lastName = lastName,
             email = email,
             profileImageUrl = profileImageUrl
+        )
+    }
+
+    private fun bindCachedHeader() {
+        bindHeader(
+            firstName = TokenManager.getUserFirstName(),
+            lastName = TokenManager.getUserLastName(),
+            email = TokenManager.getUserEmail(),
+            profileImageUrl = TokenManager.getUserProfileImageUrl()
         )
     }
 
