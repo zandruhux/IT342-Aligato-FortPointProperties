@@ -83,16 +83,35 @@
                     android:textStyle="bold"
                     android:layout_marginBottom="8dp" />
 
-                <EditText
-                    android:id="@+id/etPassword"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:textColor="@color/black"
-                    android:inputType="textPassword"
-                    android:background="@drawable/edit_text_background"
-                    android:paddingHorizontal="16dp"
-                    android:hint="Enter your password"
-                    android:textSize="14sp" />
+                    android:layout_height="48dp">
+
+                    <EditText
+                        android:id="@+id/etPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/edit_text_background"
+                        android:hint="Enter your password"
+                        android:inputType="textPassword"
+                        android:paddingEnd="48dp"
+                        android:paddingStart="16dp"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+
+                    <ImageButton
+                        android:id="@+id/btnTogglePassword"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="4dp"
+                        android:background="@android:color/transparent"
+                        android:contentDescription="@string/password_visibility_show"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_visibility_off"
+                        android:tint="@color/property_text_secondary" />
+
+                </FrameLayout>
 
             </LinearLayout>
 
