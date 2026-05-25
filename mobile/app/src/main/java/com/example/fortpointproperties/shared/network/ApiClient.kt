@@ -8,7 +8,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
 
     private val logging = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        // Keep request diagnostics without printing passwords, tokens, uploads, or message bodies.
+        level = HttpLoggingInterceptor.Level.BASIC
     }
 
     private val httpClient = OkHttpClient.Builder()
@@ -17,7 +18,7 @@ object ApiClient {
         .build()
 
     val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(Constants.BASE_URL)
+        .baseUrl(ApiConfig.BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .client(httpClient)
         .build()

@@ -11,6 +11,7 @@ class AuthInterceptor : Interceptor {
         val requestBuilder = chain.request().newBuilder()
 
         if (!token.isNullOrEmpty()) {
+            // Retrofit services stay clean; authenticated endpoints get the bearer token here.
             requestBuilder.addHeader("Authorization", "Bearer $token")
         }
 
