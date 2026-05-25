@@ -34,6 +34,7 @@ import com.example.fortpointproperties.shared.auth.SessionManager
 import com.example.fortpointproperties.shared.auth.TokenManager
 import com.example.fortpointproperties.shared.network.ApiClient
 import com.example.fortpointproperties.shared.ui.MobileHeaderBinder
+import com.example.fortpointproperties.shared.ui.isHarmlessCancellation
 import kotlinx.coroutines.launch
 
 class ConversationDetailActivity : AppCompatActivity() {
@@ -168,6 +169,7 @@ class ConversationDetailActivity : AppCompatActivity() {
                     showErrorState("Unable to verify the current session.")
                 }
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_messages))
             }
         }
@@ -193,6 +195,7 @@ class ConversationDetailActivity : AppCompatActivity() {
             } catch (error: MessagingLoadException) {
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_messages))
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_messages))
             }
         }
@@ -215,6 +218,7 @@ class ConversationDetailActivity : AppCompatActivity() {
             } catch (error: MessagingLoadException) {
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_messages))
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: getString(R.string.messages_failed_load_messages))
             }
         }
@@ -317,6 +321,7 @@ class ConversationDetailActivity : AppCompatActivity() {
             } catch (error: MessagingSendException) {
                 showErrorState(error.message ?: getString(R.string.messages_failed_send))
             } catch (error: Exception) {
+                if (error.isHarmlessCancellation()) return@launch
                 showErrorState(error.message ?: getString(R.string.messages_failed_send))
             } finally {
                 setSendingState(false)
