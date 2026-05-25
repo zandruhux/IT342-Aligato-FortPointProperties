@@ -13,5 +13,11 @@ data class UserResponse(
     val lastname: String,
     
     val email: String,
-    val role: String
+    val role: String,
+
+    @SerializedName("phoneNumber")
+    val phoneNumber: String? = null,
+
+    @SerializedName("profileImageUrl")
+    val profileImageUrl: String? = null
 )
