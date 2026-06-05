@@ -1,4 +1,7 @@
-export const API_BASE_URL = 'http://localhost:8080';
+const LOCAL_API_BASE_URL = 'http://localhost:8080';
+
+// Use the deployed backend URL when set, but keep localhost as the default for local development.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim() || LOCAL_API_BASE_URL;
 export const WS_BASE_URL = `${API_BASE_URL}/ws`;
 
 export const ROLES = {

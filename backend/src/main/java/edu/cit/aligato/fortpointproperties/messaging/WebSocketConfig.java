@@ -2,8 +2,10 @@ package edu.cit.aligato.fortpointproperties.messaging;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -28,15 +30,24 @@ import edu.cit.aligato.fortpointproperties.shared.security.JwtUtil;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final List<String> allowedOriginPatterns;
 
-    public WebSocketConfig(JwtUtil jwtUtil, UserRepository userRepository) {
+    public WebSocketConfig(JwtUtil jwtUtil, UserRepository userRepository,
+            @Value("#{'${app.cors.allowed-origin-patterns}'.split(',')}") List<String> allowedOriginPatterns) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
+        this.allowedOriginPatterns = allowedOriginPatterns;
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns(allowedOriginPatterns.stream()
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .collect(Collectors.toList())
+                        .toArray(new String[0]))
+                .withSockJS();
     }
 
     @Override

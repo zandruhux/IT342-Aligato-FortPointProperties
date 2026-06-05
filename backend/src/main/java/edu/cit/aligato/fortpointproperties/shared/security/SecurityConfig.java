@@ -2,6 +2,8 @@ package edu.cit.aligato.fortpointproperties.shared.security;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -42,27 +44,28 @@ public class SecurityConfig {
     private final GoogleOAuthSuccessHandler googleOAuthSuccessHandler;
     private final ObjectMapper objectMapper;
     private final String frontendLoginUrl;
+    private final List<String> allowedOriginPatterns;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
             GoogleOAuthSuccessHandler googleOAuthSuccessHandler,
             ObjectMapper objectMapper,
-            @Value("${app.oauth2.frontend-login-url}") String frontendLoginUrl) {
+            @Value("${app.oauth2.frontend-login-url}") String frontendLoginUrl,
+            @Value("#{'${app.cors.allowed-origin-patterns}'.split(',')}") List<String> allowedOriginPatterns) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.googleOAuthSuccessHandler = googleOAuthSuccessHandler;
         this.objectMapper = objectMapper;
         this.frontendLoginUrl = frontendLoginUrl;
+        this.allowedOriginPatterns = allowedOriginPatterns;
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",
-                "http://localhost:3000",
-                "http://localhost:5174",
-                "http://127.0.0.1:5173",
-                "http://10.0.2.2:8080"));
+        configuration.setAllowedOriginPatterns(allowedOriginPatterns.stream()
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList()));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
