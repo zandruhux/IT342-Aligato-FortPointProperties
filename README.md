@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Fort Point Properties is a property-focused platform with a React web frontend, Spring Boot backend, Android mobile app, PostgreSQL / Supabase database, and Supabase storage where implemented. It is designed to help public visitors browse properties, registered users save favorites and send messages, mobile registered users use core property and messaging flows, and admins or agents manage content and inquiries on the web.
+Fort Point Properties is a property-focused platform with a React web frontend, Spring Boot backend, Android mobile app, PostgreSQL / Supabase database, and Supabase storage where implemented. It is designed to help public visitors browse properties, registered users save favorites and send messages, mobile registered users use core property and messaging flows, and admins or agents manage content and inquiries on the web.s
 
 The project is organized as a client-server system. The web frontend and Android mobile app communicate with the backend REST API, while the backend handles authentication, authorization, data access, file storage integration, and response handling.
 
