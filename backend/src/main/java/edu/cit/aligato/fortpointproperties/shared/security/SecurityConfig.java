@@ -100,6 +100,7 @@ public class SecurityConfig {
                         "/api/auth/google/mobile").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/health", "/health/", "/api/health", "/api/health/").permitAll()
                 .requestMatchers("/properties").permitAll()
                 .requestMatchers("/properties/{id}").permitAll()
                 .requestMatchers("/properties/search/location").permitAll()
