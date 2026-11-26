@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs + FindSecBugs exclusions. Every entry needs a reason.
+-->
+<FindBugsFilter
+        xmlns="https://github.com/spotbugs/filter/3.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- JPA entities, DTOs and Spring-injected beans intentionally expose/store
+         mutable references (collections, Dates, injected collaborators). -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Spring beans are constructed by the container; throwing from a constructor
+         on bad config is the desired fail-fast behaviour. -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!-- FindSecBugs informational: flags every @RestController endpoint as
+         "an entry point". Not a vulnerability by itself. -->
+    <Match>
+        <Bug pattern="SPRING_ENDPOINT"/>
+    </Match>
+
+    <!-- DTOs in this codebase are public-field data carriers serialised by Jackson,
+         so SpotBugs cannot see reads/writes. New DTOs should use records or
+         private fields + accessors (see docs/ENGINEERING_STANDARDS.md). -->
+    <Match>
+        <Package name="~.*\.dto"/>
+        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD,UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD,PA_PUBLIC_PRIMITIVE_ATTRIBUTE"/>
+    </Match>
+    <Match>
+        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD,UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+        <Class name="edu.cit.aligato.fortpointproperties.properties.service.PropertyService"/>
+    </Match>
+
+    <!-- CSRF is disabled on purpose: the API is stateless (SessionCreationPolicy.STATELESS)
+         and authenticates via an Authorization: Bearer header, not cookies.
+         Re-evaluate if auth ever moves to cookies. -->
+    <Match>
+        <Class name="edu.cit.aligato.fortpointproperties.shared.security.SecurityConfig"/>
+        <Bug pattern="SPRING_CSRF_PROTECTION_DISABLED"/>
+    </Match>
+
+    <!-- ===================================================================
+         KNOWN ISSUES BASELINE (pre-existing as of 2026-11-27).
+         Matched by exact class so the same bug anywhere else still fails.
+         Delete each entry when the underlying code is fixed.
+         =================================================================== -->
+
+    <!-- OAuth redirects target the configured frontend URL; verify no
+         request-controlled value can reach sendRedirect(). -->
+    <Match>
+        <Or>
+            <Class name="edu.cit.aligato.fortpointproperties.shared.security.SecurityConfig"/>
+            <Class name="edu.cit.aligato.fortpointproperties.auth.service.GoogleOAuthSuccessHandler"/>
+        </Or>
+        <Bug pattern="UNVALIDATED_REDIRECT"/>
+    </Match>
+
+    <!-- Anonymous payload class with constant instance fields. -->
+    <Match>
+        <Class name="~edu\.cit\.aligato\.fortpointproperties\.messaging\.service\.MessagingService\$.*"/>
+        <Bug pattern="SS_SHOULD_BE_STATIC"/>
+    </Match>
+
+    <!-- Test code -->
+    <Match>
+        <Class name="~.*Test(s)?(\$.*)?"/>
+    </Match>
+</FindBugsFilter>

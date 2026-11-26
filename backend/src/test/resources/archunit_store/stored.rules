@@ -1,0 +1,6 @@
+#
+#Fri Nov 27 01:24:54 PST 2026
+no\ classes\ should\ throw\ generic\ exceptions,\ because\ throw\ AppException\ (or\ a\ specific\ subtype)\ so\ GlobalExceptionHandler\ maps\ it=a522e860-fb33-4c66-880d-c25cf3803b7f
+no\ classes\ should\ use\ field\ injection,\ because\ field\ injection\ is\ considered\ harmful;\ use\ constructor\ injection\ or\ setter\ injection\ instead;\ see\ https\://stackoverflow.com/q/39890849\ for\ detailed\ explanations,\ because\ use\ constructor\ injection\ (immutable,\ testable)=7efb974c-28f8-41ed-89ec-a5a86e9abb5a
+no\ classes\ that\ reside\ in\ a\ package\ '..controller..'\ should\ depend\ on\ classes\ that\ are\ annotated\ with\ @Entity,\ because\ API\ contracts\ use\ DTOs,\ never\ JPA\ entities=c7063e5c-988a-4782-b7b1-290a4330bbc7
+no\ classes\ that\ reside\ in\ a\ package\ '..controller..'\ should\ depend\ on\ classes\ that\ reside\ in\ a\ package\ '..repository..',\ because\ controllers\ delegate\ to\ services;\ services\ own\ data\ access=86524ae2-0255-45e9-a692-e1f2a3723871

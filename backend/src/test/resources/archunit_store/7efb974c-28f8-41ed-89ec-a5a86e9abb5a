@@ -1,0 +1,3 @@
+Field <edu.cit.aligato.fortpointproperties.shared.security.JwtUtil.accessTokenExpiration> is annotated with @Value in (JwtUtil.java:0)
+Field <edu.cit.aligato.fortpointproperties.shared.security.JwtUtil.refreshTokenExpiration> is annotated with @Value in (JwtUtil.java:0)
+Field <edu.cit.aligato.fortpointproperties.shared.security.JwtUtil.secretKey> is annotated with @Value in (JwtUtil.java:0)

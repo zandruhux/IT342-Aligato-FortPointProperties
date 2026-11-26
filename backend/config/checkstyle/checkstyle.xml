@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<!--
+  FortPoint Properties Checkstyle rules.
+
+  severity="error"   -> fails the build (correctness, readability essentials)
+  severity="warning" -> reported only (size/complexity budgets; tighten over time)
+
+  Formatting (indentation, braces placement, whitespace) is intentionally NOT
+  enforced here; it is left to the IDE formatter to avoid churn on existing code.
+-->
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java"/>
+
+    <!-- suppressions.xml is wired in via pom.xml (suppressionsLocation) -->
+    <module name="SuppressWarningsFilter"/>
+
+    <module name="FileLength">
+        <property name="max" value="600"/>
+        <property name="severity" value="warning"/>
+    </module>
+    <module name="LineLength">
+        <property name="max" value="140"/>
+        <property name="ignorePattern" value="^(package|import) .*$"/>
+        <property name="severity" value="warning"/>
+    </module>
+    <module name="FileTabCharacter">
+        <property name="severity" value="warning"/>
+    </module>
+
+    <!-- No debugging output / stack traces to stdout in production code -->
+    <module name="RegexpSingleline">
+        <property name="format" value="System\.(out|err)\.print"/>
+        <property name="message" value="Use an SLF4J logger instead of System.out/err."/>
+    </module>
+    <module name="RegexpSingleline">
+        <property name="format" value="\.printStackTrace\(\)"/>
+        <property name="message" value="Log the exception with a logger instead of printStackTrace()."/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+
+        <!-- Imports -->
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
+        <module name="IllegalImport"/>
+
+        <!-- Naming -->
+        <module name="PackageName">
+            <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
+        </module>
+        <module name="TypeName"/>
+        <!-- Allows test names like method_scenario_expected and Spring Data paths like findByProperty_Id -->
+        <module name="MethodName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$"/>
+        </module>
+        <module name="MemberName"/>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="ConstantName"/>
+        <module name="StaticVariableName"/>
+
+        <!-- Correctness -->
+        <module name="EqualsHashCode"/>
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="expected|ignored"/>
+        </module>
+        <module name="EmptyStatement"/>
+        <module name="FallThrough"/>
+        <module name="MissingSwitchDefault"/>
+        <module name="StringLiteralEquality"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="InnerAssignment"/>
+        <module name="OneStatementPerLine"/>
+        <module name="MultipleVariableDeclarations"/>
+        <module name="NeedBraces">
+            <!-- warning until the 3 existing cases in PropertyService are fixed -->
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="ModifierOrder"/>
+        <module name="UpperEll"/>
+        <module name="ArrayTypeStyle"/>
+        <module name="HideUtilityClassConstructor">
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="IllegalCatch">
+            <property name="illegalClassNames" value="Throwable, Error"/>
+        </module>
+
+        <!-- Size / complexity budgets (reported, not blocking) -->
+        <module name="MethodLength">
+            <property name="max" value="80"/>
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="ParameterNumber">
+            <property name="max" value="8"/>
+            <property name="ignoreOverriddenMethods" value="true"/>
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="CyclomaticComplexity">
+            <property name="max" value="15"/>
+            <property name="severity" value="warning"/>
+        </module>
+        <module name="NestedIfDepth">
+            <property name="max" value="3"/>
+            <property name="severity" value="warning"/>
+        </module>
+    </module>
+</module>
