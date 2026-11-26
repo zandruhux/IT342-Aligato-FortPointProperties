@@ -10,6 +10,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -48,9 +49,7 @@ public class ArticleStorageService {
     }
 
     public UploadedArticlePhoto uploadCoverPhoto(MultipartFile file) {
-        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename() == null
-                ? "cover-photo"
-                : file.getOriginalFilename());
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNullElse(file.getOriginalFilename(), "cover-photo"));
         String extension = getFileExtension(originalFilename);
         String storagePath = "articles/" + UUID.randomUUID() + "." + extension;
 

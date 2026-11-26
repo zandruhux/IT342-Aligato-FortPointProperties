@@ -10,6 +10,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -47,9 +48,7 @@ public class SupabaseStorageService {
     public UploadedFile uploadCareerResume(String userId, MultipartFile file) {
         ensureConfigured();
 
-        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename() == null
-                ? "resume"
-                : file.getOriginalFilename());
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNullElse(file.getOriginalFilename(), "resume"));
         String extension = getFileExtension(originalFilename);
         String storagePath = "career-applications/" + userId + "/" + UUID.randomUUID() + "." + extension;
 

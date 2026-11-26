@@ -5,6 +5,19 @@ import { useFavorites } from '../hooks';
 import { PropertyCard, PropertyDetailModal } from '../../properties/components';
 import { usePropertyDetailAccess } from '../../properties/hooks';
 
+// Maps a FavoriteDTO to the shape PropertyCard expects.
+const mapFavoriteToProperty = (fav) => ({
+  id: fav.propertyId, // This maps the correct property ID for the card
+  priceRangeMin: fav.priceRangeMin,
+  priceRangeMax: fav.priceRangeMax,
+  name: fav.propertyName,
+  location: fav.location,
+  basicDescription: fav.description,
+  hasPromo: fav.hasPromo,
+  coverPhotoUrl: fav.coverPhotoUrl,
+  isFavorite: true, // Optional: Force the heart to be filled on this page
+});
+
 /**
  * FavoritePage Component
  * Displays all properties added to favorites by the current user
@@ -13,12 +26,8 @@ export default function FavoritePage() {
   const navigate = useNavigate();
   const { isLoggedIn } = useAuthContext();
   const { favorites, loading, error, fetchFavorites, removeFavorite } = useFavorites();
-  const {
-    isDetailModalOpen,
-    selectedProperty,
-    openDetailModal,
-    closeDetailModal,
-  } = usePropertyDetailAccess();
+  const { isDetailModalOpen, selectedProperty, openDetailModal, closeDetailModal } =
+    usePropertyDetailAccess();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -29,27 +38,12 @@ export default function FavoritePage() {
     fetchFavorites();
   }, [isLoggedIn, navigate, fetchFavorites]);
 
+  // Hooks must run on every render, so this stays above the early return below.
+  const mappedFavorites = useMemo(() => (favorites || []).map(mapFavoriteToProperty), [favorites]);
+
   if (!isLoggedIn) {
     return null;
   }
-
-  //Mapper Function
-  const mapFavoriteToProperty = (fav) => ({
-    id: fav.propertyId, // This maps the correct property ID for the card
-    priceRangeMin: fav.priceRangeMin,
-    priceRangeMax: fav.priceRangeMax,
-    name: fav.propertyName,
-    location: fav.location,
-    basicDescription: fav.description,
-    hasPromo: fav.hasPromo,
-    coverPhotoUrl: fav.coverPhotoUrl,
-    isFavorite: true // Optional: Force the heart to be filled on this page
-  });
-
-  const mappedFavorites = useMemo(
-    () => (favorites || []).map(mapFavoriteToProperty),
-    [favorites]
-  );
 
   const handlePropertyClick = (propertyId) => {
     const property = mappedFavorites.find((item) => item.id === propertyId);
@@ -71,9 +65,7 @@ export default function FavoritePage() {
         {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">My Favorites</h1>
-          <p className="text-gray-600 text-lg">
-            Properties you've saved for later reference
-          </p>
+          <p className="text-gray-600 text-lg">Properties you've saved for later reference</p>
         </div>
 
         {/* Error Alert */}

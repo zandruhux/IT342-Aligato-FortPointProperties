@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,9 +42,7 @@ public class ProfileImageStorageService {
     public UploadedProfileImage uploadProfileImage(String userId, MultipartFile file) {
         ensureConfigured();
 
-        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename() == null
-                ? "profile-image"
-                : file.getOriginalFilename());
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNullElse(file.getOriginalFilename(), "profile-image"));
         String extension = getFileExtension(originalFilename);
         // Store paths per user so old profile images can be replaced or removed safely.
         String storagePath = "profile-images/" + userId + "/" + UUID.randomUUID() + "." + extension;

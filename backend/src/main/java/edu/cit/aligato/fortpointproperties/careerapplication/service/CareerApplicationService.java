@@ -3,6 +3,7 @@ package edu.cit.aligato.fortpointproperties.careerapplication.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -177,9 +178,7 @@ public class CareerApplicationService {
             throw new IllegalArgumentException("Resume file is required");
         }
 
-        String originalFilename = StringUtils.cleanPath(resume.getOriginalFilename() == null
-                ? ""
-                : resume.getOriginalFilename());
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNullElse(resume.getOriginalFilename(), ""));
         String extension = getFileExtension(originalFilename);
         String contentType = resume.getContentType();
 

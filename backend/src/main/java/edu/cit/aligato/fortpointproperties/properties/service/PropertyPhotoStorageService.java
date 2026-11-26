@@ -9,6 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -45,9 +46,7 @@ public class PropertyPhotoStorageService {
         ensureConfigured();
         validatePhoto(file);
 
-        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename() == null
-                ? "property-photo"
-                : file.getOriginalFilename());
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNullElse(file.getOriginalFilename(), "property-photo"));
         String extension = getFileExtension(originalFilename);
         String storagePath = "properties/" + UUID.randomUUID() + "." + extension;
 
